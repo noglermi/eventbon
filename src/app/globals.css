@@ -35,43 +35,60 @@ input {
 
 @media print {
   @page {
-    size: 80mm auto;
-    margin: 4mm;
+    size: auto;
+    margin: 2mm;
   }
 
+  html,
   body {
     min-width: 0;
-    background: white;
+    width: auto;
+    margin: 0;
+    background: white !important;
+    color: black !important;
   }
 
   body * {
-    visibility: hidden;
+    visibility: hidden !important;
   }
 
   .print-area,
   .print-area * {
-    visibility: visible;
+    visibility: visible !important;
   }
 
   .print-area {
     position: absolute;
     inset: 0 auto auto 0;
-    width: 72mm;
-    max-width: 72mm;
-    display: block;
+    display: block !important;
+    width: 100%;
+    max-width: 76mm;
+    margin: 0;
+    padding: 0;
+    background: white;
   }
 
-  .print-preview-controls {
+  .print-preview-chrome,
+  .print-preview-actions {
     display: none !important;
   }
 
   .voucher-ticket {
-    width: 72mm;
-    margin: 0 0 4mm;
-    padding: 3mm;
-    color: black;
-    box-shadow: none;
+    width: 100%;
+    max-width: 76mm;
+    margin: 0 0 3mm;
+    padding: 2mm 2mm 3mm;
+    color: black !important;
+    background: white !important;
+    box-shadow: none !important;
     page-break-inside: avoid;
     break-inside: avoid;
+    border: 0 !important;
+    outline: 0 !important;
+  }
+
+  .voucher-cut-line {
+    border-top: 1px dashed black !important;
+    margin-top: 3mm !important;
   }
 }

@@ -38,24 +38,25 @@ function buildLines(cartItems: CartItem[], productsById: Map<string, ProductTile
 
 function Voucher({ eventName, labels, lines, printedAtText }: { eventName: string; labels: Translation; lines: VoucherLine[]; printedAtText: string }) {
   return (
-    <article className="voucher-ticket break-inside-avoid bg-white p-4 font-mono text-slate-950 ring-1 ring-slate-300">
+    <article className="voucher-ticket break-inside-avoid bg-white px-4 py-3 font-mono text-slate-950 shadow-sm ring-1 ring-slate-300">
       <div className="text-center">
-        <p className="text-lg font-black tracking-wide">eventBon</p>
+        <p className="text-base font-black tracking-wide">eventBon</p>
         <p className="mt-1 text-sm font-bold">{eventName}</p>
       </div>
-      <div className="my-3 border-t border-dashed border-slate-500" />
-      <div className="space-y-1 text-base font-black">
+      <div className="my-2 border-t border-dashed border-slate-500" />
+      <div className="space-y-1 text-base font-black leading-tight">
         {lines.map((line) => (
           <div key={line.id} className="flex justify-between gap-4">
             <span>{line.quantity > 1 ? line.quantity + " x " : ""}{line.name}</span>
           </div>
         ))}
       </div>
-      <div className="my-3 border-t border-dashed border-slate-500" />
+      <div className="my-2 border-t border-dashed border-slate-500" />
       <div className="text-xs font-bold leading-relaxed">
         <p>{labels.dateTime}</p>
         <p>{printedAtText}</p>
       </div>
+      <div className="voucher-cut-line mt-3 border-t border-dashed border-slate-700" />
     </article>
   );
 }
@@ -73,28 +74,28 @@ export function VoucherPrintPreview({ eventName, language, labels, cartItems, pr
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-8 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="print-preview-title">
-      <div className="flex max-h-[90vh] w-full max-w-3xl flex-col rounded-[2rem] bg-white shadow-2xl">
-        <div className="print-preview-controls flex items-center justify-between gap-6 border-b border-slate-200 px-7 py-5">
-          <div>
-            <p className="text-sm font-bold uppercase tracking-widest text-emerald-600">{labels.voucherPrinting}</p>
-            <h2 id="print-preview-title" className="mt-1 text-3xl font-black tracking-normal text-slate-950">{labels.printPreview}</h2>
-          </div>
-          <div className="flex gap-3">
-            <button type="button" onClick={onCancel} className="min-h-12 rounded-2xl bg-slate-100 px-5 text-lg font-black text-slate-700 transition hover:bg-slate-200 focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200">
-              {labels.cancel}
-            </button>
-            <button type="button" onClick={printVouchers} className="min-h-12 rounded-2xl bg-emerald-500 px-6 text-lg font-black text-white shadow-lg shadow-emerald-500/20 transition hover:bg-emerald-600 focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200">
-              {labels.print}
-            </button>
-          </div>
+      <div className="flex max-h-[90vh] w-full max-w-3xl flex-col overflow-hidden rounded-[2rem] bg-white shadow-2xl">
+        <div className="print-preview-chrome border-b border-slate-200 px-7 py-5">
+          <p className="text-sm font-bold uppercase tracking-widest text-emerald-600">{labels.voucherPrinting}</p>
+          <h2 id="print-preview-title" className="mt-1 text-3xl font-black tracking-normal text-slate-950">{labels.printPreview}</h2>
+          <p className="mt-2 max-w-xl text-sm font-semibold text-slate-500">{labels.thermalPrinterNote}</p>
         </div>
 
-        <div className="overflow-y-auto bg-slate-100 p-6">
-          <div className="print-area mx-auto grid max-w-sm gap-4">
+        <div className="min-h-0 flex-1 overflow-y-auto bg-slate-100 p-6">
+          <div className="print-area mx-auto grid max-w-[80mm] gap-4">
             {vouchers.map((voucher) => (
               <Voucher key={voucher.id} eventName={eventName} labels={labels} lines={voucher.lines} printedAtText={printedAtText} />
             ))}
           </div>
+        </div>
+
+        <div className="print-preview-actions sticky bottom-0 flex justify-end gap-3 border-t border-slate-200 bg-white/95 px-7 py-5 shadow-[0_-10px_30px_rgba(15,23,42,0.08)] backdrop-blur">
+          <button type="button" onClick={onCancel} className="min-h-12 rounded-2xl bg-slate-100 px-5 text-lg font-black text-slate-700 transition hover:bg-slate-200 focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200">
+            {labels.cancel}
+          </button>
+          <button type="button" onClick={printVouchers} className="min-h-12 rounded-2xl bg-emerald-500 px-6 text-lg font-black text-white shadow-lg shadow-emerald-500/20 transition hover:bg-emerald-600 focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200">
+            {labels.print}
+          </button>
         </div>
       </div>
     </div>
