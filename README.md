@@ -1,36 +1,60 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# eventBon
 
-## Getting Started
+eventBon is the simplest voucher printing system for events.
 
-First, run the development server:
+Its mission is intentionally small:
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- Sell vouchers.
+- Calculate change.
+- Print vouchers.
+- Generate a simple sales summary.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Nothing else.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## What eventBon Is Not
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+eventBon is not:
 
-## Learn More
+- a cash register
+- POS software
+- accounting software
+- inventory management
+- ERP
+- restaurant software
 
-To learn more about Next.js, take a look at the following resources:
+## Product Direction
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+eventBon exists for event teams that need a fast, focused way to sell prepaid vouchers at a single event. The user should be able to open the sales terminal, tap sales tiles, confirm payment, print vouchers in the browser, and review a simple summary at the end.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+The product deliberately avoids back-office complexity. There is no dashboard in the MVP, no separate article management, no invoices, no receipts, no taxes, and no accounting.
 
-## Deploy on Vercel
+## Design Principles
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- Simple for the user.
+- Scalable in the architecture.
+- Invisible complexity.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+The interface should feel immediate and obvious. The architecture should still be ready for multiple tenants, hosted deployment, and future payment integrations without exposing that complexity to event staff.
+
+## Technology Direction
+
+eventBon is built around:
+
+- Next.js
+- Supabase
+- Vercel
+
+The architecture is multi-tenant by design. All application data is stored in Supabase. The system should be structured so Stripe and SumUp integrations can be added later without reworking the product model.
+
+## Documentation
+
+- [Project Charter](docs/Project-Charter.md)
+- [Architecture](docs/Architecture.md)
+- [MVP](docs/MVP.md)
+- [Wireframes](docs/Wireframes.md)
+- [Data Model](docs/Data-Model.md)
+- [Roadmap](docs/Roadmap.md)
+
+## Contributor Note
+
+This project may use a Next.js version with breaking changes compared with common examples. Before implementing application code, read the relevant local Next.js guide in `node_modules/next/dist/docs/` and heed deprecation notices.
