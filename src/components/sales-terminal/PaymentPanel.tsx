@@ -54,7 +54,8 @@ export function PaymentPanel({ labels, language, totalCents, receivedCents, rece
   }
 
   return (
-    <section className="space-y-5 border-t border-dashed border-slate-300 pt-6">
+    <section className="flex min-h-0 flex-1 flex-col border-t border-dashed border-slate-300 pt-6">
+      <div className="min-h-0 flex-1 space-y-5 overflow-y-auto pb-4 pr-1">
       <div className="flex items-end justify-between gap-4">
         <span className="text-lg font-black text-slate-500">{labels.total}</span>
         <span className="text-5xl font-black tracking-normal text-slate-950">{formatCents(totalCents)}</span>
@@ -112,7 +113,10 @@ export function PaymentPanel({ labels, language, totalCents, receivedCents, rece
         </div>
       </div>
 
-      <button
+      </div>
+
+      <div className="shrink-0 space-y-4 bg-white pt-4">
+        <button
         type="button"
         onClick={onClearSale}
         className="min-h-14 w-full rounded-2xl bg-rose-50 px-5 text-lg font-black text-rose-700 ring-1 ring-rose-100 transition hover:bg-rose-100 focus:outline-none focus-visible:ring-4 focus-visible:ring-rose-200"
@@ -120,9 +124,10 @@ export function PaymentPanel({ labels, language, totalCents, receivedCents, rece
         {labels.clearSale}
       </button>
 
-      <button type="button" onClick={onOpenPrintPreview} className="min-h-20 w-full rounded-[1.75rem] bg-emerald-500 px-6 text-2xl font-black tracking-normal text-white shadow-xl shadow-emerald-500/25 transition hover:bg-emerald-600 focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200 active:scale-[0.99]">
+        <button type="button" onClick={onOpenPrintPreview} className="min-h-20 w-full rounded-[1.75rem] bg-emerald-500 px-6 text-2xl font-black tracking-normal text-white shadow-xl shadow-emerald-500/25 transition hover:bg-emerald-600 focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200 active:scale-[0.99]">
         {labels.printVouchers}
-      </button>
+        </button>
+      </div>
     </section>
   );
 }

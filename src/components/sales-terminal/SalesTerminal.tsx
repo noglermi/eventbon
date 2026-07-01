@@ -159,9 +159,11 @@ export function SalesTerminal() {
             </div>
           </section>
 
-          <aside className="flex flex-col gap-6 rounded-[2rem] bg-white p-6 shadow-sm ring-1 ring-slate-200/70">
+          <aside className="flex min-h-0 flex-col gap-6 overflow-hidden rounded-[2rem] bg-white p-6 shadow-sm ring-1 ring-slate-200/70 lg:sticky lg:top-6 lg:max-h-[calc(100vh-3rem)]">
             <PrintModeSetting labels={labels} printMode={printMode} onPrintModeChange={setPrintMode} />
-            <Cart items={cartItems} language={language} labels={labels} productsById={productsById} onIncrease={increaseItem} onDecrease={decreaseItem} onRemove={removeItem} />
+            <div className="min-h-0 shrink overflow-y-auto pr-1">
+              <Cart items={cartItems} language={language} labels={labels} productsById={productsById} onIncrease={increaseItem} onDecrease={decreaseItem} onRemove={removeItem} />
+            </div>
             <PaymentPanel labels={labels} language={language} totalCents={totalCents} receivedCents={receivedCents} receivedEntry={receivedEntry} paymentMethod={paymentMethod} onPaymentMethodChange={setPaymentMethod} onReceivedEntryChange={setReceivedEntry} onClearSale={clearSale} onOpenPrintPreview={openPrintPreview} />
           </aside>
         </div>
