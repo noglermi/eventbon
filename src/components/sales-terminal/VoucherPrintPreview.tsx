@@ -47,7 +47,7 @@ function Voucher({ eventName, labels, lines, printedAtText }: { eventName: strin
       <div className="space-y-1 text-base font-black leading-tight">
         {lines.map((line) => (
           <div key={line.id} className="flex justify-between gap-4">
-            <span>{line.quantity > 1 ? line.quantity + " x " : ""}{line.name}</span>
+            <span>{line.quantity} {"\u00d7"} {line.name}</span>
           </div>
         ))}
       </div>
@@ -74,8 +74,8 @@ export function VoucherPrintPreview({ eventName, language, labels, cartItems, pr
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-8 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="print-preview-title">
-      <div className="flex max-h-[90vh] w-full max-w-3xl flex-col overflow-hidden rounded-[2rem] bg-white shadow-2xl">
-        <div className="print-preview-chrome border-b border-slate-200 px-7 py-5">
+      <div className="flex h-[90vh] w-full max-w-3xl flex-col overflow-hidden rounded-[2rem] bg-white shadow-2xl">
+        <div className="print-preview-chrome shrink-0 border-b border-slate-200 px-7 py-5">
           <p className="text-sm font-bold uppercase tracking-widest text-emerald-600">{labels.voucherPrinting}</p>
           <h2 id="print-preview-title" className="mt-1 text-3xl font-black tracking-normal text-slate-950">{labels.printPreview}</h2>
           <p className="mt-2 max-w-xl text-sm font-semibold text-slate-500">{labels.thermalPrinterNote}</p>
@@ -89,7 +89,7 @@ export function VoucherPrintPreview({ eventName, language, labels, cartItems, pr
           </div>
         </div>
 
-        <div className="print-preview-actions sticky bottom-0 flex justify-end gap-3 border-t border-slate-200 bg-white/95 px-7 py-5 shadow-[0_-10px_30px_rgba(15,23,42,0.08)] backdrop-blur">
+        <div className="print-preview-actions shrink-0 flex justify-end gap-3 border-t border-slate-200 bg-white/95 px-7 py-5 shadow-[0_-10px_30px_rgba(15,23,42,0.08)] backdrop-blur">
           <button type="button" onClick={onCancel} className="min-h-12 rounded-2xl bg-slate-100 px-5 text-lg font-black text-slate-700 transition hover:bg-slate-200 focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200">
             {labels.cancel}
           </button>
