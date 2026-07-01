@@ -11,7 +11,7 @@ type PaymentPanelProps = {
 };
 
 const currency = new Intl.NumberFormat("de-AT", { style: "currency", currency: "EUR" });
-const numpadButtonClass = "flex min-h-16 items-center justify-center rounded-2xl bg-white text-2xl font-black text-slate-800 shadow-sm ring-1 ring-slate-200 transition active:scale-95 focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200";
+const numpadButtonClass = "flex min-h-16 items-center justify-center rounded-2xl bg-white text-2xl font-black text-slate-800 shadow-sm ring-1 ring-slate-200/80 transition active:scale-95 focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200";
 
 function formatCents(cents: number) {
   return currency.format(cents / 100);
@@ -48,15 +48,15 @@ export function PaymentPanel({ labels, language, receivedCents, receivedEntry, t
   }
 
   return (
-    <section className="flex min-h-0 flex-1 flex-col rounded-[2rem] bg-white shadow-sm ring-1 ring-slate-200/70">
-      <div className="shrink-0 border-b border-slate-100 px-6 py-5">
-        <h2 className="text-3xl font-black tracking-normal text-slate-950">{labels.payment}</h2>
+    <section className="flex min-h-0 flex-1 flex-col rounded-[2.25rem] bg-white/95 shadow-[0_18px_50px_rgba(15,23,42,0.06)] ring-1 ring-slate-200/75">
+      <div className="shrink-0 border-b border-slate-100 px-7 py-6">
+        <h2 className="text-3xl font-black tracking-tight text-slate-950">{labels.payment}</h2>
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto p-5">
-        <div className="rounded-3xl bg-emerald-50 p-5 ring-1 ring-emerald-100">
-          <p className="text-sm font-bold uppercase tracking-widest text-emerald-700">{labels.received} (EUR)</p>
-          <div className="mt-3 rounded-2xl bg-white px-4 py-4 text-5xl font-black tabular-nums text-slate-950 ring-1 ring-emerald-200">
+        <div className="rounded-[1.75rem] bg-white p-5 shadow-sm ring-1 ring-slate-200/75">
+          <p className="text-sm font-bold uppercase tracking-widest text-slate-500">{labels.received} (EUR)</p>
+          <div className="mt-3 rounded-2xl bg-slate-50 px-4 py-4 text-5xl font-black tabular-nums text-slate-950 ring-1 ring-slate-200/75">
             {displayedReceived}
           </div>
         </div>
@@ -70,9 +70,9 @@ export function PaymentPanel({ labels, language, receivedCents, receivedEntry, t
           <button type="button" onClick={appendSeparator} className={numpadButtonClass}>{decimalSeparator}</button>
         </div>
 
-        <div className="mt-5 rounded-3xl bg-emerald-500 p-5 text-white shadow-lg shadow-emerald-500/20">
+        <div className="mt-5 rounded-[1.75rem] bg-emerald-600 p-5 text-white shadow-[0_16px_32px_rgba(5,150,105,0.22)]">
           <p className="text-sm font-bold uppercase tracking-widest text-emerald-100">{labels.change}</p>
-          <p className="mt-2 text-5xl font-black tracking-normal">{formatCents(changeCents)}</p>
+          <p className="mt-2 text-5xl font-black tracking-tight tabular-nums">{formatCents(changeCents)}</p>
         </div>
       </div>
     </section>

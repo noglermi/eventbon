@@ -147,19 +147,19 @@ export function SalesTerminal() {
   }
 
   return (
-    <main className="grid h-screen grid-rows-[5rem_minmax(0,1fr)_7rem] overflow-hidden bg-slate-100 text-slate-950">
-      <header className="flex items-center justify-between border-b border-slate-200 bg-white px-6 shadow-sm">
+    <main className="grid h-screen grid-rows-[5rem_minmax(0,1fr)_7rem] overflow-hidden bg-[#f6f7f5] text-slate-950">
+      <header className="flex items-center justify-between border-b border-slate-200/70 bg-white/95 px-7 shadow-[0_1px_0_rgba(15,23,42,0.04)] backdrop-blur">
         <div className="flex items-center gap-4">
-          <button type="button" className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-700 focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200" aria-label={labels.menu}>
+          <button type="button" className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100 transition active:scale-95 focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200" aria-label={labels.menu}>
             <MenuIcon />
           </button>
           <div className="leading-tight">
             <p className="text-2xl font-black tracking-normal text-emerald-600">eventBon</p>
-            <p className="text-sm font-bold text-slate-500">Fest Sommer 2025</p>
+            <p className="text-sm font-semibold text-slate-500">Fest Sommer 2025</p>
           </div>
         </div>
 
-        <div className="flex min-h-12 items-center rounded-2xl bg-slate-100 px-2" aria-label={labels.language}>
+        <div className="flex min-h-12 items-center rounded-2xl bg-slate-100/80 px-2 ring-1 ring-slate-200/70" aria-label={labels.language}>
           <button
             type="button"
             onClick={() => setLanguage("de")}
@@ -178,11 +178,11 @@ export function SalesTerminal() {
         </div>
       </header>
 
-      <div className="grid min-h-0 grid-cols-[minmax(0,1.35fr)_minmax(360px,0.95fr)_minmax(320px,0.8fr)] gap-5 p-5">
-        <section className="flex min-h-0 flex-col rounded-[2rem] bg-white shadow-sm ring-1 ring-slate-200/70">
-          <div className="shrink-0 border-b border-slate-100 px-6 py-5">
-            <h1 className="text-3xl font-black tracking-normal text-slate-950">{labels.articles}</h1>
-            <div className="mt-4 flex gap-2 overflow-x-auto pb-1">
+      <div className="grid min-h-0 grid-cols-[minmax(0,1.35fr)_minmax(360px,0.95fr)_minmax(320px,0.8fr)] gap-6 p-6">
+        <section className="flex min-h-0 flex-col rounded-[2.25rem] bg-white/95 shadow-[0_18px_50px_rgba(15,23,42,0.06)] ring-1 ring-slate-200/75">
+          <div className="shrink-0 border-b border-slate-100 px-7 py-6">
+            <h1 className="text-3xl font-black tracking-tight text-slate-950">{labels.articles}</h1>
+            <div className="mt-5 flex gap-2.5 overflow-x-auto pb-1">
               {productFilters.map((filter) => {
                 const isActive = activeFilter === filter;
                 return (
@@ -190,7 +190,7 @@ export function SalesTerminal() {
                     key={filter}
                     type="button"
                     onClick={() => setActiveFilter(filter)}
-                    className={"min-h-12 shrink-0 rounded-2xl px-5 text-base font-black transition focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200 " + (isActive ? "bg-slate-950 text-white shadow-md" : "bg-slate-100 text-slate-700")}
+                    className={"min-h-12 shrink-0 rounded-2xl px-5 text-base font-black transition active:scale-[0.98] focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200 " + (isActive ? "bg-emerald-600 text-white shadow-sm shadow-emerald-600/20" : "bg-slate-50 text-slate-600 ring-1 ring-slate-200/75")}
                   >
                     {getFilterLabel(filter, labels, language)}
                   </button>
@@ -199,8 +199,8 @@ export function SalesTerminal() {
             </div>
           </div>
 
-          <div className="min-h-0 flex-1 overflow-y-auto p-5">
-            <div className="grid grid-cols-2 gap-4 xl:grid-cols-3 2xl:grid-cols-4">
+          <div className="min-h-0 flex-1 overflow-y-auto p-6">
+            <div className="grid grid-cols-2 gap-5 xl:grid-cols-3 2xl:grid-cols-4">
               {filteredProducts.map((product) => (
                 <ProductTile key={product.id} language={language} product={product} onSelect={addProduct} />
               ))}
@@ -210,18 +210,18 @@ export function SalesTerminal() {
 
         <Cart items={cartItems} language={language} labels={labels} productsById={productsById} totalCents={totalCents} onIncrease={increaseItem} onDecrease={decreaseItem} onRemove={removeItem} />
 
-        <div className="flex min-h-0 flex-col gap-4">
+        <div className="flex min-h-0 flex-col gap-5">
           <PaymentPanel labels={labels} language={language} totalCents={totalCents} receivedCents={receivedCents} receivedEntry={receivedEntry} onReceivedEntryChange={setReceivedEntry} />
           <PrintModeSetting labels={labels} printMode={printMode} onPrintModeChange={setPrintMode} />
         </div>
       </div>
 
-      <footer className="grid grid-cols-[minmax(260px,0.8fr)_minmax(0,1.6fr)] gap-5 border-t border-slate-200 bg-white px-6 py-4 shadow-[0_-10px_30px_rgba(15,23,42,0.08)]">
-        <button type="button" onClick={clearSale} className="flex min-h-20 items-center justify-center gap-3 rounded-[1.75rem] bg-rose-50 px-6 text-xl font-black text-rose-700 ring-1 ring-rose-100 focus:outline-none focus-visible:ring-4 focus-visible:ring-rose-200">
+      <footer className="grid grid-cols-[minmax(260px,0.78fr)_minmax(0,1.62fr)] gap-5 border-t border-slate-200/70 bg-white/95 px-7 py-4 shadow-[0_-18px_45px_rgba(15,23,42,0.10)] backdrop-blur">
+        <button type="button" onClick={clearSale} className="flex min-h-20 items-center justify-center gap-3 rounded-[1.75rem] bg-rose-50/90 px-6 text-xl font-black text-rose-700 ring-1 ring-rose-100 transition active:scale-[0.99] focus:outline-none focus-visible:ring-4 focus-visible:ring-rose-200">
           <TrashIcon />
           {labels.clearSale}
         </button>
-        <button type="button" onClick={openPrintPreview} className="flex min-h-20 items-center justify-center gap-4 rounded-[1.75rem] bg-emerald-500 px-8 text-2xl font-black tracking-normal text-white shadow-xl shadow-emerald-500/25 focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200 active:scale-[0.99]">
+        <button type="button" onClick={openPrintPreview} className="flex min-h-20 items-center justify-center gap-4 rounded-[1.75rem] bg-emerald-600 px-8 text-2xl font-black tracking-normal text-white shadow-[0_18px_35px_rgba(5,150,105,0.28)] transition focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200 active:scale-[0.99]">
           <PrinterIcon />
           {labels.printVouchers}
         </button>
