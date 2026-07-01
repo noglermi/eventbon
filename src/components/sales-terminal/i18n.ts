@@ -39,7 +39,7 @@ export const translations = {
     dropImageHere: "Bild hier ablegen",
     increase: "Erh\u00f6hen",
     language: "Sprache",
-    menu: "Menü",
+    menu: "Men\u00fc",
     mockDataNote: "Nur Beispieldaten. Kacheln werden sp\u00e4ter direkt bearbeitet.",
     name: "Name",
     newVoucher: "Neuer Bon",

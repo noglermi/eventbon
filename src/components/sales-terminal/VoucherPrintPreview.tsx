@@ -46,8 +46,9 @@ function Voucher({ eventName, labels, lines, printedAtText }: { eventName: strin
       <div className="my-2 border-t border-dashed border-slate-500" />
       <div className="space-y-1 text-base font-black leading-tight">
         {lines.map((line) => (
-          <div key={line.id} className="flex justify-between gap-4">
-            <span>{line.quantity} {"\u00d7"} {line.name}</span>
+          <div key={line.id} className="voucher-line grid grid-cols-[auto_minmax(0,1fr)] gap-2">
+            <span className="tabular-nums">{line.quantity} {"\u00d7"}</span>
+            <span className="break-words">{line.name}</span>
           </div>
         ))}
       </div>
@@ -81,7 +82,7 @@ export function VoucherPrintPreview({ eventName, language, labels, cartItems, pr
           <p className="mt-2 max-w-xl text-sm font-semibold text-slate-500">{labels.thermalPrinterNote}</p>
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto bg-slate-100 p-6">
+        <div className="print-preview-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain bg-slate-100 p-6">
           <div className="print-area mx-auto grid max-w-[80mm] gap-4">
             {vouchers.map((voucher) => (
               <Voucher key={voucher.id} eventName={eventName} labels={labels} lines={voucher.lines} printedAtText={printedAtText} />
@@ -89,7 +90,7 @@ export function VoucherPrintPreview({ eventName, language, labels, cartItems, pr
           </div>
         </div>
 
-        <div className="print-preview-actions shrink-0 flex justify-end gap-3 border-t border-slate-200 bg-white/95 px-7 py-5 shadow-[0_-10px_30px_rgba(15,23,42,0.08)] backdrop-blur">
+        <div className="print-preview-actions z-10 shrink-0 flex justify-end gap-3 border-t border-slate-200 bg-white/95 px-7 py-5 shadow-[0_-10px_30px_rgba(15,23,42,0.08)] backdrop-blur">
           <button type="button" onClick={onCancel} className="min-h-12 rounded-2xl bg-slate-100 px-5 text-lg font-black text-slate-700 transition hover:bg-slate-200 focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200">
             {labels.cancel}
           </button>
