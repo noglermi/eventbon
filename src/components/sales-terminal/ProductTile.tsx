@@ -13,10 +13,9 @@ export function ProductTile({ language, product, onSelect }: ProductTileProps) {
     <button
       type="button"
       onClick={() => onSelect(product)}
-      className="group flex min-h-40 flex-col justify-between rounded-[2rem] p-5 text-left shadow-sm ring-1 ring-black/5 transition duration-200 hover:-translate-y-0.5 hover:shadow-xl focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-300 active:translate-y-0"
-      style={{ backgroundColor: product.color, color: product.textColor ?? "#111827" }}
+      className="flex min-h-40 flex-col items-center justify-center rounded-3xl border border-slate-200 bg-white p-4 text-center shadow-sm transition active:scale-[0.98] focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200"
     >
-      <span className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-3xl bg-white/45 text-4xl shadow-inner ring-1 ring-white/50 backdrop-blur">
+      <span className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl bg-slate-50 text-4xl ring-1 ring-slate-100">
         {product.image ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={product.image} alt="" className="h-9 w-9 object-contain" />
@@ -24,10 +23,8 @@ export function ProductTile({ language, product, onSelect }: ProductTileProps) {
           <span aria-hidden="true">{product.icon}</span>
         )}
       </span>
-      <span className="space-y-1">
-        <span className="block text-2xl font-black leading-tight tracking-normal">{product.name[language]}</span>
-        <span className="block text-xl font-bold opacity-85">{currency.format(product.price)}</span>
-      </span>
+      <span className="mt-4 block text-xl font-black leading-tight text-slate-950">{product.name[language]}</span>
+      <span className="mt-1 block text-base font-bold text-slate-500">{currency.format(product.price)}</span>
     </button>
   );
 }
