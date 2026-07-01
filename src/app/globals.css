@@ -31,3 +31,47 @@ button,
 input {
   font: inherit;
 }
+
+
+@media print {
+  @page {
+    size: 80mm auto;
+    margin: 4mm;
+  }
+
+  body {
+    min-width: 0;
+    background: white;
+  }
+
+  body * {
+    visibility: hidden;
+  }
+
+  .print-area,
+  .print-area * {
+    visibility: visible;
+  }
+
+  .print-area {
+    position: absolute;
+    inset: 0 auto auto 0;
+    width: 72mm;
+    max-width: 72mm;
+    display: block;
+  }
+
+  .print-preview-controls {
+    display: none !important;
+  }
+
+  .voucher-ticket {
+    width: 72mm;
+    margin: 0 0 4mm;
+    padding: 3mm;
+    color: black;
+    box-shadow: none;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+}

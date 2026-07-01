@@ -1,8 +1,13 @@
+export type Language = "de" | "en";
 export type TileGroupName = "Drinks" | "Food" | "Desserts" | "Other";
+export type PaymentMethod = "cash" | "card";
+export type PrintMode = "single_vouchers" | "combined_voucher";
+
+export type LocalizedText = Record<Language, string>;
 
 export type ProductTileData = {
   id: string;
-  name: string;
+  name: LocalizedText;
   price: number;
   group: TileGroupName;
   icon?: string;
@@ -13,7 +18,9 @@ export type ProductTileData = {
 
 export type CartItem = {
   productId: string;
-  name: string;
-  price: number;
   quantity: number;
+};
+
+export type EventSettings = {
+  printMode: PrintMode;
 };

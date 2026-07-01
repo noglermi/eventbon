@@ -1,13 +1,14 @@
-import type { ProductTileData } from "./types";
+import type { Language, ProductTileData } from "./types";
 
 type ProductTileProps = {
+  language: Language;
   product: ProductTileData;
   onSelect: (product: ProductTileData) => void;
 };
 
 const currency = new Intl.NumberFormat("de-AT", { style: "currency", currency: "EUR" });
 
-export function ProductTile({ product, onSelect }: ProductTileProps) {
+export function ProductTile({ language, product, onSelect }: ProductTileProps) {
   return (
     <button
       type="button"
@@ -24,7 +25,7 @@ export function ProductTile({ product, onSelect }: ProductTileProps) {
         )}
       </span>
       <span className="space-y-1">
-        <span className="block text-2xl font-black leading-tight tracking-normal">{product.name}</span>
+        <span className="block text-2xl font-black leading-tight tracking-normal">{product.name[language]}</span>
         <span className="block text-xl font-bold opacity-85">{currency.format(product.price)}</span>
       </span>
     </button>
