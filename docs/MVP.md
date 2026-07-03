@@ -12,6 +12,40 @@ The MVP supports one active event.
 
 There is no multi-event management interface in the MVP, even though the architecture remains multi-tenant by design.
 
+## Milestone 3: Event Setup
+
+Goal:
+
+A user can create a usable event in less than 3 minutes.
+
+Setup scope:
+
+- event name
+- event date or date range
+- access and usage period concept
+- event-level print mode
+- default tile groups
+- direct tile editing in the sales terminal
+- icon or image per tile
+- price per tile
+- group assignment
+- immediate transition to selling Bons
+
+Event setup should be short and operational. It should lead directly into the sales terminal instead of becoming a dashboard or back-office workflow.
+
+The access and usage period concept prepares the product for booked event usage and future offline license periods. It does not implement offline mode in the MVP.
+
+## Event-Level Print Mode
+
+Print mode is configured per event.
+
+MVP print mode options:
+
+- single vouchers
+- combined voucher
+
+There is no per-product print mode in the MVP.
+
 ## Sales Tiles
 
 Sales tiles are edited directly inside the sales terminal.

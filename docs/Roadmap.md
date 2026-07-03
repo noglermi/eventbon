@@ -54,6 +54,27 @@ Potential improvements after the MVP:
 
 These improvements should not add accounting, inventory, or POS complexity.
 
+## Milestone 3: Event Setup
+
+Goal:
+
+A user can create a usable event in less than 3 minutes.
+
+Scope:
+
+- event name
+- event date or date range
+- access and usage period concept
+- event-level print mode
+- default tile groups
+- direct tile editing in the sales terminal
+- icon or image per tile
+- price per tile
+- group assignment
+- immediate transition to selling Bons
+
+Milestone 3 keeps setup close to the sales terminal. It does not introduce a separate article management area, dashboard, accounting workflow, or cash register behavior.
+
 ## Phase 3: Payment Integrations
 
 Payment integration candidates:
