@@ -6,6 +6,8 @@ eventBon is the simplest voucher printing system for events.
 
 It helps event teams sell vouchers, calculate cash change, print vouchers in the browser, and produce a simple sales summary.
 
+eventBon is event-booking based. The customer books eventBon for a specific event and usage period instead of primarily subscribing to a generic permanent software workspace.
+
 ## Mission
 
 Sell vouchers.
@@ -37,7 +39,24 @@ eventBon is for a single event where staff sell voucher products from a simple t
 
 eventBon itself can be booked for a defined event usage period. That booking may include a preparation period, event period, post-event access period, and optional paid extension.
 
+Example:
+
+- a riding tournament organizer books eventBon for a tournament from 28.07. to 30.07.
+- before the event, the organizer configures products, groups, print mode, helpers, and access rules
+- during the active event period, Bons can be sold and printed
+- after the event, the sales terminal becomes inactive while statistics and export remain available during the post-event access period
+
 The eventBon rental payment is separate from Bon sales. eventBon does not process event visitor payments as a cash register.
+
+## Roles
+
+### Organizer
+
+The organizer books the event, pays for the eventBon usage period, defines event name, date range, print mode, products, groups, and access rules, and can invite helpers.
+
+### Helpers And Volunteers
+
+Helpers and volunteers can access only the booked event they were invited to. They can use the sales terminal for that event, cannot change booking, payment, or license data, and may have restricted permissions.
 
 ## Design Principles
 

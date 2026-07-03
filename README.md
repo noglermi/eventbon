@@ -26,7 +26,13 @@ eventBon is not:
 
 eventBon exists for event teams that need a fast, focused way to sell prepaid vouchers at a single event. The user should be able to open the sales terminal, tap sales tiles, confirm payment, print vouchers in the browser, and review a simple summary at the end.
 
+eventBon is event-booking based. A customer does not primarily subscribe to a generic permanent software account; an organizer books eventBon for a specific event and usage period. For example, a riding tournament organizer can book eventBon for a tournament from 28.07. to 30.07.
+
+The booked event is the core business object. The organizer account may own multiple booked events over time, but each event carries its own date range, access period, print active period, post-event access period, status, products, groups, and invited helpers.
+
 The product deliberately avoids back-office complexity. There is no dashboard in the MVP, no separate article management, no invoices, no receipts, no taxes, and no accounting.
+
+Stripe later handles event booking, organizer payment, paid extensions, and invoice/payment handling for the eventBon usage period. This remains separate from visitor payments and Bon sales. eventBon remains not a cash register.
 
 ## Design Principles
 

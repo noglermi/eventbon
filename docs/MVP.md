@@ -12,6 +12,8 @@ The MVP supports one active event.
 
 There is no multi-event management interface in the MVP, even though the architecture remains multi-tenant by design.
 
+The product model is still event-booking based: the active event represents a booked event with its own date range, access period, print active period, post-event access period, status, products, groups, and invited helpers. The MVP may use mock or simplified state, but the product concept is a booked event rather than a generic software workspace.
+
 ## Milestone 3: Event Setup
 
 Goal:
@@ -23,6 +25,7 @@ Setup scope:
 - event name
 - event date or date range
 - access and usage period concept
+- print active period concept
 - event-level print mode
 - default tile groups
 - direct tile editing in the sales terminal
@@ -34,6 +37,14 @@ Setup scope:
 Event setup should be short and operational. It should lead directly into the sales terminal instead of becoming a dashboard or back-office workflow.
 
 The access and usage period concept prepares the product for booked event usage and future offline license periods. It does not implement offline mode in the MVP.
+
+Before the event, the organizer may configure products and settings. Active Bon printing should only be available during the active event period or an explicitly activated usage window. After the event, the sales terminal becomes inactive while statistics and export remain available during the post-event access period.
+
+## Roles In The MVP Concept
+
+The organizer books the event, pays for the eventBon usage period, configures event settings, and can invite helpers in later milestones.
+
+Helpers and volunteers are event-scoped users. They can use the sales terminal for the booked event they were invited to, cannot change booking, payment, or license data, and may have restricted permissions.
 
 ## Event-Level Print Mode
 
@@ -116,6 +127,8 @@ After payment confirmation, eventBon prints vouchers through the browser.
 
 Printed vouchers should represent the purchased items clearly enough for event operations.
 
+Bon printing is tied to the active event period or an explicitly enabled usage window. The MVP documents this rule but does not yet implement full access enforcement.
+
 ## Simple Statistics
 
 The MVP includes simple statistics for the active event:
@@ -128,6 +141,8 @@ The MVP includes simple statistics for the active event:
 - totals by payment method
 
 Statistics should remain operational and simple.
+
+After the event period, statistics and export remain available during the defined post-event access period even when the sales terminal is inactive.
 
 ## CSV Export
 

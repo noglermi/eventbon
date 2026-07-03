@@ -14,11 +14,24 @@ Generate a simple sales summary.
 
 Nothing else.
 
+eventBon is event-booking based. The customer books eventBon for a specific event and usage period; the booked event is the core business object, not a generic permanent software workspace.
+
+Booking lifecycle:
+
+- booking or purchase
+- preparation period
+- event period
+- active Bon printing during event period
+- post-event read-only and statistics period
+- optional paid extension
+- data archived under the organizer account for a defined retention period
+
 ## Phase 1: MVP
 
 Scope:
 
 - single active event
+- event setup for a booked event
 - editable sales tiles inside the sales terminal
 - tile groups: Drinks, Food, Desserts, Other
 - shopping cart
@@ -27,6 +40,13 @@ Scope:
 - browser voucher printing
 - simple statistics
 - CSV export
+
+Conceptual access rules:
+
+- before the event, the organizer can configure products and settings
+- Bon printing is only allowed during the active event period or an explicitly activated usage window
+- after the event, the sales terminal becomes inactive
+- statistics and export remain available during the post-event access period
 
 Exclusions:
 
@@ -65,6 +85,7 @@ Scope:
 - event name
 - event date or date range
 - access and usage period concept
+- print active period concept
 - event-level print mode
 - default tile groups
 - direct tile editing in the sales terminal
@@ -74,6 +95,8 @@ Scope:
 - immediate transition to selling Bons
 
 Milestone 3 keeps setup close to the sales terminal. It does not introduce a separate article management area, dashboard, accounting workflow, or cash register behavior.
+
+The setup model prepares each event to become a booked event with organizer ownership, helper access, an active print window, post-event access, and later archiving.
 
 ## Phase 3: Payment Integrations
 
@@ -86,14 +109,14 @@ The goal is payment confirmation inside the eventBon flow while keeping the term
 
 Provider-specific setup and status handling should remain hidden from event staff during active sales whenever possible.
 
-Stripe-ready architecture must also support eventBon rental purchases separately from Bon sales. A future booking model can define:
+Stripe-ready architecture must also support eventBon event booking purchases separately from Bon sales. A future booking model can define:
 
 - preparation period
 - event period
 - post-event access period
 - optional paid extension
 
-Stripe must later be able to support duration-based access, paid extensions, renewal/extension flow, invoice/payment handling outside the Bon sales workflow, and a license activation token for future offline use.
+Stripe must later be able to support event booking, organizer payment, duration-based access, paid extensions, renewal/extension flow, invoice/payment handling outside the Bon sales workflow, and a license activation token for future offline use.
 
 eventBon must not process event visitor payments as a cash register.
 
@@ -107,6 +130,8 @@ During the booked time window, the offline version must be able to run without i
 - statistics and export remain read-only for a defined grace period
 - paid extension can reactivate access
 
+Offline license tokens must represent the booked event and its allowed usage period. The offline version must enforce preparation mode, active sales and printing mode, read-only post-event mode, expiry, and paid extension.
+
 This phase is documentation and architecture readiness only until offline mode is explicitly planned. It does not add offline mode to the MVP.
 
 ## Phase 4: Multi-Event Support
@@ -119,6 +144,8 @@ Future multi-event support may include:
 - event duplication
 - archived events
 - per-event summaries
+- organizer account with multiple booked events over time
+- helper invitations scoped to individual booked events
 
 This phase should still avoid dashboards unless a focused event selection screen becomes necessary.
 

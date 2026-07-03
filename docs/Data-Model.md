@@ -6,11 +6,13 @@ This document describes the conceptual MVP data model. It is not an implementati
 
 All persistent data belongs in Supabase.
 
+The core business object is a booked event. The organizer account may own multiple booked events over time, but each event carries its own usage period, print active period, post-event access period, status, products, groups, and helper access.
+
 ## Core Entities
 
 ### Tenant
 
-Represents an organization or operator using eventBon.
+Represents an organizer account or organization using eventBon.
 
 Suggested fields:
 
@@ -20,16 +22,54 @@ Suggested fields:
 
 ### Event
 
-Represents the active event where vouchers are sold.
+Represents a booked event where vouchers are configured, sold, printed, and later reviewed.
 
 Suggested fields:
 
 - id
 - tenant_id
 - name
+- starts_at
+- ends_at
+- preparation_starts_at
+- access_until
+- print_active_from
+- print_active_until
+- post_event_access_until
+- retention_until
+- print_mode
 - status
 - created_at
 - updated_at
+
+Suggested statuses:
+
+- booked
+- preparation
+- active
+- post_event_read_only
+- expired
+- archived
+
+Each event belongs to one organizer or tenant. Bon printing should only be allowed during the active print window or another explicitly activated usage window. Before the event, product and setting configuration may be allowed without active Bon printing. After the event, the sales terminal becomes inactive while statistics and export remain available during the post-event access period.
+
+### Event Helper Access
+
+Represents a helper or volunteer invited to a booked event.
+
+Suggested fields:
+
+- id
+- tenant_id
+- event_id
+- user_id
+- role
+- permissions
+- invited_at
+- accepted_at
+- created_at
+
+Helpers can access only the booked event they were invited to. They can use the sales terminal for that event, cannot change booking, payment, or license data, and may have restricted permissions.
 
 ### Sales Tile
 
@@ -125,8 +165,12 @@ Tenant-aware records include:
 - sales
 - sale items
 - vouchers
+- helper access records
+- access extensions
 
 Tenant separation should be enforced consistently in application logic and Supabase security policies.
+
+Event boundaries matter inside the tenant. A helper invited to one event should not automatically access another event owned by the same organizer.
 
 ## Summary Data
 
@@ -164,3 +208,7 @@ The CSV export is not an invoice, receipt, tax report, or accounting export.
 Stripe and SumUp readiness can be supported by reserving a payment reference model later.
 
 The MVP should avoid hard-coding provider details into sales records. Provider-specific data should be isolated when payment integrations are added.
+
+Stripe later handles event booking, organizer payment, paid extension, and invoice/payment handling outside the Bon sales workflow. This is separate from visitor payments and Bon sales.
+
+Offline license tokens must represent the booked event and its allowed usage period. A future offline version must enforce preparation mode, active sales and printing mode, read-only post-event mode, expiry, and paid extension.
