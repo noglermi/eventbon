@@ -97,7 +97,7 @@ function mapPersistedEvent(event: PersistedEvent): BookedEvent {
 export function OrganizerEventWorkspace() {
   const language = defaultLanguage;
   const labels = translations[language];
-  const [events, setEvents] = useState<BookedEvent[]>(mockBookedEvents);
+  const [events, setEvents] = useState<BookedEvent[]>(supabaseConfigWarning ? mockBookedEvents : []);
   const [selectedEvent, setSelectedEvent] = useState<BookedEvent | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isLoadingEvents, setIsLoadingEvents] = useState(false);
@@ -133,7 +133,7 @@ export function OrganizerEventWorkspace() {
       } catch (error) {
         if (isActive) {
           const diagnostic = logSupabaseError("load events", error);
-          setEvents(mockBookedEvents);
+          setEvents([]);
           setEventError(labels.eventLoadError + " " + labels.supabaseDiagnosticPrefix + ": " + diagnostic);
         }
       } finally {
@@ -237,8 +237,8 @@ export function OrganizerEventWorkspace() {
           <p className="rounded-lg bg-white px-4 py-3 text-base font-black text-slate-600 ring-1 ring-slate-200">{labels.loadingEvents}</p>
         ) : null}
 
-        {!isLoadingEvents && !eventError && events.length === 0 ? (
-          <p className="rounded-lg bg-white px-4 py-6 text-lg font-black text-slate-600 ring-1 ring-slate-200">{labels.noEventsFound}</p>
+        {!isLoadingEvents && events.length === 0 ? (
+          <p className="rounded-lg bg-white px-4 py-6 text-lg font-black text-slate-600 ring-1 ring-slate-200">{labels.noEvents}</p>
         ) : null}
 
         <section className="grid gap-4 md:grid-cols-2" aria-label={labels.myEvents}>
