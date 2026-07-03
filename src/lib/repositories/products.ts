@@ -1,6 +1,8 @@
 import { supabase } from "@/lib/supabase/client";
 import type { ProductTileData, TileGroupName } from "@/components/sales-terminal/types";
 
+type ProductGroupKey = "drinks" | "food" | "desserts" | "other";
+
 type ProductRow = {
   id: string;
   tenant_id: string;
@@ -26,12 +28,25 @@ type ProductSaveInput = {
 };
 
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const productImagesBucket = "product-images";
 const textColorByColor: Record<string, string> = {
   "#f8c755": "#3a2500",
   "#81d4f7": "#073447",
   "#83c57c": "#0d3213",
   "#f5a8c7": "#431022",
   "#b49af4": "#221046",
+};
+const groupToStorageKey: Record<TileGroupName, ProductGroupKey> = {
+  Drinks: "drinks",
+  Food: "food",
+  Desserts: "desserts",
+  Other: "other",
+};
+const storageKeyToGroup: Record<ProductGroupKey, TileGroupName> = {
+  drinks: "Drinks",
+  food: "Food",
+  desserts: "Desserts",
+  other: "Other",
 };
 
 function requireSupabase() {
@@ -46,12 +61,85 @@ function asNumber(value: number | string) {
   return typeof value === "number" ? value : Number(value);
 }
 
+function toProductGroupKey(group: TileGroupName) {
+  return groupToStorageKey[group];
+}
+
+function fromProductGroupKey(groupKey: string): TileGroupName {
+  return storageKeyToGroup[groupKey as ProductGroupKey] ?? "Other";
+}
+
+function safeFileName(fileName: string) {
+  return fileName
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9.\-_]+/g, "-")
+    .replace(/^-+|-+$/g, "") || "product-image";
+}
+
+async function ensureProductImagesBucket() {
+  const client = requireSupabase();
+  const { error } = await client.storage.getBucket(productImagesBucket);
+
+  if (!error) {
+    return;
+  }
+
+  const { error: createError } = await client.storage.createBucket(productImagesBucket, {
+    public: true,
+    fileSizeLimit: "5MB",
+    allowedMimeTypes: ["image/jpeg", "image/png", "image/webp"],
+  });
+
+  if (createError) {
+    throw new Error(
+      "Supabase Storage bucket product-images is not available. Create a public bucket named product-images or allow bucket creation. " + createError.message,
+    );
+  }
+}
+
+async function uploadProductImage(input: ProductSaveInput) {
+  if (!input.product.imageFile) {
+    return input.product.image ?? null;
+  }
+
+  const client = requireSupabase();
+  await ensureProductImagesBucket();
+
+  const pathId = typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : String(Date.now());
+  const storagePath = [
+    input.tenantId,
+    input.eventId,
+    pathId + "-" + safeFileName(input.product.imageFile.name),
+  ].join("/");
+
+  const { error } = await client.storage
+    .from(productImagesBucket)
+    .upload(storagePath, input.product.imageFile, {
+      cacheControl: "3600",
+      contentType: input.product.imageFile.type,
+      upsert: true,
+    });
+
+  if (error) {
+    throw error;
+  }
+
+  const { data } = client.storage.from(productImagesBucket).getPublicUrl(storagePath);
+
+  if (!data.publicUrl) {
+    throw new Error("Supabase Storage did not return a public product image URL.");
+  }
+
+  return data.publicUrl;
+}
+
 function mapProduct(row: ProductRow): ProductTileData {
   return {
     id: row.id,
     name: { de: row.name, en: row.name },
     price: row.price_cents / 100,
-    group: row.group_key as TileGroupName,
+    group: fromProductGroupKey(row.group_key),
     icon: row.icon,
     image: row.image_url ?? undefined,
     imageCrop: {
@@ -64,18 +152,19 @@ function mapProduct(row: ProductRow): ProductTileData {
   };
 }
 
-function toPayload(input: ProductSaveInput) {
+async function toPayload(input: ProductSaveInput) {
   const crop = input.product.imageCrop ?? { zoom: 1, x: 50, y: 50 };
+  const imageUrl = await uploadProductImage(input);
 
   return {
     tenant_id: input.tenantId,
     event_id: input.eventId,
     name: input.product.name.de,
     price_cents: Math.round(input.product.price * 100),
-    group_key: input.product.group,
+    group_key: toProductGroupKey(input.product.group),
     color: input.product.color,
     icon: input.product.icon ?? "⭐",
-    image_url: input.product.image ?? null,
+    image_url: imageUrl,
     image_crop_zoom: crop.zoom,
     image_crop_x: crop.x,
     image_crop_y: crop.y,
@@ -92,6 +181,7 @@ export async function listProducts(eventId: string) {
     .select("*")
     .eq("event_id", eventId)
     .eq("is_active", true)
+    .order("group_key", { ascending: true })
     .order("position", { ascending: true });
 
   if (error) {
@@ -103,7 +193,7 @@ export async function listProducts(eventId: string) {
 
 export async function saveProduct(input: ProductSaveInput) {
   const client = requireSupabase();
-  const payload = toPayload(input);
+  const payload = await toPayload(input);
   const shouldUpdate = uuidPattern.test(input.product.id);
 
   if (shouldUpdate) {

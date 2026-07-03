@@ -36,6 +36,8 @@ Scope:
 - event setup for a booked event
 - editable sales tiles inside the sales terminal
 - tile groups: Drinks, Food, Desserts, Other
+- persisted product groups and product positions
+- product images stored in Supabase Storage
 - shopping cart
 - cash change helper
 - manual card confirmation
@@ -73,7 +75,7 @@ Potential improvements after the MVP:
 - event-scoped helper invitations
 - audit-friendly sale history
 - safer CSV export options
-- improved image handling for sales tiles
+- improved image handling for sales tiles beyond the current Supabase Storage foundation
 
 These improvements should not add accounting, inventory, or POS complexity.
 

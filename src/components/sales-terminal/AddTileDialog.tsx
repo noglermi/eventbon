@@ -23,6 +23,8 @@ type IconCategory = (typeof iconCategories)[number];
 
 type ProductIcon = {
   label: string;
+  labelDe?: string;
+  labelEn?: string;
   icon: string;
   category: IconCategory;
 };
@@ -33,6 +35,10 @@ const iconLibrary: ProductIcon[] = [
   { label: "Shot", icon: "\u{1F943}", category: "Drinks" },
   { label: "Punch", icon: "\u{1F964}", category: "Drinks" },
   { label: "Bratwurst", icon: "\u{1F32D}", category: "Food" },
+  { label: "Sausage", labelDe: "W\u00fcrstel", labelEn: "Sausage", icon: "\u{1F32D}", category: "Food" },
+  { label: "Leberk\u00e4se roll", labelDe: "Leberk\u00e4ssemmel", labelEn: "Leberk\u00e4se roll", icon: "\u{1F96A}", category: "Food" },
+  { label: "Wiener schnitzel", labelDe: "Wienerschnitzel", labelEn: "Wiener schnitzel", icon: "\u{1F37D}\uFE0F", category: "Food" },
+  { label: "Cordon bleu", labelDe: "Cordon bleu", labelEn: "Cordon bleu", icon: "\u{1F37D}\uFE0F", category: "Food" },
   { label: "Hot Dog", icon: "\u{1F32D}", category: "Food" },
   { label: "Fries", icon: "\u{1F35F}", category: "Food" },
   { label: "Pizza", icon: "\u{1F355}", category: "Food" },
@@ -156,6 +162,10 @@ function getIconCategoryLabel(category: IconCategory, language: Language) {
   return labels[category][language];
 }
 
+function getProductIconLabel(item: ProductIcon, language: Language) {
+  return language === "de" ? item.labelDe ?? item.label : item.labelEn ?? item.label;
+}
+
 function IconPickerDialog({
   labels,
   language,
@@ -175,7 +185,8 @@ function IconPickerDialog({
   const filteredIconsByCategory = iconCategories.map((itemCategory) => {
     const icons = iconLibrary.filter((item) => {
       const matchesCategory = category === "all" || item.category === category;
-      const matchesQuery = !normalizedQuery || item.label.toLowerCase().includes(normalizedQuery);
+      const searchableLabels = [item.label, item.labelDe, item.labelEn].filter(Boolean).join(" ").toLowerCase();
+      const matchesQuery = !normalizedQuery || searchableLabels.includes(normalizedQuery);
       return item.category === itemCategory && matchesCategory && matchesQuery;
     });
 
@@ -241,7 +252,7 @@ function IconPickerDialog({
                     className={"flex min-h-32 flex-col items-center justify-center rounded-2xl p-4 text-center transition active:scale-[0.98] focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200 " + (selectedIcon === item.icon ? "bg-emerald-50 text-emerald-900 ring-4 ring-emerald-400" : "bg-slate-50 text-slate-700 ring-1 ring-slate-200/75")}
                   >
                     <span className="text-6xl" aria-hidden="true">{item.icon}</span>
-                    <span className="mt-3 text-sm font-black leading-tight">{item.label}</span>
+                    <span className="mt-3 text-sm font-black leading-tight">{getProductIconLabel(item, language)}</span>
                   </button>
                 ))}
               </div>
@@ -258,6 +269,7 @@ export function AddTileDialog({ tile, initialGroup, language, labels, onClose, o
   const tileColor = tile?.color ?? colors[0];
   const [selectedIcon, setSelectedIcon] = useState(tile?.icon ?? "\u2B50");
   const [imagePreview, setImagePreview] = useState(tile?.image ?? "");
+  const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
   const [imageCrop, setImageCrop] = useState<ImageCrop>(tile?.imageCrop ?? defaultImageCrop);
   const [isIconPickerOpen, setIsIconPickerOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -276,6 +288,7 @@ export function AddTileDialog({ tile, initialGroup, language, labels, onClose, o
     }
 
     setImagePreview(URL.createObjectURL(file));
+    setSelectedImageFile(file);
     setImageCrop(defaultImageCrop);
   }
 
@@ -296,6 +309,7 @@ export function AddTileDialog({ tile, initialGroup, language, labels, onClose, o
 
   function removeImage() {
     setImagePreview("");
+    setSelectedImageFile(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
@@ -313,6 +327,7 @@ export function AddTileDialog({ tile, initialGroup, language, labels, onClose, o
       group: selectedGroup,
       icon: selectedIcon,
       image: imagePreview || undefined,
+      imageFile: selectedImageFile ?? undefined,
       imageCrop,
       color: selectedColor,
       textColor: textColorByColor[selectedColor] ?? tile?.textColor ?? "#0f172a",

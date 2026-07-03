@@ -92,17 +92,26 @@ Suggested fields:
 - color
 - icon
 - image_url
-- sort_order
+- image_crop_zoom
+- image_crop_x
+- image_crop_y
+- position
 - is_active
 - created_at
 - updated_at
 
-Allowed groups:
+Product images are stored durably in Supabase Storage in the product-images bucket. The products.image_url field stores the public image URL or storage reference used by the sales terminal. Browser object URLs are only local previews and must not be treated as persistent data.
 
-- Drinks
-- Food
-- Desserts
-- Other
+The product position is persisted per event and used for stable display order. Products are loaded by group_key and then position.
+
+Allowed persisted group_key values:
+
+- drinks
+- food
+- desserts
+- other
+
+The UI may translate these keys into localized group labels such as Getränke, Speisen, Desserts, and Sonstiges.
 
 ### Sale
 

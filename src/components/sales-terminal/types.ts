@@ -18,6 +18,7 @@ export type ProductTileData = {
   group: TileGroupName;
   icon?: string;
   image?: string;
+  imageFile?: File;
   imageCrop?: ImageCrop;
   color: string;
   textColor?: string;
