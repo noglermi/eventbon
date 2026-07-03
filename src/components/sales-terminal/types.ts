@@ -22,5 +22,8 @@ export type CartItem = {
 };
 
 export type EventSettings = {
+  name: LocalizedText;
+  dateFrom: string;
+  dateTo: string;
   printMode: PrintMode;
 };

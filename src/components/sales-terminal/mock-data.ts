@@ -3,6 +3,9 @@ import type { CartItem, EventSettings, ProductTileData, TileGroupName } from "./
 export const tileGroups: TileGroupName[] = ["Drinks", "Food", "Desserts", "Other"];
 
 export const mockEventSettings: EventSettings = {
+  name: { de: "Demo Sommerfest", en: "Demo Summer Fest" },
+  dateFrom: "2026-07-18",
+  dateTo: "2026-07-18",
   printMode: "single_vouchers",
 };
 

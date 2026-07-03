@@ -10,10 +10,11 @@ type TileGroupProps = {
   labels: Translation;
   onToggle: () => void;
   onSelectProduct: (product: ProductTileData) => void;
+  onEditProduct: (product: ProductTileData) => void;
   onAddTile: (group: TileGroupName) => void;
 };
 
-export function TileGroup({ group, language, products, isOpen, labels, onToggle, onSelectProduct, onAddTile }: TileGroupProps) {
+export function TileGroup({ group, language, products, isOpen, labels, onToggle, onSelectProduct, onEditProduct, onAddTile }: TileGroupProps) {
   const groupLabel = groupLabels[group][language];
 
   return (
@@ -31,7 +32,7 @@ export function TileGroup({ group, language, products, isOpen, labels, onToggle,
       {isOpen ? (
         <div className="grid grid-cols-2 gap-4 xl:grid-cols-3 2xl:grid-cols-4">
           {products.map((product) => (
-            <ProductTile key={product.id} language={language} product={product} onSelect={onSelectProduct} />
+            <ProductTile key={product.id} language={language} product={product} editLabel={labels.edit} onSelect={onSelectProduct} onEdit={onEditProduct} />
           ))}
           <button
             type="button"
