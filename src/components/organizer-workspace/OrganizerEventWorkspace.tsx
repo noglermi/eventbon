@@ -105,7 +105,7 @@ export function OrganizerEventWorkspace() {
   }
 
   if (selectedEvent) {
-    return <SalesTerminal initialEventSettings={selectedEvent.settings} />;
+    return <SalesTerminal initialEventSettings={selectedEvent.settings} onBackToEvents={() => setSelectedEvent(null)} />;
   }
 
   return (

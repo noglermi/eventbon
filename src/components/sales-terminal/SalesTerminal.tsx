@@ -9,7 +9,7 @@ import { PaymentPanel } from "./PaymentPanel";
 import { ProductTile } from "./ProductTile";
 import { PrintModeSetting } from "./PrintModeSetting";
 import { VoucherPrintPreview } from "./VoucherPrintPreview";
-import type { CartItem, EventSettings, Language, PrintMode, ProductTileData, TileGroupName } from "./types";
+import type { CartItem, EventSettings, Language, ProductTileData, TileGroupName } from "./types";
 
 type ProductFilter = "all" | TileGroupName;
 
@@ -104,93 +104,12 @@ function formatEventDate(eventSettings: EventSettings, language: Language) {
   return formatter.format(from) + " - " + formatter.format(to);
 }
 
-function EventSetupDialog({
-  eventSettings,
-  labels,
-  language,
-  onClose,
-  onSave,
-}: {
-  eventSettings: EventSettings;
-  labels: ReturnType<typeof getLabels>;
-  language: Language;
-  onClose: () => void;
-  onSave: (eventSettings: EventSettings) => void;
-}) {
-  function saveEvent(formData: FormData) {
-    const name = String(formData.get("name") ?? "").trim() || eventSettings.name[language];
-    const dateFrom = String(formData.get("dateFrom") ?? eventSettings.dateFrom);
-    const dateToEntry = String(formData.get("dateTo") ?? "");
-    const printMode = String(formData.get("printMode") ?? eventSettings.printMode) as PrintMode;
-
-    onSave({
-      ...eventSettings,
-      name: { ...eventSettings.name, [language]: name },
-      dateFrom,
-      dateTo: dateToEntry || dateFrom,
-      printMode,
-    });
-  }
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-8 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="event-setup-title">
-      <div className="w-full max-w-2xl rounded-[2rem] bg-white p-7 shadow-2xl">
-        <div className="flex items-start justify-between gap-6">
-          <div>
-            <p className="text-sm font-bold uppercase tracking-widest text-emerald-600">{labels.activeEvent}</p>
-            <h2 id="event-setup-title" className="mt-1 text-3xl font-black tracking-normal text-slate-950">{labels.eventSetup}</h2>
-          </div>
-          <button type="button" onClick={onClose} className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-2xl font-bold text-slate-600 transition hover:bg-slate-200 focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200" aria-label={labels.closeAddTileDialog}>
-            x
-          </button>
-        </div>
-
-        <form action={saveEvent} className="mt-7 grid gap-5">
-          <label className="grid gap-2 text-sm font-bold uppercase tracking-widest text-slate-500">
-            {labels.eventName}
-            <input name="name" className="min-h-14 rounded-2xl border border-slate-200 px-4 text-xl font-bold normal-case tracking-normal text-slate-950 outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100" defaultValue={eventSettings.name[language]} />
-          </label>
-
-          <div className="grid grid-cols-2 gap-4">
-            <label className="grid gap-2 text-sm font-bold uppercase tracking-widest text-slate-500">
-              {labels.eventDateFrom}
-              <input name="dateFrom" type="date" className="min-h-14 rounded-2xl border border-slate-200 px-4 text-xl font-bold normal-case tracking-normal text-slate-950 outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100" defaultValue={eventSettings.dateFrom} />
-            </label>
-            <label className="grid gap-2 text-sm font-bold uppercase tracking-widest text-slate-500">
-              {labels.eventDateTo}
-              <input name="dateTo" type="date" className="min-h-14 rounded-2xl border border-slate-200 px-4 text-xl font-bold normal-case tracking-normal text-slate-950 outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100" defaultValue={eventSettings.dateTo} />
-            </label>
-          </div>
-
-          <fieldset className="grid gap-2">
-            <legend className="text-sm font-bold uppercase tracking-widest text-slate-500">{labels.voucherPrinting}</legend>
-            <div className="grid grid-cols-2 gap-3">
-              {(["single_vouchers", "combined_voucher"] as PrintMode[]).map((mode) => (
-                <label key={mode} className="block">
-                  <input name="printMode" type="radio" value={mode} defaultChecked={eventSettings.printMode === mode} className="peer sr-only" />
-                  <span className="flex min-h-14 items-center justify-center rounded-2xl bg-slate-50 px-4 text-lg font-black text-slate-600 ring-1 ring-slate-200/75 transition peer-checked:bg-emerald-600 peer-checked:text-white peer-focus-visible:ring-4 peer-focus-visible:ring-emerald-200">
-                    {mode === "single_vouchers" ? labels.singleVouchers : labels.combinedVoucher}
-                  </span>
-                </label>
-              ))}
-            </div>
-          </fieldset>
-
-          <div className="mt-2 flex justify-end gap-3">
-            <button type="button" onClick={onClose} className="min-h-14 rounded-2xl bg-slate-100 px-6 text-lg font-black text-slate-700 transition hover:bg-slate-200">{labels.cancel}</button>
-            <button type="submit" className="min-h-14 rounded-2xl bg-emerald-600 px-6 text-lg font-black text-white transition hover:bg-emerald-700">{labels.sellBons}</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-}
-
 type SalesTerminalProps = {
   initialEventSettings?: EventSettings;
+  onBackToEvents?: () => void;
 };
 
-export function SalesTerminal({ initialEventSettings = mockEventSettings }: SalesTerminalProps) {
+export function SalesTerminal({ initialEventSettings = mockEventSettings, onBackToEvents }: SalesTerminalProps) {
   const receivedInputRef = useRef<HTMLInputElement>(null);
   const [language, setLanguage] = useState<Language>(defaultLanguage);
   const [activeFilter, setActiveFilter] = useState<ProductFilter>("all");
@@ -198,7 +117,6 @@ export function SalesTerminal({ initialEventSettings = mockEventSettings }: Sale
   const [products, setProducts] = useState<ProductTileData[]>(productTiles);
   const [cartItems, setCartItems] = useState<CartItem[]>(initialCart);
   const [receivedEntry, setReceivedEntry] = useState("");
-  const [isEventSetupOpen, setIsEventSetupOpen] = useState(false);
   const [tileEditor, setTileEditor] = useState<{ tile: ProductTileData | null; group: TileGroupName } | null>(null);
   const [printPreviewDate, setPrintPreviewDate] = useState<Date | null>(null);
   const labels = getLabels(language);
@@ -272,11 +190,6 @@ export function SalesTerminal({ initialEventSettings = mockEventSettings }: Sale
     setTileEditor(null);
   }
 
-  function saveEvent(settings: EventSettings) {
-    setEventSettings(settings);
-    setIsEventSetupOpen(false);
-  }
-
   return (
     <main className="grid h-screen grid-rows-[5rem_minmax(0,1fr)_7rem] overflow-hidden bg-[#f6f7f5] text-slate-950">
       <header className="flex items-center justify-between border-b border-slate-200/70 bg-white/95 px-7 shadow-[0_1px_0_rgba(15,23,42,0.04)] backdrop-blur">
@@ -284,6 +197,15 @@ export function SalesTerminal({ initialEventSettings = mockEventSettings }: Sale
           <button type="button" className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100 transition active:scale-95 focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200" aria-label={labels.menu}>
             <MenuIcon />
           </button>
+          {onBackToEvents ? (
+            <button
+              type="button"
+              onClick={onBackToEvents}
+              className="min-h-12 rounded-2xl bg-slate-100 px-4 text-base font-black text-slate-700 ring-1 ring-slate-200/80 transition active:scale-[0.98] focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200"
+            >
+              ← {labels.myEvents}
+            </button>
+          ) : null}
           <div className="leading-tight">
             <p className="text-2xl font-black tracking-normal text-emerald-600">eventBon</p>
             <p className="text-sm font-semibold text-slate-500">{eventName}</p>
@@ -291,10 +213,6 @@ export function SalesTerminal({ initialEventSettings = mockEventSettings }: Sale
         </div>
 
         <div className="flex items-center gap-3">
-          <button type="button" onClick={() => setIsEventSetupOpen(true)} className="flex min-h-12 items-center gap-2 rounded-2xl bg-emerald-50 px-4 text-base font-black text-emerald-800 ring-1 ring-emerald-100 transition active:scale-[0.98] focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200">
-            <CalendarIcon />
-            {labels.editEvent}
-          </button>
           <div className="flex min-h-12 items-center rounded-2xl bg-slate-100/80 px-2 ring-1 ring-slate-200/70" aria-label={labels.language}>
             <button
               type="button"
@@ -403,10 +321,6 @@ export function SalesTerminal({ initialEventSettings = mockEventSettings }: Sale
           printedAt={printPreviewDate}
           onCancel={() => setPrintPreviewDate(null)}
         />
-      ) : null}
-
-      {isEventSetupOpen ? (
-        <EventSetupDialog eventSettings={eventSettings} labels={labels} language={language} onClose={() => setIsEventSetupOpen(false)} onSave={saveEvent} />
       ) : null}
 
       {tileEditor ? (
