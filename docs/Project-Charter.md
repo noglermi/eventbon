@@ -35,6 +35,10 @@ The product must not drift into general point-of-sale, finance, stock, restauran
 
 eventBon is for a single event where staff sell voucher products from a simple terminal. A voucher product can represent a drink, food item, dessert, or other event item. Staff build a cart, confirm the payment method, print vouchers, and continue serving the next guest.
 
+eventBon itself can be booked for a defined event usage period. That booking may include a preparation period, event period, post-event access period, and optional paid extension.
+
+The eventBon rental payment is separate from Bon sales. eventBon does not process event visitor payments as a cash register.
+
 ## Design Principles
 
 ### Simple for the User
@@ -48,6 +52,8 @@ The system should remain small in the interface while being prepared for multi-t
 ### Invisible Complexity
 
 Tenant separation, storage, deployment, permissions, and payment readiness belong in the architecture. They should not make the selling flow harder.
+
+Future offline readiness also belongs in the architecture. If an offline-capable version is introduced, the booked usage period must be represented as a local license period so the app can run without internet during the booked time window. After expiry, sales access should stop while statistics and export can remain read-only for a defined grace period.
 
 ## Scope Control
 

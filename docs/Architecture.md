@@ -74,6 +74,38 @@ Deployment should remain simple:
 - production deployment on Vercel
 - preview deployments for validation
 
+## Event Booking And Usage Period
+
+eventBon can be booked for a defined event usage period.
+
+The booking defines:
+
+- preparation period
+- event period
+- post-event access period
+- optional paid extension
+
+The booked usage period controls access to eventBon as a product rental. It does not change the Bon sales workflow and does not make eventBon a cash register for event visitor payments.
+
+## Future Offline License Period
+
+For a future offline-capable version, the booked usage period must also be represented as a local license period.
+
+The offline version must be able to run without internet during the booked time window. The local license period should cover the same access phases as the online booking:
+
+- preparation period
+- event period
+- post-event access period
+- optional paid extension
+
+After the local license expires:
+
+- sales terminal becomes inactive
+- statistics and export remain read-only for a defined grace period
+- paid extension can reactivate access
+
+This is an architectural readiness requirement only. The MVP does not implement offline mode or local license enforcement.
+
 ## Payment Readiness
 
 The MVP supports:
@@ -87,6 +119,17 @@ The architecture must remain ready for:
 - SumUp
 
 Payment providers should be modeled as replaceable adapters. The sales terminal should not depend directly on provider-specific logic.
+
+Stripe readiness is for eventBon rental and account access, separate from Bon sales. Stripe must later support:
+
+- event rental purchase
+- duration-based access
+- paid extension
+- license activation token for offline use
+- renewal/extension flow
+- invoice/payment handling outside the Bon sales workflow
+
+eventBon still does not process event visitor payments as a cash register.
 
 ## Printing
 
