@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import { createEvent, listEvents } from "@/lib/repositories/events";
+import { logSupabaseError } from "@/lib/supabase/diagnostics";
 import { supabaseConfigWarning } from "@/lib/supabase/client";
 import { SalesTerminal } from "@/components/sales-terminal/SalesTerminal";
 import { defaultLanguage, translations } from "@/components/sales-terminal/i18n";
@@ -100,7 +101,7 @@ export function OrganizerEventWorkspace() {
   const [selectedEvent, setSelectedEvent] = useState<BookedEvent | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isLoadingEvents, setIsLoadingEvents] = useState(false);
-  const [eventError, setEventError] = useState<string | null>(supabaseConfigWarning ? labels.mockFallbackWarning : null);
+  const [eventError, setEventError] = useState<string | null>(supabaseConfigWarning ? labels.mockFallbackWarning + " " + supabaseConfigWarning : null);
 
   const statusLabels: Record<BookedEventStatus, string> = {
     draft: labels.statusPreparation,
@@ -117,6 +118,7 @@ export function OrganizerEventWorkspace() {
 
     async function loadEvents() {
       if (supabaseConfigWarning) {
+        console.warn(labels.supabaseDiagnosticPrefix + ": " + supabaseConfigWarning);
         return;
       }
 
@@ -128,10 +130,11 @@ export function OrganizerEventWorkspace() {
         if (isActive) {
           setEvents(loadedEvents.map(mapPersistedEvent));
         }
-      } catch {
+      } catch (error) {
         if (isActive) {
+          const diagnostic = logSupabaseError("load events", error);
           setEvents(mockBookedEvents);
-          setEventError(labels.eventLoadError);
+          setEventError(labels.eventLoadError + " " + labels.supabaseDiagnosticPrefix + ": " + diagnostic);
         }
       } finally {
         if (isActive) {
@@ -145,7 +148,7 @@ export function OrganizerEventWorkspace() {
     return () => {
       isActive = false;
     };
-  }, [labels.eventLoadError]);
+  }, [labels.eventLoadError, labels.supabaseDiagnosticPrefix]);
 
   async function createBookedEvent(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -166,8 +169,9 @@ export function OrganizerEventWorkspace() {
         setSelectedEvent(bookedEvent);
         return;
       }
-    } catch {
-      setEventError(labels.saveError);
+    } catch (error) {
+      const diagnostic = logSupabaseError("create event", error);
+      setEventError(labels.saveError + " " + labels.supabaseDiagnosticPrefix + ": " + diagnostic);
     }
 
     const bookedEvent: BookedEvent = {
@@ -231,6 +235,10 @@ export function OrganizerEventWorkspace() {
 
         {isLoadingEvents ? (
           <p className="rounded-lg bg-white px-4 py-3 text-base font-black text-slate-600 ring-1 ring-slate-200">{labels.loadingEvents}</p>
+        ) : null}
+
+        {!isLoadingEvents && !eventError && events.length === 0 ? (
+          <p className="rounded-lg bg-white px-4 py-6 text-lg font-black text-slate-600 ring-1 ring-slate-200">{labels.noEventsFound}</p>
         ) : null}
 
         <section className="grid gap-4 md:grid-cols-2" aria-label={labels.myEvents}>

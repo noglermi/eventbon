@@ -68,6 +68,27 @@ function mapEvent(row: EventRow): Event {
 }
 
 async function getOrCreateTenantId() {
+  const tenantId = await getFirstTenantId();
+
+  if (tenantId) {
+    return tenantId;
+  }
+
+  const client = requireSupabase();
+  const { data: tenant, error: insertError } = await client
+    .from("tenants")
+    .insert({ name: defaultOrganizerName })
+    .select("id")
+    .single();
+
+  if (insertError) {
+    throw insertError;
+  }
+
+  return String(tenant.id);
+}
+
+async function getFirstTenantId() {
   const client = requireSupabase();
   const { data: existingTenants, error: selectError } = await client
     .from("tenants")
@@ -83,22 +104,17 @@ async function getOrCreateTenantId() {
     return String(existingTenants[0].id);
   }
 
-  const { data: tenant, error: insertError } = await client
-    .from("tenants")
-    .insert({ name: defaultOrganizerName })
-    .select("id")
-    .single();
-
-  if (insertError) {
-    throw insertError;
-  }
-
-  return String(tenant.id);
+  return null;
 }
 
 export async function listEvents() {
   const client = requireSupabase();
-  const tenantId = await getOrCreateTenantId();
+  const tenantId = await getFirstTenantId();
+
+  if (!tenantId) {
+    return [];
+  }
+
   const { data, error } = await client
     .from("events")
     .select("*")

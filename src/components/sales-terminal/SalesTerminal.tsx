@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { listProducts, saveProduct } from "@/lib/repositories/products";
 import { updateEventBasics } from "@/lib/repositories/events";
+import { logSupabaseError } from "@/lib/supabase/diagnostics";
 import { supabaseConfigWarning } from "@/lib/supabase/client";
 import { AddTileDialog } from "./AddTileDialog";
 import { Cart } from "./Cart";
@@ -135,7 +136,7 @@ export function SalesTerminal({
   const [cartItems, setCartItems] = useState<CartItem[]>(initialCart);
   const [receivedEntry, setReceivedEntry] = useState("");
   const [isLoadingProducts, setIsLoadingProducts] = useState(false);
-  const [persistenceMessage, setPersistenceMessage] = useState<string | null>(supabaseConfigWarning ? translations[defaultLanguage].mockFallbackWarning : null);
+  const [persistenceMessage, setPersistenceMessage] = useState<string | null>(supabaseConfigWarning ? translations[defaultLanguage].mockFallbackWarning + " " + supabaseConfigWarning : null);
   const [tileEditor, setTileEditor] = useState<{ tile: ProductTileData | null; group: TileGroupName } | null>(null);
   const [printPreviewDate, setPrintPreviewDate] = useState<Date | null>(null);
   const labels = getLabels(language);
@@ -150,6 +151,9 @@ export function SalesTerminal({
 
     async function loadEventProducts() {
       if (!eventId || supabaseConfigWarning) {
+        if (supabaseConfigWarning) {
+          console.warn(labels.supabaseDiagnosticPrefix + ": " + supabaseConfigWarning);
+        }
         setProducts(productTiles);
         return;
       }
@@ -162,10 +166,11 @@ export function SalesTerminal({
         if (isActive) {
           setProducts(loadedProducts);
         }
-      } catch {
+      } catch (error) {
         if (isActive) {
+          const diagnostic = logSupabaseError("load products", error);
           setProducts(productTiles);
-          setPersistenceMessage(labels.productLoadError);
+          setPersistenceMessage(labels.productLoadError + " " + labels.supabaseDiagnosticPrefix + ": " + diagnostic);
         }
       } finally {
         if (isActive) {
@@ -179,7 +184,7 @@ export function SalesTerminal({
     return () => {
       isActive = false;
     };
-  }, [eventId, labels.productLoadError]);
+  }, [eventId, labels.productLoadError, labels.supabaseDiagnosticPrefix]);
 
   const productsById = useMemo(
     () => new Map(products.map((product) => [product.id, product])),
@@ -245,8 +250,9 @@ export function SalesTerminal({
         const existingPosition = products.findIndex((product) => product.id === tile.id);
         savedTile = await saveProduct({ tenantId, eventId, product: tile, position: existingPosition >= 0 ? existingPosition : products.length });
         setPersistenceMessage(null);
-      } catch {
-        setPersistenceMessage(labels.saveError);
+      } catch (error) {
+        const diagnostic = logSupabaseError("save product", error);
+        setPersistenceMessage(labels.saveError + " " + labels.supabaseDiagnosticPrefix + ": " + diagnostic);
         return;
       }
     }
@@ -279,8 +285,9 @@ export function SalesTerminal({
       });
       onEventUpdated?.(updatedEvent);
       setPersistenceMessage(null);
-    } catch {
-      setPersistenceMessage(labels.saveError);
+    } catch (error) {
+      const diagnostic = logSupabaseError("update event basics", error);
+      setPersistenceMessage(labels.saveError + " " + labels.supabaseDiagnosticPrefix + ": " + diagnostic);
     }
   }
 
