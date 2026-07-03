@@ -16,7 +16,7 @@ type AddTileDialogProps = {
 };
 
 const colors = ["#f8c755", "#81d4f7", "#83c57c", "#f5a8c7", "#b49af4"];
-const iconCategories = ["Drinks", "Food", "Desserts", "Snacks", "Coffee", "Wine", "Beer", "Soft drinks", "Miscellaneous"] as const;
+const iconCategories = ["Drinks", "Food", "Desserts", "Coffee", "Wine", "Beer", "Soft drinks", "Other"] as const;
 
 type IconCategory = (typeof iconCategories)[number];
 
@@ -27,55 +27,56 @@ type ProductIcon = {
 };
 
 const iconLibrary: ProductIcon[] = [
-  { label: "Beer", icon: "🍺", category: "Beer" },
-  { label: "Radler", icon: "🍻", category: "Beer" },
-  { label: "Pils", icon: "🍺", category: "Beer" },
-  { label: "Cola", icon: "🥤", category: "Soft drinks" },
-  { label: "Fanta", icon: "🟠", category: "Soft drinks" },
-  { label: "Sprite", icon: "🟢", category: "Soft drinks" },
-  { label: "Water", icon: "💧", category: "Soft drinks" },
-  { label: "Lemonade", icon: "🍋", category: "Soft drinks" },
-  { label: "Juice", icon: "🧃", category: "Soft drinks" },
-  { label: "Wine", icon: "🍷", category: "Wine" },
-  { label: "Red Wine", icon: "🍷", category: "Wine" },
-  { label: "White Wine", icon: "🥂", category: "Wine" },
-  { label: "Spritzer", icon: "🍾", category: "Wine" },
-  { label: "Champagne", icon: "🥂", category: "Wine" },
-  { label: "Coffee", icon: "☕", category: "Coffee" },
-  { label: "Espresso", icon: "☕", category: "Coffee" },
-  { label: "Cappuccino", icon: "☕", category: "Coffee" },
-  { label: "Tea", icon: "🫖", category: "Coffee" },
-  { label: "Fries", icon: "🍟", category: "Snacks" },
-  { label: "Bratwurst", icon: "🌭", category: "Food" },
-  { label: "Hot Dog", icon: "🌭", category: "Food" },
-  { label: "Pizza", icon: "🍕", category: "Food" },
-  { label: "Pizza Salami", icon: "🍕", category: "Food" },
-  { label: "Pizza Margherita", icon: "🍕", category: "Food" },
-  { label: "Toast", icon: "🥪", category: "Snacks" },
-  { label: "Pretzel", icon: "🥨", category: "Snacks" },
-  { label: "Cake", icon: "🍰", category: "Desserts" },
-  { label: "Ice Cream", icon: "🍦", category: "Desserts" },
-  { label: "Apple Strudel", icon: "🥧", category: "Desserts" },
-  { label: "Soup", icon: "🍲", category: "Food" },
-  { label: "Burger", icon: "🍔", category: "Food" },
-  { label: "Salad", icon: "🥗", category: "Food" },
-  { label: "Fish", icon: "🐟", category: "Food" },
-  { label: "Vegan", icon: "🌱", category: "Food" },
-  { label: "Schnitzel", icon: "🍽️", category: "Food" },
-  { label: "Kebab", icon: "🥙", category: "Food" },
-  { label: "Taco", icon: "🌮", category: "Food" },
-  { label: "Popcorn", icon: "🍿", category: "Snacks" },
-  { label: "Chips", icon: "🥔", category: "Snacks" },
-  { label: "Chocolate", icon: "🍫", category: "Desserts" },
-  { label: "Muffin", icon: "🧁", category: "Desserts" },
-  { label: "Donut", icon: "🍩", category: "Desserts" },
-  { label: "Token", icon: "🎟️", category: "Miscellaneous" },
-  { label: "Donation", icon: "⭐", category: "Miscellaneous" },
-  { label: "Merch", icon: "🛍️", category: "Miscellaneous" },
-  { label: "Special", icon: "✨", category: "Miscellaneous" },
-  { label: "Cocktail", icon: "🍹", category: "Drinks" },
-  { label: "Long Drink", icon: "🍸", category: "Drinks" },
-  { label: "Shot", icon: "🥃", category: "Drinks" },
+  { label: "Cocktail", icon: "\u{1F379}", category: "Drinks" },
+  { label: "Long Drink", icon: "\u{1F378}", category: "Drinks" },
+  { label: "Shot", icon: "\u{1F943}", category: "Drinks" },
+  { label: "Punch", icon: "\u{1F964}", category: "Drinks" },
+  { label: "Bratwurst", icon: "\u{1F32D}", category: "Food" },
+  { label: "Hot Dog", icon: "\u{1F32D}", category: "Food" },
+  { label: "Fries", icon: "\u{1F35F}", category: "Food" },
+  { label: "Pizza", icon: "\u{1F355}", category: "Food" },
+  { label: "Pizza Salami", icon: "\u{1F355}", category: "Food" },
+  { label: "Pizza Margherita", icon: "\u{1F355}", category: "Food" },
+  { label: "Toast", icon: "\u{1F96A}", category: "Food" },
+  { label: "Pretzel", icon: "\u{1F968}", category: "Food" },
+  { label: "Soup", icon: "\u{1F372}", category: "Food" },
+  { label: "Burger", icon: "\u{1F354}", category: "Food" },
+  { label: "Salad", icon: "\u{1F957}", category: "Food" },
+  { label: "Fish", icon: "\u{1F41F}", category: "Food" },
+  { label: "Vegan", icon: "\u{1F331}", category: "Food" },
+  { label: "Schnitzel", icon: "\u{1F37D}\uFE0F", category: "Food" },
+  { label: "Kebab", icon: "\u{1F959}", category: "Food" },
+  { label: "Taco", icon: "\u{1F32E}", category: "Food" },
+  { label: "Cake", icon: "\u{1F370}", category: "Desserts" },
+  { label: "Ice Cream", icon: "\u{1F366}", category: "Desserts" },
+  { label: "Apple Strudel", icon: "\u{1F967}", category: "Desserts" },
+  { label: "Chocolate", icon: "\u{1F36B}", category: "Desserts" },
+  { label: "Muffin", icon: "\u{1F9C1}", category: "Desserts" },
+  { label: "Donut", icon: "\u{1F369}", category: "Desserts" },
+  { label: "Coffee", icon: "\u2615", category: "Coffee" },
+  { label: "Espresso", icon: "\u2615", category: "Coffee" },
+  { label: "Cappuccino", icon: "\u2615", category: "Coffee" },
+  { label: "Tea", icon: "\u{1FAD6}", category: "Coffee" },
+  { label: "Wine", icon: "\u{1F377}", category: "Wine" },
+  { label: "Red Wine", icon: "\u{1F377}", category: "Wine" },
+  { label: "White Wine", icon: "\u{1F942}", category: "Wine" },
+  { label: "Spritzer", icon: "\u{1F37E}", category: "Wine" },
+  { label: "Champagne", icon: "\u{1F942}", category: "Wine" },
+  { label: "Beer", icon: "\u{1F37A}", category: "Beer" },
+  { label: "Radler", icon: "\u{1F37B}", category: "Beer" },
+  { label: "Pils", icon: "\u{1F37A}", category: "Beer" },
+  { label: "Cola", icon: "\u{1F964}", category: "Soft drinks" },
+  { label: "Fanta", icon: "\u{1F7E0}", category: "Soft drinks" },
+  { label: "Sprite", icon: "\u{1F7E2}", category: "Soft drinks" },
+  { label: "Water", icon: "\u{1F4A7}", category: "Soft drinks" },
+  { label: "Lemonade", icon: "\u{1F34B}", category: "Soft drinks" },
+  { label: "Juice", icon: "\u{1F9C3}", category: "Soft drinks" },
+  { label: "Popcorn", icon: "\u{1F37F}", category: "Other" },
+  { label: "Chips", icon: "\u{1F954}", category: "Other" },
+  { label: "Token", icon: "\u{1F39F}\uFE0F", category: "Other" },
+  { label: "Donation", icon: "\u2B50", category: "Other" },
+  { label: "Merch", icon: "\u{1F6CD}\uFE0F", category: "Other" },
+  { label: "Special", icon: "\u2728", category: "Other" },
 ];
 
 const textColorByColor: Record<string, string> = {
@@ -95,13 +96,30 @@ function isAcceptedImage(file: File) {
   return ["image/jpeg", "image/png", "image/webp"].includes(file.type);
 }
 
+function getIconCategoryLabel(category: IconCategory, language: Language) {
+  const labels: Record<IconCategory, Record<Language, string>> = {
+    Drinks: { de: "Getr\u00e4nke", en: "Drinks" },
+    Food: { de: "Essen", en: "Food" },
+    Desserts: { de: "Desserts", en: "Desserts" },
+    Coffee: { de: "Kaffee", en: "Coffee" },
+    Wine: { de: "Wein", en: "Wine" },
+    Beer: { de: "Bier", en: "Beer" },
+    "Soft drinks": { de: "Alkoholfrei", en: "Soft drinks" },
+    Other: { de: "Sonstiges", en: "Other" },
+  };
+
+  return labels[category][language];
+}
+
 function IconPickerDialog({
   labels,
+  language,
   selectedIcon,
   onClose,
   onSelect,
 }: {
   labels: Translation;
+  language: Language;
   selectedIcon: string;
   onClose: () => void;
   onSelect: (icon: string) => void;
@@ -109,15 +127,24 @@ function IconPickerDialog({
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<IconCategory | "all">("all");
   const normalizedQuery = query.trim().toLowerCase();
-  const filteredIcons = iconLibrary.filter((item) => {
-    const matchesCategory = category === "all" || item.category === category;
-    const matchesQuery = !normalizedQuery || item.label.toLowerCase().includes(normalizedQuery);
-    return matchesCategory && matchesQuery;
-  });
+  const filteredIconsByCategory = iconCategories.map((itemCategory) => {
+    const icons = iconLibrary.filter((item) => {
+      const matchesCategory = category === "all" || item.category === category;
+      const matchesQuery = !normalizedQuery || item.label.toLowerCase().includes(normalizedQuery);
+      return item.category === itemCategory && matchesCategory && matchesQuery;
+    });
+
+    return { category: itemCategory, icons };
+  }).filter((group) => group.icons.length > 0);
+
+  function chooseIcon(icon: string) {
+    onSelect(icon);
+    onClose();
+  }
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/60 p-7 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="icon-picker-title">
-      <div className="flex h-[86vh] w-full max-w-5xl flex-col overflow-hidden rounded-[2rem] bg-white shadow-2xl">
+      <div className="flex h-[86vh] w-full max-w-6xl flex-col overflow-hidden rounded-[2rem] bg-white shadow-2xl">
         <div className="shrink-0 border-b border-slate-100 p-7">
           <div className="flex items-start justify-between gap-6">
             <div>
@@ -149,27 +176,32 @@ function IconPickerDialog({
                   onClick={() => setCategory(item)}
                   className={"min-h-12 shrink-0 rounded-2xl px-5 text-base font-black transition focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200 " + (category === item ? "bg-emerald-600 text-white" : "bg-slate-50 text-slate-600 ring-1 ring-slate-200/75")}
                 >
-                  {item}
+                  {getIconCategoryLabel(item, language)}
                 </button>
               ))}
             </div>
           </div>
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto p-7">
-          <div className="grid grid-cols-3 gap-4 md:grid-cols-4 xl:grid-cols-6">
-            {filteredIcons.map((item) => (
-              <button
-                key={item.label}
-                type="button"
-                onClick={() => onSelect(item.icon)}
-                className={"flex min-h-28 flex-col items-center justify-center rounded-2xl p-4 text-center transition active:scale-[0.98] focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200 " + (selectedIcon === item.icon ? "bg-emerald-50 text-emerald-900 ring-4 ring-emerald-300" : "bg-slate-50 text-slate-700 ring-1 ring-slate-200/75")}
-              >
-                <span className="text-5xl" aria-hidden="true">{item.icon}</span>
-                <span className="mt-3 text-sm font-black leading-tight">{item.label}</span>
-              </button>
-            ))}
-          </div>
+        <div className="min-h-0 flex-1 space-y-8 overflow-y-auto p-7">
+          {filteredIconsByCategory.map((group) => (
+            <section key={group.category} className="space-y-4" aria-label={getIconCategoryLabel(group.category, language)}>
+              <h4 className="text-2xl font-black tracking-normal text-slate-950">{getIconCategoryLabel(group.category, language)}</h4>
+              <div className="grid grid-cols-3 gap-4 md:grid-cols-4 xl:grid-cols-6">
+                {group.icons.map((item) => (
+                  <button
+                    key={item.category + item.label}
+                    type="button"
+                    onClick={() => chooseIcon(item.icon)}
+                    className={"flex min-h-32 flex-col items-center justify-center rounded-2xl p-4 text-center transition active:scale-[0.98] focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200 " + (selectedIcon === item.icon ? "bg-emerald-50 text-emerald-900 ring-4 ring-emerald-400" : "bg-slate-50 text-slate-700 ring-1 ring-slate-200/75")}
+                  >
+                    <span className="text-6xl" aria-hidden="true">{item.icon}</span>
+                    <span className="mt-3 text-sm font-black leading-tight">{item.label}</span>
+                  </button>
+                ))}
+              </div>
+            </section>
+          ))}
         </div>
       </div>
     </div>
@@ -179,7 +211,7 @@ function IconPickerDialog({
 export function AddTileDialog({ tile, initialGroup, language, labels, onClose, onSave }: AddTileDialogProps) {
   const group = tile?.group ?? initialGroup;
   const tileColor = tile?.color ?? colors[0];
-  const [selectedIcon, setSelectedIcon] = useState(tile?.icon ?? "⭐");
+  const [selectedIcon, setSelectedIcon] = useState(tile?.icon ?? "\u2B50");
   const [imagePreview, setImagePreview] = useState(tile?.image ?? "");
   const [isIconPickerOpen, setIsIconPickerOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -211,6 +243,13 @@ export function AddTileDialog({ tile, initialGroup, language, labels, onClose, o
     const file = event.dataTransfer.files[0];
     if (file) {
       applyImageFile(file);
+    }
+  }
+
+  function removeImage() {
+    setImagePreview("");
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
     }
   }
 
@@ -287,16 +326,39 @@ export function AddTileDialog({ tile, initialGroup, language, labels, onClose, o
           <div className="grid gap-2">
             <span className="text-sm font-bold uppercase tracking-widest text-slate-500">{labels.image}</span>
             <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={handleFileChange} className="sr-only" />
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              onDragOver={(event) => event.preventDefault()}
-              onDrop={handleImageDrop}
-              className="flex min-h-36 flex-col items-center justify-center gap-3 rounded-3xl border-2 border-dashed border-slate-300 bg-slate-50 px-5 text-center text-lg font-black text-slate-500 transition active:scale-[0.99] focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200"
-            >
-              <span>{labels.dragImageHereOrClick}</span>
-              <span className="text-sm font-bold uppercase tracking-widest text-slate-400">jpg, png, webp</span>
-            </button>
+            {imagePreview ? (
+              <div className="grid gap-3">
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  onDragOver={(event) => event.preventDefault()}
+                  onDrop={handleImageDrop}
+                  className="flex min-h-44 items-center justify-center rounded-3xl border border-slate-200 bg-slate-50 px-5 transition active:scale-[0.99] focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={imagePreview} alt="" className="max-h-36 max-w-full object-contain" />
+                </button>
+                <div className="grid grid-cols-2 gap-3">
+                  <button type="button" onClick={() => fileInputRef.current?.click()} className="min-h-14 rounded-2xl bg-slate-100 px-5 text-lg font-black text-slate-700 transition active:scale-[0.98] focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200">
+                    {labels.changeImage}
+                  </button>
+                  <button type="button" onClick={removeImage} className="min-h-14 rounded-2xl bg-rose-50 px-5 text-lg font-black text-rose-700 ring-1 ring-rose-100 transition active:scale-[0.98] focus:outline-none focus-visible:ring-4 focus-visible:ring-rose-200">
+                    {labels.removeImage}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                onDragOver={(event) => event.preventDefault()}
+                onDrop={handleImageDrop}
+                className="flex min-h-44 flex-col items-center justify-center gap-3 rounded-3xl border-2 border-dashed border-slate-300 bg-slate-50 px-5 text-center text-lg font-black text-slate-500 transition active:scale-[0.99] focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200"
+              >
+                <span>{labels.dragImageHereOrClick}</span>
+                <span className="text-sm font-bold uppercase tracking-widest text-slate-400">jpg, png, webp</span>
+              </button>
+            )}
           </div>
 
           <div className="grid gap-2">
@@ -320,11 +382,11 @@ export function AddTileDialog({ tile, initialGroup, language, labels, onClose, o
         {isIconPickerOpen ? (
           <IconPickerDialog
             labels={labels}
+            language={language}
             selectedIcon={selectedIcon}
             onClose={() => setIsIconPickerOpen(false)}
             onSelect={(icon) => {
               setSelectedIcon(icon);
-              setIsIconPickerOpen(false);
             }}
           />
         ) : null}
