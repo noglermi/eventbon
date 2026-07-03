@@ -24,23 +24,23 @@ export function ProductTile({ language, product, editLabel, onSelect, onEdit }: 
 
   return (
     <article
-      className="grid min-h-40 grid-rows-[1fr_auto] overflow-hidden rounded-[1.75rem] border border-slate-200/75 bg-white text-center shadow-[0_12px_32px_rgba(15,23,42,0.06)]"
+      className="grid min-h-52 grid-rows-[1fr_auto] overflow-hidden rounded-[1.75rem] border border-slate-200/75 bg-white text-center shadow-[0_12px_32px_rgba(15,23,42,0.06)]"
       style={{ backgroundColor: product.color, color: product.textColor ?? "#0f172a" }}
     >
       <button
         type="button"
         onClick={() => onSelect(product)}
-        className="flex min-h-32 flex-col items-center justify-center p-5 transition active:scale-[0.98] focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200"
+        className="flex min-h-40 flex-col items-center justify-center p-4 transition active:scale-[0.98] focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200"
       >
-        <span className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-[1.5rem] bg-white/85 text-5xl ring-1 ring-black/5">
+        <span className={"flex items-center justify-center overflow-hidden rounded-[1.5rem] bg-white/85 ring-1 ring-black/5 " + (product.image ? "h-28 w-full" : "h-20 w-20 text-5xl")}>
           {product.image ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={product.image} alt="" className="h-12 w-12 object-contain" />
+            <img src={product.image} alt="" className="h-full w-full object-cover object-center" />
           ) : (
             <span aria-hidden="true">{product.icon}</span>
           )}
         </span>
-        <span className="mt-5 block text-xl font-black leading-tight tracking-tight">{productName}</span>
+        <span className="mt-4 block text-xl font-black leading-tight tracking-tight">{productName}</span>
         <span className="mt-1.5 block text-base font-bold tabular-nums opacity-80">{currency.format(product.price)}</span>
       </button>
       <button

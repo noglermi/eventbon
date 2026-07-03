@@ -333,10 +333,10 @@ export function AddTileDialog({ tile, initialGroup, language, labels, onClose, o
                   onClick={() => fileInputRef.current?.click()}
                   onDragOver={(event) => event.preventDefault()}
                   onDrop={handleImageDrop}
-                  className="flex min-h-44 items-center justify-center rounded-3xl border border-slate-200 bg-slate-50 px-5 transition active:scale-[0.99] focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200"
+                  className="flex min-h-56 items-center justify-center overflow-hidden rounded-3xl border border-slate-200 bg-slate-50 transition active:scale-[0.99] focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200"
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={imagePreview} alt="" className="max-h-36 max-w-full object-contain" />
+                  <img src={imagePreview} alt="" className="h-56 w-full object-cover object-center" />
                 </button>
                 <div className="grid grid-cols-2 gap-3">
                   <button type="button" onClick={() => fileInputRef.current?.click()} className="min-h-14 rounded-2xl bg-slate-100 px-5 text-lg font-black text-slate-700 transition active:scale-[0.98] focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200">
@@ -363,10 +363,10 @@ export function AddTileDialog({ tile, initialGroup, language, labels, onClose, o
 
           <div className="grid gap-2">
             <span className="text-sm font-bold uppercase tracking-widest text-slate-500">{labels.preview}</span>
-            <div className="flex min-h-32 items-center justify-center rounded-3xl border border-slate-200 bg-slate-50 px-4">
+            <div className="flex min-h-44 items-center justify-center overflow-hidden rounded-3xl border border-slate-200 bg-slate-50">
               {imagePreview ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={imagePreview} alt="" className="max-h-24 max-w-40 object-contain" />
+                <img src={imagePreview} alt="" className="h-44 w-full object-cover object-center" />
               ) : (
                 <span className="flex h-20 w-20 items-center justify-center rounded-2xl bg-white text-5xl ring-1 ring-slate-200/75" aria-hidden="true">{selectedIcon}</span>
               )}
