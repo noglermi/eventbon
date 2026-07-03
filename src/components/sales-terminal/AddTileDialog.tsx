@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import type { ChangeEvent, DragEvent } from "react";
+import type { ChangeEvent, DragEvent, FormEvent } from "react";
 import type { Translation } from "./i18n";
 import { groupLabels } from "./i18n";
 import type { ImageCrop, Language, ProductTileData, TileGroupName } from "./types";
@@ -12,7 +12,13 @@ type AddTileDialogProps = {
   language: Language;
   labels: Translation;
   onClose: () => void;
-  onSave: (tile: ProductTileData) => void;
+  onSave: (tile: ProductTileData) => Promise<ProductSaveResult>;
+};
+
+type ProductSaveResult = {
+  diagnostic?: string;
+  message?: string;
+  ok: boolean;
 };
 
 const colors = ["#f8c755", "#81d4f7", "#83c57c", "#f5a8c7", "#b49af4"];
@@ -272,6 +278,8 @@ export function AddTileDialog({ tile, initialGroup, language, labels, onClose, o
   const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
   const [imageCrop, setImageCrop] = useState<ImageCrop>(tile?.imageCrop ?? defaultImageCrop);
   const [isIconPickerOpen, setIsIconPickerOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<ProductSaveResult | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   if (!group) {
@@ -283,10 +291,26 @@ export function AddTileDialog({ tile, initialGroup, language, labels, onClose, o
   const hasCustomCrop = !isDefaultCrop(imageCrop);
 
   function applyImageFile(file: File) {
+    console.info("Product image selected", {
+      name: file.name,
+      size: file.size,
+      type: file.type,
+    });
+
     if (!isAcceptedImage(file)) {
+      console.error("Product image rejected because the file type is not supported", {
+        name: file.name,
+        type: file.type,
+      });
+      setSaveError({
+        diagnostic: "Unsupported image type: " + file.type,
+        message: labels.imageUploadError,
+        ok: false,
+      });
       return;
     }
 
+    setSaveError(null);
     setImagePreview(URL.createObjectURL(file));
     setSelectedImageFile(file);
     setImageCrop(defaultImageCrop);
@@ -315,23 +339,48 @@ export function AddTileDialog({ tile, initialGroup, language, labels, onClose, o
     }
   }
 
-  function saveTile(formData: FormData) {
+  async function saveTile(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (isSaving) {
+      return;
+    }
+
+    setIsSaving(true);
+    setSaveError(null);
+    const formData = new FormData(event.currentTarget);
     const name = String(formData.get("name") ?? "").trim() || labels.newProduct;
     const selectedGroup = String(formData.get("group") ?? group) as TileGroupName;
     const selectedColor = String(formData.get("color") ?? tileColor);
 
-    onSave({
-      id: tile?.id ?? "tile-" + Date.now(),
-      name: tile ? { ...tile.name, [language]: name } : { de: name, en: name },
-      price: parsePrice(String(formData.get("price") ?? "0")),
-      group: selectedGroup,
-      icon: selectedIcon,
-      image: imagePreview || undefined,
-      imageFile: selectedImageFile ?? undefined,
-      imageCrop,
-      color: selectedColor,
-      textColor: textColorByColor[selectedColor] ?? tile?.textColor ?? "#0f172a",
-    });
+    try {
+      const result = await onSave({
+        id: tile?.id ?? "tile-" + Date.now(),
+        name: tile ? { ...tile.name, [language]: name } : { de: name, en: name },
+        price: parsePrice(String(formData.get("price") ?? "0")),
+        group: selectedGroup,
+        icon: selectedIcon,
+        image: imagePreview || undefined,
+        imageFile: selectedImageFile ?? undefined,
+        imageCrop,
+        color: selectedColor,
+        textColor: textColorByColor[selectedColor] ?? tile?.textColor ?? "#0f172a",
+      });
+
+      if (!result.ok) {
+        setSaveError(result);
+        setIsSaving(false);
+      }
+    } catch (error) {
+      const diagnostic = error instanceof Error ? error.message : String(error);
+      console.error("Product save failed before the result could be handled", error);
+      setSaveError({
+        diagnostic,
+        message: selectedImageFile ? labels.imageUploadError : labels.saveError,
+        ok: false,
+      });
+      setIsSaving(false);
+    }
   }
 
   return (
@@ -349,7 +398,7 @@ export function AddTileDialog({ tile, initialGroup, language, labels, onClose, o
           </div>
         </div>
 
-        <form action={saveTile} className="flex min-h-0 flex-1 flex-col">
+        <form onSubmit={saveTile} className="flex min-h-0 flex-1 flex-col">
           <div className="min-h-0 flex-1 overflow-y-auto p-7">
             <div className="grid gap-6 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
               <div className="grid content-start gap-5">
@@ -455,9 +504,20 @@ export function AddTileDialog({ tile, initialGroup, language, labels, onClose, o
           </div>
 
           <div className="shrink-0 border-t border-slate-100 bg-white p-5">
+            {saveError ? (
+              <div className="mb-4 rounded-2xl bg-rose-50 px-4 py-3 text-sm font-bold text-rose-900 ring-1 ring-rose-200">
+                <p>{saveError.message ?? labels.saveError}</p>
+                {saveError.diagnostic ? (
+                  <details className="mt-2">
+                    <summary className="cursor-pointer text-rose-800">{labels.technicalDetails}</summary>
+                    <p className="mt-2 break-words font-mono text-xs font-semibold text-rose-950">{saveError.diagnostic}</p>
+                  </details>
+                ) : null}
+              </div>
+            ) : null}
             <div className="flex justify-end gap-3">
-              <button type="button" onClick={onClose} className="min-h-14 rounded-2xl bg-slate-100 px-6 text-lg font-black text-slate-700 transition hover:bg-slate-200">{labels.cancel}</button>
-              <button type="submit" className="min-h-14 rounded-2xl bg-slate-950 px-6 text-lg font-black text-white transition hover:bg-slate-800">{labels.save}</button>
+              <button type="button" onClick={onClose} disabled={isSaving} className="min-h-14 rounded-2xl bg-slate-100 px-6 text-lg font-black text-slate-700 transition hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-60">{labels.cancel}</button>
+              <button type="submit" disabled={isSaving} className="min-h-14 rounded-2xl bg-slate-950 px-6 text-lg font-black text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-70">{isSaving ? labels.saving : labels.save}</button>
             </div>
           </div>
         </form>

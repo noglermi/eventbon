@@ -77,13 +77,38 @@ function safeFileName(fileName: string) {
     .replace(/^-+|-+$/g, "") || "product-image";
 }
 
+function getFileExtension(file: File) {
+  const fromName = file.name.split(".").pop()?.toLowerCase();
+
+  if (fromName && ["jpg", "jpeg", "png", "webp"].includes(fromName)) {
+    return fromName;
+  }
+
+  if (file.type === "image/png") {
+    return "png";
+  }
+
+  if (file.type === "image/webp") {
+    return "webp";
+  }
+
+  return "jpg";
+}
+
 async function ensureProductImagesBucket() {
   const client = requireSupabase();
+  console.info("Checking Supabase Storage bucket", { bucket: productImagesBucket });
   const { error } = await client.storage.getBucket(productImagesBucket);
 
   if (!error) {
+    console.info("Supabase Storage bucket is available", { bucket: productImagesBucket });
     return;
   }
+
+  console.warn("Supabase Storage bucket lookup failed; trying to create bucket", {
+    bucket: productImagesBucket,
+    error,
+  });
 
   const { error: createError } = await client.storage.createBucket(productImagesBucket, {
     public: true,
@@ -92,10 +117,16 @@ async function ensureProductImagesBucket() {
   });
 
   if (createError) {
+    console.error("Supabase Storage bucket is not available", {
+      bucket: productImagesBucket,
+      error: createError,
+    });
     throw new Error(
       "Supabase Storage bucket product-images is not available. Create a public bucket named product-images or allow bucket creation. " + createError.message,
     );
   }
+
+  console.info("Supabase Storage bucket created", { bucket: productImagesBucket });
 }
 
 async function uploadProductImage(input: ProductSaveInput) {
@@ -106,30 +137,60 @@ async function uploadProductImage(input: ProductSaveInput) {
   const client = requireSupabase();
   await ensureProductImagesBucket();
 
-  const pathId = typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : String(Date.now());
-  const storagePath = [
-    input.tenantId,
-    input.eventId,
-    pathId + "-" + safeFileName(input.product.imageFile.name),
-  ].join("/");
+  const file = input.product.imageFile;
+  const safeName = safeFileName(file.name);
+  const fileExtension = getFileExtension(file);
+  const pathName = uuidPattern.test(input.product.id)
+    ? input.product.id + "-" + safeName
+    : "new-product-" + Date.now() + "." + fileExtension;
+  const storagePath = input.eventId + "/" + pathName;
+
+  console.info("Uploading product image to Supabase Storage", {
+    bucket: productImagesBucket,
+    fileName: file.name,
+    fileSize: file.size,
+    fileType: file.type,
+    productId: input.product.id,
+    storagePath,
+  });
 
   const { error } = await client.storage
     .from(productImagesBucket)
-    .upload(storagePath, input.product.imageFile, {
+    .upload(storagePath, file, {
       cacheControl: "3600",
-      contentType: input.product.imageFile.type,
+      contentType: file.type,
       upsert: true,
     });
 
   if (error) {
+    console.error("Product image upload failed", {
+      bucket: productImagesBucket,
+      error,
+      storagePath,
+    });
     throw error;
   }
+
+  console.info("Product image upload succeeded", {
+    bucket: productImagesBucket,
+    storagePath,
+  });
 
   const { data } = client.storage.from(productImagesBucket).getPublicUrl(storagePath);
 
   if (!data.publicUrl) {
+    console.error("Supabase Storage did not return a public product image URL", {
+      bucket: productImagesBucket,
+      storagePath,
+    });
     throw new Error("Supabase Storage did not return a public product image URL.");
   }
+
+  console.info("Generated public product image URL", {
+    bucket: productImagesBucket,
+    publicUrl: data.publicUrl,
+    storagePath,
+  });
 
   return data.publicUrl;
 }
@@ -197,6 +258,12 @@ export async function saveProduct(input: ProductSaveInput) {
   const shouldUpdate = uuidPattern.test(input.product.id);
 
   if (shouldUpdate) {
+    console.info("Updating product in Supabase", {
+      eventId: input.eventId,
+      productId: input.product.id,
+      tenantId: input.tenantId,
+    });
+
     const { data, error } = await client
       .from("products")
       .update(payload)
@@ -207,11 +274,28 @@ export async function saveProduct(input: ProductSaveInput) {
       .single();
 
     if (error) {
+      console.error("Product update failed", {
+        error,
+        eventId: input.eventId,
+        productId: input.product.id,
+        tenantId: input.tenantId,
+      });
       throw error;
     }
 
+    console.info("Product update succeeded", {
+      eventId: input.eventId,
+      productId: input.product.id,
+      tenantId: input.tenantId,
+    });
+
     return mapProduct(data as ProductRow);
   }
+
+  console.info("Creating product in Supabase", {
+    eventId: input.eventId,
+    tenantId: input.tenantId,
+  });
 
   const { data, error } = await client
     .from("products")
@@ -220,8 +304,19 @@ export async function saveProduct(input: ProductSaveInput) {
     .single();
 
   if (error) {
+    console.error("Product insert failed", {
+      error,
+      eventId: input.eventId,
+      tenantId: input.tenantId,
+    });
     throw error;
   }
+
+  console.info("Product insert succeeded", {
+    eventId: input.eventId,
+    productId: (data as ProductRow).id,
+    tenantId: input.tenantId,
+  });
 
   return mapProduct(data as ProductRow);
 }

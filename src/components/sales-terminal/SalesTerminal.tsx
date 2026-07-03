@@ -248,12 +248,19 @@ export function SalesTerminal({
     if (eventId && tenantId && !supabaseConfigWarning) {
       try {
         const existingPosition = products.findIndex((product) => product.id === tile.id);
+        console.info("Saving product to Supabase", {
+          eventId,
+          hasImageFile: Boolean(tile.imageFile),
+          productId: tile.id,
+          tenantId,
+        });
         savedTile = await saveProduct({ tenantId, eventId, product: tile, position: existingPosition >= 0 ? existingPosition : products.length });
         setPersistenceMessage(null);
       } catch (error) {
         const diagnostic = logSupabaseError("save product", error);
-        setPersistenceMessage(labels.saveError + " " + labels.supabaseDiagnosticPrefix + ": " + diagnostic);
-        return;
+        const message = tile.imageFile ? labels.imageUploadError : labels.saveError;
+        setPersistenceMessage(message + " " + labels.supabaseDiagnosticPrefix + ": " + diagnostic);
+        return { diagnostic, message, ok: false };
       }
     }
 
@@ -262,6 +269,7 @@ export function SalesTerminal({
       return exists ? current.map((product) => product.id === tile.id || product.id === savedTile.id ? savedTile : product) : [...current, savedTile];
     });
     setTileEditor(null);
+    return { ok: true };
   }
 
   async function updatePrintMode(printMode: PrintMode) {
