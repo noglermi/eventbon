@@ -78,3 +78,23 @@ The product is rented for temporary events. This supports Stripe rental logic, o
 - After the event, the sales terminal becomes inactive while statistics and export remain available during the post-event access period.
 - Helpers and volunteers can access only the booked event they were invited to and cannot change booking, payment, or license data.
 - Offline license tokens must represent the booked event and enforce preparation, active sales and printing, read-only post-event access, expiry, and paid extension.
+
+## ADR-007 Organizer Event Workspace
+
+### Decision
+
+The main organizer-facing entry point is Meine Veranstaltungen, not a generic dashboard.
+
+User-facing product language uses Veranstalter. Internally, the data model may still use tenant and tenant_id for multi-tenant boundaries, but user-facing concepts should avoid Mandant.
+
+### Reason
+
+Organizers book eventBon for specific events. The UI and data model should reflect that.
+
+### Implications
+
+- An organizer can own multiple booked events over time.
+- Helpers are invited per event and can access only the event they were invited to.
+- Helpers are not global users in the product concept.
+- Each booked event has a preparation period, active sales and printing period, post-event statistics and export period, archive or retention period, and optional paid extension.
+- Opening an event from Meine Veranstaltungen leads into the sales terminal for that selected event.

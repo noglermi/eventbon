@@ -30,6 +30,12 @@ eventBon is event-booking based. A customer does not primarily subscribe to a ge
 
 The booked event is the core business object. The organizer account may own multiple booked events over time, but each event carries its own date range, access period, print active period, post-event access period, status, products, groups, and invited helpers.
 
+User-facing product language uses "Veranstalter" for the organizer. Internally, the data model may still use tenant and tenant_id for multi-tenant boundaries, but the user-facing product should avoid "Mandant". The main organizer-facing entry point is "Meine Veranstaltungen".
+
+Helpers and volunteers are invited per event. They can access only the booked event they were invited to and are not global users in the product concept.
+
+The event lifecycle includes preparation, active sales and printing, post-event statistics and export access, archive or retention, and optional paid extension.
+
 The product deliberately avoids back-office complexity. There is no dashboard in the MVP, no separate article management, no invoices, no receipts, no taxes, and no accounting.
 
 Stripe later handles event booking, organizer payment, paid extensions, and invoice/payment handling for the eventBon usage period. This remains separate from visitor payments and Bon sales. eventBon remains not a cash register.

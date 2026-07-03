@@ -186,11 +186,15 @@ function EventSetupDialog({
   );
 }
 
-export function SalesTerminal() {
+type SalesTerminalProps = {
+  initialEventSettings?: EventSettings;
+};
+
+export function SalesTerminal({ initialEventSettings = mockEventSettings }: SalesTerminalProps) {
   const receivedInputRef = useRef<HTMLInputElement>(null);
   const [language, setLanguage] = useState<Language>(defaultLanguage);
   const [activeFilter, setActiveFilter] = useState<ProductFilter>("all");
-  const [eventSettings, setEventSettings] = useState<EventSettings>(mockEventSettings);
+  const [eventSettings, setEventSettings] = useState<EventSettings>(initialEventSettings);
   const [products, setProducts] = useState<ProductTileData[]>(productTiles);
   const [cartItems, setCartItems] = useState<CartItem[]>(initialCart);
   const [receivedEntry, setReceivedEntry] = useState("");

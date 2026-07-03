@@ -8,11 +8,15 @@ All persistent data belongs in Supabase.
 
 The core business object is a booked event. The organizer account may own multiple booked events over time, but each event carries its own usage period, print active period, post-event access period, status, products, groups, and helper access.
 
+User-facing product language uses Veranstalter. Internally, the data model may still use tenant and tenant_id for multi-tenant boundaries. Avoid user-facing Mandant.
+
 ## Core Entities
 
 ### Tenant
 
 Represents an organizer account or organization using eventBon.
+
+This entity may remain named Tenant internally, but user-facing product concepts should call it Veranstalter.
 
 Suggested fields:
 
@@ -70,6 +74,8 @@ Suggested fields:
 - created_at
 
 Helpers can access only the booked event they were invited to. They can use the sales terminal for that event, cannot change booking, payment, or license data, and may have restricted permissions.
+
+Helpers are event-scoped access records, not global users across all organizer events in the product concept.
 
 ### Sales Tile
 
@@ -171,6 +177,8 @@ Tenant-aware records include:
 Tenant separation should be enforced consistently in application logic and Supabase security policies.
 
 Event boundaries matter inside the tenant. A helper invited to one event should not automatically access another event owned by the same organizer.
+
+The organizer-facing navigation should start from Meine Veranstaltungen: a list of booked events owned by the organizer account.
 
 ## Summary Data
 

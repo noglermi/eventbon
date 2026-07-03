@@ -24,11 +24,17 @@ The system is multi-tenant by design and integration-ready for Stripe and SumUp.
 
 ## Application Shape
 
-The MVP application centers on one primary experience:
+The main organizer-facing entry point is:
 
-- Sales terminal for a single event.
+- Meine Veranstaltungen
 
-Supporting capabilities exist only where they are required by that terminal:
+From there, the organizer opens a booked event and enters the sales terminal for that event.
+
+The MVP application still centers operational work on one primary event experience:
+
+- Sales terminal for the selected booked event.
+
+Supporting capabilities exist only where they are required by that event terminal:
 
 - Editable sales tiles.
 - Shopping cart.
@@ -40,6 +46,8 @@ Supporting capabilities exist only where they are required by that terminal:
 
 There is no dashboard in the MVP.
 
+User-facing product language should use Veranstalter for the organizer. Internally, the data model may still use tenant and tenant_id for multi-tenant boundaries, but the user-facing product should avoid Mandant.
+
 ## Multi-Tenant Design
 
 eventBon must support multiple tenants even if the MVP interface exposes only a single event flow.
@@ -48,7 +56,7 @@ Tenant-aware records should include a tenant reference. Booked event, product, s
 
 Tenant separation should be enforced at the data access layer and, where applicable, by Supabase row-level security.
 
-The organizer account may own multiple booked events over time. Helpers and volunteers are invited into specific booked events and should not automatically gain access to other events owned by the same organizer.
+The organizer account may own multiple booked events over time. Helpers and volunteers are invited into specific booked events and should not automatically gain access to other events owned by the same organizer. Helpers are not global users in the product concept.
 
 ## Supabase
 
@@ -96,6 +104,7 @@ Each booked event has:
 - access period
 - print active period
 - post-event access period
+- archive or retention period
 - status
 - products and groups
 - invited helpers
@@ -108,9 +117,8 @@ The booking lifecycle is:
 
 - booking or purchase
 - preparation period
-- event period
-- active Bon printing during event period
-- post-event access period
+- active sales and printing period
+- post-event statistics and export period
 - optional paid extension
 - data archived under the organizer account for a defined retention period
 

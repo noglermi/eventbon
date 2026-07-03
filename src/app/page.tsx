@@ -1,5 +1,5 @@
-import { SalesTerminal } from "@/components/sales-terminal/SalesTerminal";
+import { OrganizerEventWorkspace } from "@/components/organizer-workspace/OrganizerEventWorkspace";
 
 export default function Home() {
-  return <SalesTerminal />;
+  return <OrganizerEventWorkspace />;
 }

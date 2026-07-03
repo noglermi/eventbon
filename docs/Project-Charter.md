@@ -8,6 +8,8 @@ It helps event teams sell vouchers, calculate cash change, print vouchers in the
 
 eventBon is event-booking based. The customer books eventBon for a specific event and usage period instead of primarily subscribing to a generic permanent software workspace.
 
+The user-facing product language is centered on the Veranstalter. Internally, the data model may still use tenant and tenant_id, but user-facing concepts should avoid Mandant. The main organizer-facing entry point is Meine Veranstaltungen.
+
 ## Mission
 
 Sell vouchers.
@@ -54,9 +56,23 @@ The eventBon rental payment is separate from Bon sales. eventBon does not proces
 
 The organizer books the event, pays for the eventBon usage period, defines event name, date range, print mode, products, groups, and access rules, and can invite helpers.
 
+An organizer can own multiple booked events over time. Each booked event has its own lifecycle, configuration, helpers, and access periods.
+
 ### Helpers And Volunteers
 
 Helpers and volunteers can access only the booked event they were invited to. They can use the sales terminal for that event, cannot change booking, payment, or license data, and may have restricted permissions.
+
+Helpers are event-scoped in the product concept. They are not global users across all organizer events.
+
+## Event Lifecycle
+
+Each booked event moves through:
+
+- preparation period
+- active sales and printing period
+- post-event statistics and export period
+- archive or retention period
+- optional paid extension
 
 ## Design Principles
 

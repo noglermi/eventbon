@@ -16,13 +16,14 @@ Nothing else.
 
 eventBon is event-booking based. The customer books eventBon for a specific event and usage period; the booked event is the core business object, not a generic permanent software workspace.
 
+The organizer-facing navigation starts with Meine Veranstaltungen, not a generic dashboard. User-facing language uses Veranstalter; tenant and tenant_id remain internal data model terms only.
+
 Booking lifecycle:
 
 - booking or purchase
 - preparation period
-- event period
-- active Bon printing during event period
-- post-event read-only and statistics period
+- active sales and printing period
+- post-event statistics and export period
 - optional paid extension
 - data archived under the organizer account for a defined retention period
 
@@ -30,6 +31,7 @@ Booking lifecycle:
 
 Scope:
 
+- Meine Veranstaltungen entry screen
 - single active event
 - event setup for a booked event
 - editable sales tiles inside the sales terminal
@@ -66,8 +68,9 @@ Potential improvements after the MVP:
 
 - clearer print layouts
 - better mobile and tablet terminal behavior
-- tenant onboarding flow
+- organizer onboarding flow
 - event setup guardrails
+- event-scoped helper invitations
 - audit-friendly sale history
 - safer CSV export options
 - improved image handling for sales tiles
