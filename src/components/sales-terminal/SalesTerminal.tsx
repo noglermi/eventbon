@@ -1,6 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { listProducts, saveProduct } from "@/lib/repositories/products";
+import { updateEventBasics } from "@/lib/repositories/events";
+import { supabaseConfigWarning } from "@/lib/supabase/client";
 import { AddTileDialog } from "./AddTileDialog";
 import { Cart } from "./Cart";
 import { defaultLanguage, groupLabels, translations } from "./i18n";
@@ -10,6 +13,7 @@ import { ProductTile } from "./ProductTile";
 import { PrintModeSetting } from "./PrintModeSetting";
 import { VoucherPrintPreview } from "./VoucherPrintPreview";
 import type { CartItem, EventSettings, Language, ProductTileData, TileGroupName } from "./types";
+import type { Event as PersistedEvent, PrintMode } from "@/types/domain";
 
 type ProductFilter = "all" | TileGroupName;
 
@@ -105,11 +109,24 @@ function formatEventDate(eventSettings: EventSettings, language: Language) {
 }
 
 type SalesTerminalProps = {
+  accessUntil?: string;
+  eventId?: string | null;
   initialEventSettings?: EventSettings;
   onBackToEvents?: () => void;
+  onEventUpdated?: (event: PersistedEvent) => void;
+  status?: string;
+  tenantId?: string | null;
 };
 
-export function SalesTerminal({ initialEventSettings = mockEventSettings, onBackToEvents }: SalesTerminalProps) {
+export function SalesTerminal({
+  accessUntil,
+  eventId = null,
+  initialEventSettings = mockEventSettings,
+  onBackToEvents,
+  onEventUpdated,
+  status = "preparation",
+  tenantId = null,
+}: SalesTerminalProps) {
   const receivedInputRef = useRef<HTMLInputElement>(null);
   const [language, setLanguage] = useState<Language>(defaultLanguage);
   const [activeFilter, setActiveFilter] = useState<ProductFilter>("all");
@@ -117,6 +134,8 @@ export function SalesTerminal({ initialEventSettings = mockEventSettings, onBack
   const [products, setProducts] = useState<ProductTileData[]>(productTiles);
   const [cartItems, setCartItems] = useState<CartItem[]>(initialCart);
   const [receivedEntry, setReceivedEntry] = useState("");
+  const [isLoadingProducts, setIsLoadingProducts] = useState(false);
+  const [persistenceMessage, setPersistenceMessage] = useState<string | null>(supabaseConfigWarning ? translations[defaultLanguage].mockFallbackWarning : null);
   const [tileEditor, setTileEditor] = useState<{ tile: ProductTileData | null; group: TileGroupName } | null>(null);
   const [printPreviewDate, setPrintPreviewDate] = useState<Date | null>(null);
   const labels = getLabels(language);
@@ -125,6 +144,42 @@ export function SalesTerminal({ initialEventSettings = mockEventSettings, onBack
   useEffect(() => {
     receivedInputRef.current?.focus();
   }, []);
+
+  useEffect(() => {
+    let isActive = true;
+
+    async function loadEventProducts() {
+      if (!eventId || supabaseConfigWarning) {
+        setProducts(productTiles);
+        return;
+      }
+
+      setIsLoadingProducts(true);
+      setPersistenceMessage(null);
+
+      try {
+        const loadedProducts = await listProducts(eventId);
+        if (isActive) {
+          setProducts(loadedProducts);
+        }
+      } catch {
+        if (isActive) {
+          setProducts(productTiles);
+          setPersistenceMessage(labels.productLoadError);
+        }
+      } finally {
+        if (isActive) {
+          setIsLoadingProducts(false);
+        }
+      }
+    }
+
+    loadEventProducts();
+
+    return () => {
+      isActive = false;
+    };
+  }, [eventId, labels.productLoadError]);
 
   const productsById = useMemo(
     () => new Map(products.map((product) => [product.id, product])),
@@ -182,12 +237,51 @@ export function SalesTerminal({ initialEventSettings = mockEventSettings, onBack
     setPrintPreviewDate(new Date());
   }
 
-  function saveTile(tile: ProductTileData) {
+  async function saveTile(tile: ProductTileData) {
+    let savedTile = tile;
+
+    if (eventId && tenantId && !supabaseConfigWarning) {
+      try {
+        const existingPosition = products.findIndex((product) => product.id === tile.id);
+        savedTile = await saveProduct({ tenantId, eventId, product: tile, position: existingPosition >= 0 ? existingPosition : products.length });
+        setPersistenceMessage(null);
+      } catch {
+        setPersistenceMessage(labels.saveError);
+        return;
+      }
+    }
+
     setProducts((current) => {
-      const exists = current.some((product) => product.id === tile.id);
-      return exists ? current.map((product) => product.id === tile.id ? tile : product) : [...current, tile];
+      const exists = current.some((product) => product.id === tile.id || product.id === savedTile.id);
+      return exists ? current.map((product) => product.id === tile.id || product.id === savedTile.id ? savedTile : product) : [...current, savedTile];
     });
     setTileEditor(null);
+  }
+
+  async function updatePrintMode(printMode: PrintMode) {
+    const nextSettings = { ...eventSettings, printMode };
+    setEventSettings(nextSettings);
+
+    if (!eventId || !tenantId || !accessUntil || supabaseConfigWarning) {
+      return;
+    }
+
+    try {
+      const updatedEvent = await updateEventBasics({
+        id: eventId,
+        tenantId,
+        name: nextSettings.name.de,
+        startsAt: nextSettings.dateFrom,
+        endsAt: nextSettings.dateTo,
+        accessUntil,
+        printMode,
+        status,
+      });
+      onEventUpdated?.(updatedEvent);
+      setPersistenceMessage(null);
+    } catch {
+      setPersistenceMessage(labels.saveError);
+    }
   }
 
   return (
@@ -288,6 +382,12 @@ export function SalesTerminal({ initialEventSettings = mockEventSettings, onBack
                 </section>
               ))}
             </div>
+            {persistenceMessage ? (
+              <p className="mt-4 rounded-2xl bg-amber-50 px-4 py-3 text-sm font-bold text-amber-900 ring-1 ring-amber-200">{persistenceMessage}</p>
+            ) : null}
+            {isLoadingProducts ? (
+              <p className="mt-4 rounded-2xl bg-slate-50 px-4 py-3 text-sm font-black text-slate-600 ring-1 ring-slate-200">{labels.loadingProducts}</p>
+            ) : null}
           </div>
         </section>
 
@@ -295,7 +395,7 @@ export function SalesTerminal({ initialEventSettings = mockEventSettings, onBack
 
         <div className="flex min-h-0 flex-col gap-5">
           <PaymentPanel labels={labels} language={language} totalCents={totalCents} receivedCents={receivedCents} receivedEntry={receivedEntry} receivedInputRef={receivedInputRef} onReceivedEntryChange={setReceivedEntry} />
-          <PrintModeSetting labels={labels} printMode={eventSettings.printMode} onPrintModeChange={(printMode) => setEventSettings((current) => ({ ...current, printMode }))} />
+          <PrintModeSetting labels={labels} printMode={eventSettings.printMode} onPrintModeChange={updatePrintMode} />
         </div>
       </div>
 

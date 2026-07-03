@@ -1,22 +1,28 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
+import { createEvent, listEvents } from "@/lib/repositories/events";
+import { supabaseConfigWarning } from "@/lib/supabase/client";
 import { SalesTerminal } from "@/components/sales-terminal/SalesTerminal";
 import { defaultLanguage, translations } from "@/components/sales-terminal/i18n";
 import type { EventSettings, PrintMode } from "@/components/sales-terminal/types";
+import type { Event as PersistedEvent } from "@/types/domain";
 
-type BookedEventStatus = "preparation" | "active" | "stats_available" | "expired";
+type BookedEventStatus = "preparation" | "active" | "stats_available" | "post_event_read_only" | "expired" | "archived" | "draft";
 
 type BookedEvent = {
   id: string;
+  tenantId: string | null;
   settings: EventSettings;
   status: BookedEventStatus;
   accessUntil: string;
+  isPersisted: boolean;
 };
 
 const mockBookedEvents: BookedEvent[] = [
   {
     id: "reitturnier-2026",
+    tenantId: null,
     settings: {
       name: { de: "Reitturnier 2026", en: "Riding Tournament 2026" },
       dateFrom: "2026-07-28",
@@ -25,9 +31,11 @@ const mockBookedEvents: BookedEvent[] = [
     },
     status: "preparation",
     accessUntil: "2026-08-06",
+    isPersisted: false,
   },
   {
     id: "sommerfest-oberperfuss",
+    tenantId: null,
     settings: {
       name: { de: "Sommerfest Oberperfuss", en: "Oberperfuss Summer Fest" },
       dateFrom: "2026-08-15",
@@ -36,6 +44,7 @@ const mockBookedEvents: BookedEvent[] = [
     },
     status: "active",
     accessUntil: "2026-08-22",
+    isPersisted: false,
   },
 ];
 
@@ -64,21 +73,81 @@ function formatDate(value: string) {
   return new Intl.DateTimeFormat("de-AT", { dateStyle: "medium" }).format(date);
 }
 
+function toDateInput(value: string) {
+  return value.slice(0, 10);
+}
+
+function mapPersistedEvent(event: PersistedEvent): BookedEvent {
+  return {
+    id: event.id,
+    tenantId: event.tenantId,
+    settings: {
+      name: { de: event.name, en: event.name },
+      dateFrom: toDateInput(event.startsAt),
+      dateTo: toDateInput(event.endsAt),
+      printMode: event.printMode,
+    },
+    status: event.status as BookedEventStatus,
+    accessUntil: toDateInput(event.accessUntil),
+    isPersisted: true,
+  };
+}
+
 export function OrganizerEventWorkspace() {
   const language = defaultLanguage;
   const labels = translations[language];
   const [events, setEvents] = useState<BookedEvent[]>(mockBookedEvents);
   const [selectedEvent, setSelectedEvent] = useState<BookedEvent | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [isLoadingEvents, setIsLoadingEvents] = useState(false);
+  const [eventError, setEventError] = useState<string | null>(supabaseConfigWarning ? labels.mockFallbackWarning : null);
 
   const statusLabels: Record<BookedEventStatus, string> = {
+    draft: labels.statusPreparation,
     preparation: labels.statusPreparation,
     active: labels.statusActive,
     stats_available: labels.statusStatsAvailable,
+    post_event_read_only: labels.statusStatsAvailable,
     expired: labels.statusExpired,
+    archived: labels.statusExpired,
   };
 
-  function createEvent(event: FormEvent<HTMLFormElement>) {
+  useEffect(() => {
+    let isActive = true;
+
+    async function loadEvents() {
+      if (supabaseConfigWarning) {
+        return;
+      }
+
+      setIsLoadingEvents(true);
+      setEventError(null);
+
+      try {
+        const loadedEvents = await listEvents();
+        if (isActive) {
+          setEvents(loadedEvents.map(mapPersistedEvent));
+        }
+      } catch {
+        if (isActive) {
+          setEvents(mockBookedEvents);
+          setEventError(labels.eventLoadError);
+        }
+      } finally {
+        if (isActive) {
+          setIsLoadingEvents(false);
+        }
+      }
+    }
+
+    loadEvents();
+
+    return () => {
+      isActive = false;
+    };
+  }, [labels.eventLoadError]);
+
+  async function createBookedEvent(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
     const name = String(formData.get("name") ?? "").trim() || labels.newVoucher;
@@ -87,8 +156,23 @@ export function OrganizerEventWorkspace() {
     const dateTo = dateToEntry || dateFrom;
     const printMode = String(formData.get("printMode") ?? "single_vouchers") as PrintMode;
 
+    try {
+      if (!supabaseConfigWarning) {
+        const persistedEvent = await createEvent({ name, startsAt: dateFrom, endsAt: dateTo, printMode });
+        const bookedEvent = mapPersistedEvent(persistedEvent);
+
+        setEvents((current) => [...current, bookedEvent]);
+        setIsCreateOpen(false);
+        setSelectedEvent(bookedEvent);
+        return;
+      }
+    } catch {
+      setEventError(labels.saveError);
+    }
+
     const bookedEvent: BookedEvent = {
       id: "event-" + Date.now().toString(),
+      tenantId: null,
       settings: {
         name: { de: name, en: name },
         dateFrom,
@@ -97,6 +181,7 @@ export function OrganizerEventWorkspace() {
       },
       status: "preparation",
       accessUntil: dateTo || dateFrom,
+      isPersisted: false,
     };
 
     setEvents((current) => [...current, bookedEvent]);
@@ -105,7 +190,21 @@ export function OrganizerEventWorkspace() {
   }
 
   if (selectedEvent) {
-    return <SalesTerminal initialEventSettings={selectedEvent.settings} onBackToEvents={() => setSelectedEvent(null)} />;
+    return (
+      <SalesTerminal
+        eventId={selectedEvent.isPersisted ? selectedEvent.id : null}
+        tenantId={selectedEvent.tenantId}
+        accessUntil={selectedEvent.accessUntil}
+        status={selectedEvent.status}
+        initialEventSettings={selectedEvent.settings}
+        onBackToEvents={() => setSelectedEvent(null)}
+        onEventUpdated={(updatedEvent) => {
+          const bookedEvent = mapPersistedEvent(updatedEvent);
+          setEvents((current) => current.map((event) => event.id === bookedEvent.id ? bookedEvent : event));
+          setSelectedEvent(bookedEvent);
+        }}
+      />
+    );
   }
 
   return (
@@ -125,6 +224,14 @@ export function OrganizerEventWorkspace() {
             + {labels.bookNewEvent}
           </button>
         </header>
+
+        {eventError ? (
+          <p className="rounded-lg bg-amber-50 px-4 py-3 text-sm font-bold text-amber-900 ring-1 ring-amber-200">{eventError}</p>
+        ) : null}
+
+        {isLoadingEvents ? (
+          <p className="rounded-lg bg-white px-4 py-3 text-base font-black text-slate-600 ring-1 ring-slate-200">{labels.loadingEvents}</p>
+        ) : null}
 
         <section className="grid gap-4 md:grid-cols-2" aria-label={labels.myEvents}>
           {events.map((bookedEvent) => (
@@ -172,7 +279,7 @@ export function OrganizerEventWorkspace() {
               </button>
             </div>
 
-            <form onSubmit={createEvent} className="mt-6 grid gap-5">
+            <form onSubmit={createBookedEvent} className="mt-6 grid gap-5">
               <label className="grid gap-2 text-sm font-bold uppercase tracking-widest text-slate-500">
                 {labels.eventName}
                 <input name="name" required className="min-h-14 rounded-lg border border-slate-200 px-4 text-xl font-bold normal-case tracking-normal text-slate-950 outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100" />

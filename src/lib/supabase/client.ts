@@ -3,12 +3,10 @@ import { createClient } from "@supabase/supabase-js";
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabasePublishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
-if (!supabaseUrl) {
-  throw new Error("NEXT_PUBLIC_SUPABASE_URL is not configured.");
-}
+export const supabaseConfigWarning = !supabaseUrl || !supabasePublishableKey
+  ? "Supabase environment variables are missing. Using mock data."
+  : null;
 
-if (!supabasePublishableKey) {
-  throw new Error("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY is not configured.");
-}
-
-export const supabase = createClient(supabaseUrl, supabasePublishableKey);
+export const supabase = supabaseConfigWarning
+  ? null
+  : createClient(supabaseUrl as string, supabasePublishableKey as string);
