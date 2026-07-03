@@ -321,117 +321,129 @@ export function AddTileDialog({ tile, initialGroup, language, labels, onClose, o
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-8 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="add-tile-title">
-      <div className="w-full max-w-xl rounded-[2rem] bg-white p-7 shadow-2xl">
-        <div className="flex items-start justify-between gap-6">
-          <div>
-            <p className="text-sm font-bold uppercase tracking-widest text-emerald-600">{groupLabels[group][language]}</p>
-            <h2 id="add-tile-title" className="mt-1 text-3xl font-black tracking-normal text-slate-950">{tile ? labels.editProduct : labels.newProduct}</h2>
-          </div>
-          <button type="button" onClick={onClose} className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-2xl font-bold text-slate-600 transition hover:bg-slate-200 focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200" aria-label={labels.closeAddTileDialog}>
-            x
-          </button>
-        </div>
-
-        <form action={saveTile} className="mt-7 grid gap-5">
-          <label className="grid gap-2 text-sm font-bold uppercase tracking-widest text-slate-500">
-            {labels.name}
-            <input name="name" className="min-h-14 rounded-2xl border border-slate-200 px-4 text-xl font-bold normal-case tracking-normal text-slate-950 outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100" defaultValue={tileName} />
-          </label>
-          <label className="grid gap-2 text-sm font-bold uppercase tracking-widest text-slate-500">
-            {labels.price}
-            <input name="price" type="number" min="0" step="0.01" className="min-h-14 rounded-2xl border border-slate-200 px-4 text-xl font-bold normal-case tracking-normal text-slate-950 outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100" defaultValue={tilePrice} />
-          </label>
-          <label className="grid gap-2 text-sm font-bold uppercase tracking-widest text-slate-500">
-            {labels.group}
-            <select name="group" className="min-h-14 rounded-2xl border border-slate-200 bg-white px-4 text-xl font-bold normal-case tracking-normal text-slate-950 outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100" defaultValue={group}>
-              {(Object.keys(groupLabels) as TileGroupName[]).map((groupName) => (
-                <option key={groupName} value={groupName}>{groupLabels[groupName][language]}</option>
-              ))}
-            </select>
-          </label>
-          <div className="grid gap-2">
-            <span className="text-sm font-bold uppercase tracking-widest text-slate-500">{labels.color}</span>
-            <div className="flex gap-3">
-              {colors.map((color) => (
-                <label key={color} className="relative">
-                  <input name="color" type="radio" value={color} defaultChecked={color === tileColor} className="peer sr-only" />
-                  <span className="block h-12 w-12 rounded-full ring-2 ring-white shadow-md outline outline-1 outline-slate-200 transition peer-checked:outline-4 peer-checked:outline-emerald-600" style={{ backgroundColor: color }} aria-label={labels.chooseColor + " " + color} />
-                </label>
-              ))}
+      <div className="flex max-h-[90vh] w-full max-w-6xl flex-col overflow-hidden rounded-[2rem] bg-white shadow-2xl">
+        <div className="shrink-0 border-b border-slate-100 p-7">
+          <div className="flex items-start justify-between gap-6">
+            <div>
+              <p className="text-sm font-bold uppercase tracking-widest text-emerald-600">{groupLabels[group][language]}</p>
+              <h2 id="add-tile-title" className="mt-1 text-3xl font-black tracking-normal text-slate-950">{tile ? labels.editProduct : labels.newProduct}</h2>
             </div>
-          </div>
-
-          <div className="grid gap-2">
-            <span className="text-sm font-bold uppercase tracking-widest text-slate-500">{labels.icon}</span>
-            <button type="button" onClick={() => setIsIconPickerOpen(true)} className="flex min-h-20 items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 px-5 text-left transition active:scale-[0.99] focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200">
-              <span className="flex items-center gap-4">
-                <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-4xl ring-1 ring-slate-200/75" aria-hidden="true">{selectedIcon}</span>
-                <span className="text-xl font-black normal-case tracking-normal text-slate-950">{labels.chooseIcon}</span>
-              </span>
-              <span className="text-lg font-black text-emerald-700">{labels.edit}</span>
+            <button type="button" onClick={onClose} className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-2xl font-bold text-slate-600 transition hover:bg-slate-200 focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200" aria-label={labels.closeAddTileDialog}>
+              x
             </button>
           </div>
+        </div>
 
-          <div className="grid gap-2">
-            <span className="text-sm font-bold uppercase tracking-widest text-slate-500">{labels.image}</span>
-            <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={handleFileChange} className="sr-only" />
-            {imagePreview ? (
-              <div className="grid gap-3">
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  onDragOver={(event) => event.preventDefault()}
-                  onDrop={handleImageDrop}
-                  className="flex min-h-56 items-center justify-center overflow-hidden rounded-3xl border border-slate-200 bg-slate-50 transition active:scale-[0.99] focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200"
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={imagePreview}
-                    alt=""
-                    className={"h-56 w-full " + (hasCustomCrop ? "object-cover" : "object-contain")}
-                    style={hasCustomCrop ? getImageCropStyle(imageCrop) : undefined}
-                  />
-                </button>
-                <div className="grid grid-cols-2 gap-3">
-                  <button type="button" onClick={() => fileInputRef.current?.click()} className="min-h-14 rounded-2xl bg-slate-100 px-5 text-lg font-black text-slate-700 transition active:scale-[0.98] focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200">
-                    {labels.changeImage}
-                  </button>
-                  <button type="button" onClick={removeImage} className="min-h-14 rounded-2xl bg-rose-50 px-5 text-lg font-black text-rose-700 ring-1 ring-rose-100 transition active:scale-[0.98] focus:outline-none focus-visible:ring-4 focus-visible:ring-rose-200">
-                    {labels.removeImage}
+        <form action={saveTile} className="flex min-h-0 flex-1 flex-col">
+          <div className="min-h-0 flex-1 overflow-y-auto p-7">
+            <div className="grid gap-6 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
+              <div className="grid content-start gap-5">
+                <label className="grid gap-2 text-sm font-bold uppercase tracking-widest text-slate-500">
+                  {labels.name}
+                  <input name="name" className="min-h-14 rounded-2xl border border-slate-200 px-4 text-xl font-bold normal-case tracking-normal text-slate-950 outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100" defaultValue={tileName} />
+                </label>
+                <label className="grid gap-2 text-sm font-bold uppercase tracking-widest text-slate-500">
+                  {labels.price}
+                  <input name="price" type="number" min="0" step="0.01" className="min-h-14 rounded-2xl border border-slate-200 px-4 text-xl font-bold normal-case tracking-normal text-slate-950 outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100" defaultValue={tilePrice} />
+                </label>
+                <label className="grid gap-2 text-sm font-bold uppercase tracking-widest text-slate-500">
+                  {labels.group}
+                  <select name="group" className="min-h-14 rounded-2xl border border-slate-200 bg-white px-4 text-xl font-bold normal-case tracking-normal text-slate-950 outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100" defaultValue={group}>
+                    {(Object.keys(groupLabels) as TileGroupName[]).map((groupName) => (
+                      <option key={groupName} value={groupName}>{groupLabels[groupName][language]}</option>
+                    ))}
+                  </select>
+                </label>
+                <div className="grid gap-2">
+                  <span className="text-sm font-bold uppercase tracking-widest text-slate-500">{labels.color}</span>
+                  <div className="flex flex-wrap gap-3">
+                    {colors.map((color) => (
+                      <label key={color} className="relative">
+                        <input name="color" type="radio" value={color} defaultChecked={color === tileColor} className="peer sr-only" />
+                        <span className="block h-12 w-12 rounded-full ring-2 ring-white shadow-md outline outline-1 outline-slate-200 transition peer-checked:outline-4 peer-checked:outline-emerald-600" style={{ backgroundColor: color }} aria-label={labels.chooseColor + " " + color} />
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="grid gap-2">
+                  <span className="text-sm font-bold uppercase tracking-widest text-slate-500">{labels.icon}</span>
+                  <button type="button" onClick={() => setIsIconPickerOpen(true)} className="flex min-h-20 items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 px-5 text-left transition active:scale-[0.99] focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200">
+                    <span className="flex items-center gap-4">
+                      <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-4xl ring-1 ring-slate-200/75" aria-hidden="true">{selectedIcon}</span>
+                      <span className="text-xl font-black normal-case tracking-normal text-slate-950">{labels.chooseIcon}</span>
+                    </span>
+                    <span className="text-lg font-black text-emerald-700">{labels.edit}</span>
                   </button>
                 </div>
               </div>
-            ) : (
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                onDragOver={(event) => event.preventDefault()}
-                onDrop={handleImageDrop}
-                className="flex min-h-44 flex-col items-center justify-center gap-3 rounded-3xl border-2 border-dashed border-slate-300 bg-slate-50 px-5 text-center text-lg font-black text-slate-500 transition active:scale-[0.99] focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200"
-              >
-                <span>{labels.dragImageHereOrClick}</span>
-                <span className="text-sm font-bold uppercase tracking-widest text-slate-400">jpg, png, webp</span>
-              </button>
-            )}
+
+              <div className="grid content-start gap-5">
+                <div className="grid gap-2">
+                  <span className="text-sm font-bold uppercase tracking-widest text-slate-500">{labels.image}</span>
+                  <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={handleFileChange} className="sr-only" />
+                  {imagePreview ? (
+                    <div className="grid gap-3">
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        onDragOver={(event) => event.preventDefault()}
+                        onDrop={handleImageDrop}
+                        className="flex h-52 max-h-60 items-center justify-center overflow-hidden rounded-3xl border border-slate-200 bg-slate-50 transition active:scale-[0.99] focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200"
+                      >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={imagePreview}
+                          alt=""
+                          className={"max-h-full w-full " + (hasCustomCrop ? "h-full object-cover" : "object-contain")}
+                          style={hasCustomCrop ? getImageCropStyle(imageCrop) : undefined}
+                        />
+                      </button>
+                      <div className="grid grid-cols-2 gap-3">
+                        <button type="button" onClick={() => fileInputRef.current?.click()} className="min-h-14 rounded-2xl bg-slate-100 px-5 text-lg font-black text-slate-700 transition active:scale-[0.98] focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200">
+                          {labels.changeImage}
+                        </button>
+                        <button type="button" onClick={removeImage} className="min-h-14 rounded-2xl bg-rose-50 px-5 text-lg font-black text-rose-700 ring-1 ring-rose-100 transition active:scale-[0.98] focus:outline-none focus-visible:ring-4 focus-visible:ring-rose-200">
+                          {labels.removeImage}
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      onDragOver={(event) => event.preventDefault()}
+                      onDrop={handleImageDrop}
+                      className="flex min-h-44 flex-col items-center justify-center gap-3 rounded-3xl border-2 border-dashed border-slate-300 bg-slate-50 px-5 text-center text-lg font-black text-slate-500 transition active:scale-[0.99] focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200"
+                    >
+                      <span>{labels.dragImageHereOrClick}</span>
+                      <span className="text-sm font-bold uppercase tracking-widest text-slate-400">jpg, png, webp</span>
+                    </button>
+                  )}
+                </div>
+
+                {imagePreview ? (
+                  <div className="grid gap-3 rounded-3xl bg-slate-50 p-4 ring-1 ring-slate-200/75">
+                    <div className="flex items-center justify-between gap-4">
+                      <span className="text-base font-black tracking-normal text-slate-950">{labels.imageCrop}</span>
+                      <button type="button" onClick={() => setImageCrop(defaultImageCrop)} className="min-h-11 rounded-2xl bg-white px-4 text-sm font-black text-slate-700 ring-1 ring-slate-200/75 transition active:scale-[0.98] focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200">
+                        {labels.resetImageCrop}
+                      </button>
+                    </div>
+                    <CropSlider label={labels.zoom} min={1} max={2.5} step={0.05} value={imageCrop.zoom} onChange={(zoom) => setImageCrop((current) => ({ ...current, zoom }))} />
+                    <CropSlider label={labels.horizontal} min={0} max={100} step={1} value={imageCrop.x} onChange={(x) => setImageCrop((current) => ({ ...current, x }))} />
+                    <CropSlider label={labels.vertical} min={0} max={100} step={1} value={imageCrop.y} onChange={(y) => setImageCrop((current) => ({ ...current, y }))} />
+                  </div>
+                ) : null}
+              </div>
+            </div>
           </div>
 
-          {imagePreview ? (
-            <div className="grid gap-3 rounded-3xl bg-slate-50 p-4 ring-1 ring-slate-200/75">
-              <div className="flex items-center justify-between gap-4">
-                <span className="text-base font-black tracking-normal text-slate-950">{labels.imageCrop}</span>
-                <button type="button" onClick={() => setImageCrop(defaultImageCrop)} className="min-h-11 rounded-2xl bg-white px-4 text-sm font-black text-slate-700 ring-1 ring-slate-200/75 transition active:scale-[0.98] focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200">
-                  {labels.resetImageCrop}
-                </button>
-              </div>
-              <CropSlider label={labels.zoom} min={1} max={2.5} step={0.05} value={imageCrop.zoom} onChange={(zoom) => setImageCrop((current) => ({ ...current, zoom }))} />
-              <CropSlider label={labels.horizontal} min={0} max={100} step={1} value={imageCrop.x} onChange={(x) => setImageCrop((current) => ({ ...current, x }))} />
-              <CropSlider label={labels.vertical} min={0} max={100} step={1} value={imageCrop.y} onChange={(y) => setImageCrop((current) => ({ ...current, y }))} />
+          <div className="shrink-0 border-t border-slate-100 bg-white p-5">
+            <div className="flex justify-end gap-3">
+              <button type="button" onClick={onClose} className="min-h-14 rounded-2xl bg-slate-100 px-6 text-lg font-black text-slate-700 transition hover:bg-slate-200">{labels.cancel}</button>
+              <button type="submit" className="min-h-14 rounded-2xl bg-slate-950 px-6 text-lg font-black text-white transition hover:bg-slate-800">{labels.save}</button>
             </div>
-          ) : null}
-
-          <div className="mt-2 flex justify-end gap-3">
-            <button type="button" onClick={onClose} className="min-h-14 rounded-2xl bg-slate-100 px-6 text-lg font-black text-slate-700 transition hover:bg-slate-200">{labels.cancel}</button>
-            <button type="submit" className="min-h-14 rounded-2xl bg-slate-950 px-6 text-lg font-black text-white transition hover:bg-slate-800">{labels.save}</button>
           </div>
         </form>
 
