@@ -1,3 +1,4 @@
+import type { RefObject } from "react";
 import type { Translation } from "./i18n";
 import type { Language } from "./types";
 
@@ -6,6 +7,7 @@ type PaymentPanelProps = {
   language: Language;
   receivedCents: number;
   receivedEntry: string;
+  receivedInputRef?: RefObject<HTMLInputElement | null>;
   totalCents: number;
   onReceivedEntryChange: (value: string) => void;
 };
@@ -17,14 +19,38 @@ function formatCents(cents: number) {
   return currency.format(cents / 100);
 }
 
-export function PaymentPanel({ labels, language, receivedCents, receivedEntry, totalCents, onReceivedEntryChange }: PaymentPanelProps) {
+export function PaymentPanel({ labels, language, receivedCents, receivedEntry, receivedInputRef, totalCents, onReceivedEntryChange }: PaymentPanelProps) {
   const changeCents = Math.max(receivedCents - totalCents, 0);
   const decimalSeparator = language === "de" ? "," : ".";
-  const displayedReceived = (receivedEntry || "0").replace(/[,.]/, decimalSeparator);
+  const displayedReceived = receivedEntry.replace(/[,.]/, decimalSeparator);
+
+  function focusReceivedInput() {
+    requestAnimationFrame(() => receivedInputRef?.current?.focus());
+  }
+
+  function updateReceivedEntry(value: string) {
+    onReceivedEntryChange(value);
+    focusReceivedInput();
+  }
+
+  function normalizeEntry(value: string) {
+    const input = value.replace(/[^\d,.]/g, "").replace(/[,.]/g, decimalSeparator);
+    const [euros = "", ...centParts] = input.split(decimalSeparator);
+
+    if (centParts.length === 0) {
+      return euros;
+    }
+
+    return euros + decimalSeparator + centParts.join("").slice(0, 2);
+  }
+
+  function handleKeyboardEntry(value: string) {
+    onReceivedEntryChange(normalizeEntry(value));
+  }
 
   function appendDigit(digit: string) {
     if (receivedEntry === "0") {
-      onReceivedEntryChange(digit);
+      updateReceivedEntry(digit);
       return;
     }
 
@@ -36,7 +62,7 @@ export function PaymentPanel({ labels, language, receivedCents, receivedEntry, t
       }
     }
 
-    onReceivedEntryChange(receivedEntry + digit);
+    updateReceivedEntry(receivedEntry + digit);
   }
 
   function appendSeparator() {
@@ -44,7 +70,16 @@ export function PaymentPanel({ labels, language, receivedCents, receivedEntry, t
       return;
     }
 
-    onReceivedEntryChange((receivedEntry || "0") + decimalSeparator);
+    updateReceivedEntry((receivedEntry || "0") + decimalSeparator);
+  }
+
+  function removeLastDigit() {
+    const shortenedEntry = receivedEntry.slice(0, -1);
+    updateReceivedEntry(shortenedEntry.replace(/[,.]$/, ""));
+  }
+
+  function clearAmount() {
+    updateReceivedEntry("");
   }
 
   return (
@@ -56,18 +91,25 @@ export function PaymentPanel({ labels, language, receivedCents, receivedEntry, t
       <div className="min-h-0 flex-1 overflow-y-auto p-5">
         <div className="rounded-[1.75rem] bg-white p-5 shadow-sm ring-1 ring-slate-200/75">
           <p className="text-sm font-bold uppercase tracking-widest text-slate-500">{labels.received} (EUR)</p>
-          <div className="mt-3 rounded-2xl bg-slate-50 px-4 py-4 text-5xl font-black tabular-nums text-slate-950 ring-1 ring-slate-200/75">
-            {displayedReceived}
-          </div>
+          <input
+            ref={receivedInputRef}
+            type="text"
+            inputMode="decimal"
+            value={displayedReceived}
+            onChange={(event) => handleKeyboardEntry(event.target.value)}
+            className="mt-3 w-full rounded-2xl bg-slate-50 px-4 py-4 text-5xl font-black tabular-nums text-slate-950 outline-none ring-1 ring-slate-200/75 transition placeholder:text-slate-300 focus:ring-4 focus:ring-emerald-200"
+            aria-label={labels.received}
+          />
         </div>
 
         <div className="mt-5 grid grid-cols-3 gap-3">
           {["1", "2", "3", "4", "5", "6", "7", "8", "9"].map((digit) => (
             <button key={digit} type="button" onClick={() => appendDigit(digit)} className={numpadButtonClass}>{digit}</button>
           ))}
-          <button type="button" onClick={() => onReceivedEntryChange("")} className={numpadButtonClass + " text-rose-700 focus-visible:ring-rose-200"}>C</button>
+          <button type="button" onClick={removeLastDigit} className={numpadButtonClass} aria-label={language === "de" ? "Letzte Ziffer l\u00f6schen" : "Delete last digit"}>⌫</button>
           <button type="button" onClick={() => appendDigit("0")} className={numpadButtonClass}>0</button>
           <button type="button" onClick={appendSeparator} className={numpadButtonClass}>{decimalSeparator}</button>
+          <button type="button" onClick={clearAmount} className={numpadButtonClass + " col-span-3 text-rose-700 focus-visible:ring-rose-200"} aria-label={language === "de" ? "Betrag l\u00f6schen" : "Clear amount"}>C</button>
         </div>
 
         <div className="mt-5 rounded-[1.75rem] bg-emerald-600 p-5 text-white shadow-[0_16px_32px_rgba(5,150,105,0.22)]">

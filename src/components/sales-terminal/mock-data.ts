@@ -14,7 +14,4 @@ export const productTiles: ProductTileData[] = [
   { id: "fries", name: { de: "Pommes", en: "Fries" }, price: 4, group: "Food", icon: "\u{1F35F}", imageCrop: { zoom: 1, x: 50, y: 50 }, color: "#f59f63", textColor: "#3b1700" },
 ];
 
-export const initialCart: CartItem[] = [
-  { productId: "beer", quantity: 2 },
-  { productId: "fries", quantity: 1 },
-];
+export const initialCart: CartItem[] = [];

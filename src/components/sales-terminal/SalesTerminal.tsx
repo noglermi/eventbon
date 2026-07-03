@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AddTileDialog } from "./AddTileDialog";
 import { Cart } from "./Cart";
 import { defaultLanguage, groupLabels, translations } from "./i18n";
@@ -187,17 +187,22 @@ function EventSetupDialog({
 }
 
 export function SalesTerminal() {
+  const receivedInputRef = useRef<HTMLInputElement>(null);
   const [language, setLanguage] = useState<Language>(defaultLanguage);
   const [activeFilter, setActiveFilter] = useState<ProductFilter>("all");
   const [eventSettings, setEventSettings] = useState<EventSettings>(mockEventSettings);
   const [products, setProducts] = useState<ProductTileData[]>(productTiles);
   const [cartItems, setCartItems] = useState<CartItem[]>(initialCart);
-  const [receivedEntry, setReceivedEntry] = useState("20");
+  const [receivedEntry, setReceivedEntry] = useState("");
   const [isEventSetupOpen, setIsEventSetupOpen] = useState(false);
   const [tileEditor, setTileEditor] = useState<{ tile: ProductTileData | null; group: TileGroupName } | null>(null);
   const [printPreviewDate, setPrintPreviewDate] = useState<Date | null>(null);
   const labels = getLabels(language);
   const eventName = eventSettings.name[language];
+
+  useEffect(() => {
+    receivedInputRef.current?.focus();
+  }, []);
 
   const productsById = useMemo(
     () => new Map(products.map((product) => [product.id, product])),
@@ -248,6 +253,7 @@ export function SalesTerminal() {
   function clearSale() {
     setCartItems([]);
     setReceivedEntry("");
+    requestAnimationFrame(() => receivedInputRef.current?.focus());
   }
 
   function openPrintPreview() {
@@ -366,7 +372,7 @@ export function SalesTerminal() {
         <Cart items={cartItems} language={language} labels={labels} productsById={productsById} totalCents={totalCents} onIncrease={increaseItem} onDecrease={decreaseItem} onRemove={removeItem} />
 
         <div className="flex min-h-0 flex-col gap-5">
-          <PaymentPanel labels={labels} language={language} totalCents={totalCents} receivedCents={receivedCents} receivedEntry={receivedEntry} onReceivedEntryChange={setReceivedEntry} />
+          <PaymentPanel labels={labels} language={language} totalCents={totalCents} receivedCents={receivedCents} receivedEntry={receivedEntry} receivedInputRef={receivedInputRef} onReceivedEntryChange={setReceivedEntry} />
           <PrintModeSetting labels={labels} printMode={eventSettings.printMode} onPrintModeChange={(printMode) => setEventSettings((current) => ({ ...current, printMode }))} />
         </div>
       </div>
