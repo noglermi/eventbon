@@ -162,12 +162,15 @@ export function OrganizerEventWorkspace() {
     try {
       if (!supabaseConfigWarning) {
         const persistedEvent = await createEvent({ name, startsAt: dateFrom, endsAt: dateTo, printMode });
-        const bookedEvent = mapPersistedEvent(persistedEvent);
 
-        setEvents((current) => [...current, bookedEvent]);
-        setIsCreateOpen(false);
-        setSelectedEvent(bookedEvent);
-        return;
+        if (persistedEvent) {
+          const bookedEvent = mapPersistedEvent(persistedEvent);
+
+          setEvents((current) => [...current, bookedEvent]);
+          setIsCreateOpen(false);
+          setSelectedEvent(bookedEvent);
+          return;
+        }
       }
     } catch (error) {
       const diagnostic = logSupabaseError("create event", error);

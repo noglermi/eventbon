@@ -11,7 +11,7 @@ export type Tenant = {
 
 export type Event = {
   id: string;
-  tenantId: string;
+  tenantId: string | null;
   name: string;
   startsAt: string;
   endsAt: string;

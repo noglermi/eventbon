@@ -32,8 +32,6 @@ export type EventUpdateInput = {
   status: string;
 };
 
-const defaultOrganizerName = "Demo Veranstalter";
-
 function requireSupabase() {
   if (!supabase) {
     throw new Error("Supabase is not configured.");
@@ -67,27 +65,6 @@ function mapEvent(row: EventRow): Event {
   };
 }
 
-async function getOrCreateTenantId() {
-  const tenantId = await getFirstTenantId();
-
-  if (tenantId) {
-    return tenantId;
-  }
-
-  const client = requireSupabase();
-  const { data: tenant, error: insertError } = await client
-    .from("tenants")
-    .insert({ name: defaultOrganizerName })
-    .select("id")
-    .single();
-
-  if (insertError) {
-    throw insertError;
-  }
-
-  return String(tenant.id);
-}
-
 async function getFirstTenantId() {
   const client = requireSupabase();
   const { data: existingTenants, error: selectError } = await client
@@ -109,16 +86,10 @@ async function getFirstTenantId() {
 
 export async function listEvents() {
   const client = requireSupabase();
-  const tenantId = await getFirstTenantId();
-
-  if (!tenantId) {
-    return [];
-  }
 
   const { data, error } = await client
     .from("events")
     .select("*")
-    .eq("tenant_id", tenantId)
     .order("starts_at", { ascending: true });
 
   if (error) {
@@ -130,7 +101,12 @@ export async function listEvents() {
 
 export async function createEvent(input: EventCreateInput) {
   const client = requireSupabase();
-  const tenantId = await getOrCreateTenantId();
+  const tenantId = await getFirstTenantId();
+
+  if (!tenantId) {
+    return null;
+  }
+
   const endsAt = toDateTime(input.endsAt || input.startsAt);
   const { data, error } = await client
     .from("events")
