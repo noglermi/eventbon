@@ -95,55 +95,18 @@ function getFileExtension(file: File) {
   return "jpg";
 }
 
-async function ensureProductImagesBucket() {
-  const client = requireSupabase();
-  console.info("Checking Supabase Storage bucket", { bucket: productImagesBucket });
-  const { error } = await client.storage.getBucket(productImagesBucket);
-
-  if (!error) {
-    console.info("Supabase Storage bucket is available", { bucket: productImagesBucket });
-    return;
-  }
-
-  console.warn("Supabase Storage bucket lookup failed; trying to create bucket", {
-    bucket: productImagesBucket,
-    error,
-  });
-
-  const { error: createError } = await client.storage.createBucket(productImagesBucket, {
-    public: true,
-    fileSizeLimit: "5MB",
-    allowedMimeTypes: ["image/jpeg", "image/png", "image/webp"],
-  });
-
-  if (createError) {
-    console.error("Supabase Storage bucket is not available", {
-      bucket: productImagesBucket,
-      error: createError,
-    });
-    throw new Error(
-      "Supabase Storage bucket product-images is not available. Create a public bucket named product-images or allow bucket creation. " + createError.message,
-    );
-  }
-
-  console.info("Supabase Storage bucket created", { bucket: productImagesBucket });
-}
-
 async function uploadProductImage(input: ProductSaveInput) {
   if (!input.product.imageFile) {
     return input.product.image ?? null;
   }
 
   const client = requireSupabase();
-  await ensureProductImagesBucket();
 
   const file = input.product.imageFile;
   const safeName = safeFileName(file.name);
   const fileExtension = getFileExtension(file);
-  const pathName = uuidPattern.test(input.product.id)
-    ? input.product.id + "-" + safeName
-    : "new-product-" + Date.now() + "." + fileExtension;
-  const storagePath = input.eventId + "/" + pathName;
+  const timestampedName = Date.now() + "-" + (safeName.includes(".") ? safeName : safeName + "." + fileExtension);
+  const storagePath = input.eventId + "/" + timestampedName;
 
   console.info("Uploading product image to Supabase Storage", {
     bucket: productImagesBucket,
