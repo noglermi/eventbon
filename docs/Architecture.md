@@ -49,20 +49,25 @@ Tenant separation should be enforced at the data access layer and, where applica
 
 ## Supabase
 
-All application data is stored in Supabase.
+Supabase is the central online data store for eventBon.
+
+All hosted application data is stored in Supabase. The online version treats Supabase as the source of truth for tenants, events, products, sales, sale items, voucher records, access periods, and exportable summaries.
 
 Supabase responsibilities:
 
 - tenants
 - events
-- sales tiles
-- sales orders
-- order items
+- products
+- sales
+- sale items
 - payment confirmations
 - printed voucher records
+- access extension records
 - summary and export data
 
 Supabase should be treated as the source of truth for sales and voucher records.
+
+A future offline-capable version may use a local storage layer or local database during the booked license period. That local layer must remain separate from the online source-of-truth model and must reconcile with the hosted model only when offline mode is explicitly designed.
 
 ## Vercel
 
@@ -120,7 +125,7 @@ The architecture must remain ready for:
 
 Payment providers should be modeled as replaceable adapters. The sales terminal should not depend directly on provider-specific logic.
 
-Stripe readiness is for eventBon rental and account access, separate from Bon sales. Stripe must later support:
+Stripe readiness is for eventBon rental, booking, and account access, separate from Bon sales. Stripe rental and payment handling must remain outside the Bon sales workflow. Stripe must later support:
 
 - event rental purchase
 - duration-based access
