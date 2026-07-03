@@ -10,8 +10,8 @@ export const mockEventSettings: EventSettings = {
 };
 
 export const productTiles: ProductTileData[] = [
-  { id: "beer", name: { de: "Bier", en: "Beer" }, price: 5, group: "Drinks", icon: "\u{1F37A}", color: "#f8c755", textColor: "#3a2500" },
-  { id: "fries", name: { de: "Pommes", en: "Fries" }, price: 4, group: "Food", icon: "\u{1F35F}", color: "#f59f63", textColor: "#3b1700" },
+  { id: "beer", name: { de: "Bier", en: "Beer" }, price: 5, group: "Drinks", icon: "\u{1F37A}", imageCrop: { zoom: 1, x: 50, y: 50 }, color: "#f8c755", textColor: "#3a2500" },
+  { id: "fries", name: { de: "Pommes", en: "Fries" }, price: 4, group: "Food", icon: "\u{1F35F}", imageCrop: { zoom: 1, x: 50, y: 50 }, color: "#f59f63", textColor: "#3b1700" },
 ];
 
 export const initialCart: CartItem[] = [

@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 import type { ChangeEvent, DragEvent } from "react";
 import type { Translation } from "./i18n";
 import { groupLabels } from "./i18n";
-import type { Language, ProductTileData, TileGroupName } from "./types";
+import type { ImageCrop, Language, ProductTileData, TileGroupName } from "./types";
 
 type AddTileDialogProps = {
   tile: ProductTileData | null;
@@ -16,6 +16,7 @@ type AddTileDialogProps = {
 };
 
 const colors = ["#f8c755", "#81d4f7", "#83c57c", "#f5a8c7", "#b49af4"];
+const defaultImageCrop: ImageCrop = { zoom: 1, x: 50, y: 50 };
 const iconCategories = ["Drinks", "Food", "Desserts", "Coffee", "Wine", "Beer", "Soft drinks", "Other"] as const;
 
 type IconCategory = (typeof iconCategories)[number];
@@ -94,6 +95,48 @@ function parsePrice(value: string) {
 
 function isAcceptedImage(file: File) {
   return ["image/jpeg", "image/png", "image/webp"].includes(file.type);
+}
+
+function getImageCropStyle(imageCrop: ImageCrop) {
+  return {
+    objectPosition: imageCrop.x + "% " + imageCrop.y + "%",
+    transform: "scale(" + imageCrop.zoom + ")",
+    transformOrigin: imageCrop.x + "% " + imageCrop.y + "%",
+  };
+}
+
+function CropSlider({
+  label,
+  max,
+  min,
+  step,
+  value,
+  onChange,
+}: {
+  label: string;
+  max: number;
+  min: number;
+  step: number;
+  value: number;
+  onChange: (value: number) => void;
+}) {
+  return (
+    <label className="grid gap-2 text-sm font-bold uppercase tracking-widest text-slate-500">
+      <span className="flex items-center justify-between gap-4">
+        <span>{label}</span>
+        <span className="rounded-xl bg-slate-100 px-3 py-1 text-base font-black normal-case tracking-normal text-slate-700">{value}</span>
+      </span>
+      <input
+        type="range"
+        min={min}
+        max={max}
+        step={step}
+        value={value}
+        onChange={(event) => onChange(Number(event.target.value))}
+        className="h-12 w-full accent-emerald-600"
+      />
+    </label>
+  );
 }
 
 function getIconCategoryLabel(category: IconCategory, language: Language) {
@@ -213,6 +256,7 @@ export function AddTileDialog({ tile, initialGroup, language, labels, onClose, o
   const tileColor = tile?.color ?? colors[0];
   const [selectedIcon, setSelectedIcon] = useState(tile?.icon ?? "\u2B50");
   const [imagePreview, setImagePreview] = useState(tile?.image ?? "");
+  const [imageCrop, setImageCrop] = useState<ImageCrop>(tile?.imageCrop ?? defaultImageCrop);
   const [isIconPickerOpen, setIsIconPickerOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -229,6 +273,7 @@ export function AddTileDialog({ tile, initialGroup, language, labels, onClose, o
     }
 
     setImagePreview(URL.createObjectURL(file));
+    setImageCrop(defaultImageCrop);
   }
 
   function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
@@ -265,6 +310,7 @@ export function AddTileDialog({ tile, initialGroup, language, labels, onClose, o
       group: selectedGroup,
       icon: selectedIcon,
       image: imagePreview || undefined,
+      imageCrop,
       color: selectedColor,
       textColor: textColorByColor[selectedColor] ?? tile?.textColor ?? "#0f172a",
     });
@@ -336,7 +382,7 @@ export function AddTileDialog({ tile, initialGroup, language, labels, onClose, o
                   className="flex min-h-56 items-center justify-center overflow-hidden rounded-3xl border border-slate-200 bg-slate-50 transition active:scale-[0.99] focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200"
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={imagePreview} alt="" className="h-56 w-full object-cover object-center" />
+                  <img src={imagePreview} alt="" className="h-56 w-full object-cover" style={getImageCropStyle(imageCrop)} />
                 </button>
                 <div className="grid grid-cols-2 gap-3">
                   <button type="button" onClick={() => fileInputRef.current?.click()} className="min-h-14 rounded-2xl bg-slate-100 px-5 text-lg font-black text-slate-700 transition active:scale-[0.98] focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200">
@@ -361,12 +407,26 @@ export function AddTileDialog({ tile, initialGroup, language, labels, onClose, o
             )}
           </div>
 
+          {imagePreview ? (
+            <div className="grid gap-4 rounded-3xl bg-slate-50 p-5 ring-1 ring-slate-200/75">
+              <div className="flex items-center justify-between gap-4">
+                <span className="text-sm font-bold uppercase tracking-widest text-slate-500">{labels.imageCrop}</span>
+                <button type="button" onClick={() => setImageCrop(defaultImageCrop)} className="min-h-12 rounded-2xl bg-white px-4 text-base font-black text-slate-700 ring-1 ring-slate-200/75 transition active:scale-[0.98] focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200">
+                  {labels.resetImageCrop}
+                </button>
+              </div>
+              <CropSlider label={labels.zoom} min={1} max={2.5} step={0.05} value={imageCrop.zoom} onChange={(zoom) => setImageCrop((current) => ({ ...current, zoom }))} />
+              <CropSlider label={labels.horizontal} min={0} max={100} step={1} value={imageCrop.x} onChange={(x) => setImageCrop((current) => ({ ...current, x }))} />
+              <CropSlider label={labels.vertical} min={0} max={100} step={1} value={imageCrop.y} onChange={(y) => setImageCrop((current) => ({ ...current, y }))} />
+            </div>
+          ) : null}
+
           <div className="grid gap-2">
             <span className="text-sm font-bold uppercase tracking-widest text-slate-500">{labels.preview}</span>
             <div className="flex min-h-44 items-center justify-center overflow-hidden rounded-3xl border border-slate-200 bg-slate-50">
               {imagePreview ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={imagePreview} alt="" className="h-44 w-full object-cover object-center" />
+                <img src={imagePreview} alt="" className="h-44 w-full object-cover" style={getImageCropStyle(imageCrop)} />
               ) : (
                 <span className="flex h-20 w-20 items-center justify-center rounded-2xl bg-white text-5xl ring-1 ring-slate-200/75" aria-hidden="true">{selectedIcon}</span>
               )}

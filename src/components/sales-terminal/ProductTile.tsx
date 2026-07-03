@@ -9,6 +9,7 @@ type ProductTileProps = {
 };
 
 const currency = new Intl.NumberFormat("de-AT", { style: "currency", currency: "EUR" });
+const defaultImageCrop = { zoom: 1, x: 50, y: 50 };
 
 function EditIcon() {
   return (
@@ -21,6 +22,7 @@ function EditIcon() {
 
 export function ProductTile({ language, product, editLabel, onSelect, onEdit }: ProductTileProps) {
   const productName = product.name[language];
+  const imageCrop = product.imageCrop ?? defaultImageCrop;
 
   return (
     <article
@@ -35,7 +37,16 @@ export function ProductTile({ language, product, editLabel, onSelect, onEdit }: 
         <span className={"flex items-center justify-center overflow-hidden rounded-[1.5rem] bg-white/85 ring-1 ring-black/5 " + (product.image ? "h-28 w-full" : "h-20 w-20 text-5xl")}>
           {product.image ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={product.image} alt="" className="h-full w-full object-cover object-center" />
+            <img
+              src={product.image}
+              alt=""
+              className="h-full w-full object-cover"
+              style={{
+                objectPosition: imageCrop.x + "% " + imageCrop.y + "%",
+                transform: "scale(" + imageCrop.zoom + ")",
+                transformOrigin: imageCrop.x + "% " + imageCrop.y + "%",
+              }}
+            />
           ) : (
             <span aria-hidden="true">{product.icon}</span>
           )}

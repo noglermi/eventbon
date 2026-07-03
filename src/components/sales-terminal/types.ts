@@ -5,6 +5,12 @@ export type PrintMode = "single_vouchers" | "combined_voucher";
 
 export type LocalizedText = Record<Language, string>;
 
+export type ImageCrop = {
+  zoom: number;
+  x: number;
+  y: number;
+};
+
 export type ProductTileData = {
   id: string;
   name: LocalizedText;
@@ -12,6 +18,7 @@ export type ProductTileData = {
   group: TileGroupName;
   icon?: string;
   image?: string;
+  imageCrop?: ImageCrop;
   color: string;
   textColor?: string;
 };
