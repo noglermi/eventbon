@@ -105,6 +105,10 @@ function getImageCropStyle(imageCrop: ImageCrop) {
   };
 }
 
+function isDefaultCrop(imageCrop: ImageCrop) {
+  return imageCrop.zoom === defaultImageCrop.zoom && imageCrop.x === defaultImageCrop.x && imageCrop.y === defaultImageCrop.y;
+}
+
 function CropSlider({
   label,
   max,
@@ -121,11 +125,8 @@ function CropSlider({
   onChange: (value: number) => void;
 }) {
   return (
-    <label className="grid gap-2 text-sm font-bold uppercase tracking-widest text-slate-500">
-      <span className="flex items-center justify-between gap-4">
-        <span>{label}</span>
-        <span className="rounded-xl bg-slate-100 px-3 py-1 text-base font-black normal-case tracking-normal text-slate-700">{value}</span>
-      </span>
+    <label className="grid grid-cols-[7rem_minmax(0,1fr)_4rem] items-center gap-3 text-sm font-bold uppercase tracking-widest text-slate-500">
+      <span>{label}</span>
       <input
         type="range"
         min={min}
@@ -133,8 +134,9 @@ function CropSlider({
         step={step}
         value={value}
         onChange={(event) => onChange(Number(event.target.value))}
-        className="h-12 w-full accent-emerald-600"
+        className="h-10 w-full accent-emerald-600"
       />
+      <span className="rounded-xl bg-white px-2 py-1 text-center text-base font-black normal-case tracking-normal text-slate-700 ring-1 ring-slate-200/75">{value}</span>
     </label>
   );
 }
@@ -266,6 +268,7 @@ export function AddTileDialog({ tile, initialGroup, language, labels, onClose, o
 
   const tileName = tile?.name[language] ?? labels.newProduct;
   const tilePrice = tile ? String(tile.price) : "5.00";
+  const hasCustomCrop = !isDefaultCrop(imageCrop);
 
   function applyImageFile(file: File) {
     if (!isAcceptedImage(file)) {
@@ -382,7 +385,12 @@ export function AddTileDialog({ tile, initialGroup, language, labels, onClose, o
                   className="flex min-h-56 items-center justify-center overflow-hidden rounded-3xl border border-slate-200 bg-slate-50 transition active:scale-[0.99] focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200"
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={imagePreview} alt="" className="h-56 w-full object-cover" style={getImageCropStyle(imageCrop)} />
+                  <img
+                    src={imagePreview}
+                    alt=""
+                    className={"h-56 w-full " + (hasCustomCrop ? "object-cover" : "object-contain")}
+                    style={hasCustomCrop ? getImageCropStyle(imageCrop) : undefined}
+                  />
                 </button>
                 <div className="grid grid-cols-2 gap-3">
                   <button type="button" onClick={() => fileInputRef.current?.click()} className="min-h-14 rounded-2xl bg-slate-100 px-5 text-lg font-black text-slate-700 transition active:scale-[0.98] focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200">
@@ -408,10 +416,10 @@ export function AddTileDialog({ tile, initialGroup, language, labels, onClose, o
           </div>
 
           {imagePreview ? (
-            <div className="grid gap-4 rounded-3xl bg-slate-50 p-5 ring-1 ring-slate-200/75">
+            <div className="grid gap-3 rounded-3xl bg-slate-50 p-4 ring-1 ring-slate-200/75">
               <div className="flex items-center justify-between gap-4">
-                <span className="text-sm font-bold uppercase tracking-widest text-slate-500">{labels.imageCrop}</span>
-                <button type="button" onClick={() => setImageCrop(defaultImageCrop)} className="min-h-12 rounded-2xl bg-white px-4 text-base font-black text-slate-700 ring-1 ring-slate-200/75 transition active:scale-[0.98] focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200">
+                <span className="text-base font-black tracking-normal text-slate-950">{labels.imageCrop}</span>
+                <button type="button" onClick={() => setImageCrop(defaultImageCrop)} className="min-h-11 rounded-2xl bg-white px-4 text-sm font-black text-slate-700 ring-1 ring-slate-200/75 transition active:scale-[0.98] focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200">
                   {labels.resetImageCrop}
                 </button>
               </div>
@@ -420,18 +428,6 @@ export function AddTileDialog({ tile, initialGroup, language, labels, onClose, o
               <CropSlider label={labels.vertical} min={0} max={100} step={1} value={imageCrop.y} onChange={(y) => setImageCrop((current) => ({ ...current, y }))} />
             </div>
           ) : null}
-
-          <div className="grid gap-2">
-            <span className="text-sm font-bold uppercase tracking-widest text-slate-500">{labels.preview}</span>
-            <div className="flex min-h-44 items-center justify-center overflow-hidden rounded-3xl border border-slate-200 bg-slate-50">
-              {imagePreview ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={imagePreview} alt="" className="h-44 w-full object-cover" style={getImageCropStyle(imageCrop)} />
-              ) : (
-                <span className="flex h-20 w-20 items-center justify-center rounded-2xl bg-white text-5xl ring-1 ring-slate-200/75" aria-hidden="true">{selectedIcon}</span>
-              )}
-            </div>
-          </div>
 
           <div className="mt-2 flex justify-end gap-3">
             <button type="button" onClick={onClose} className="min-h-14 rounded-2xl bg-slate-100 px-6 text-lg font-black text-slate-700 transition hover:bg-slate-200">{labels.cancel}</button>
