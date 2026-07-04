@@ -30,7 +30,11 @@ eventBon is event-booking based. A customer does not primarily subscribe to a ge
 
 The booked event is the core business object. The organizer account may own multiple booked events over time, but each event carries its own date range, access period, print active period, post-event access period, status, products, groups, and invited helpers.
 
+Commercially, eventBon starts with a registered organizer user. The organizer account owns events and can create multiple events over time. Each new event requires a separate payment before it becomes active. eventBon is therefore pay-per-event first, not primarily a subscription model.
+
 User-facing product language uses "Veranstalter" for the organizer. Internally, the data model may still use tenant and tenant_id for multi-tenant boundaries, but the user-facing product should avoid "Mandant". The main organizer-facing entry point is "Meine Veranstaltungen".
+
+Past events remain visible in "Meine Veranstaltungen" for review according to the configured access, archive, and retention periods.
 
 Helpers and volunteers are invited per event. They can access only the booked event they were invited to and are not global users in the product concept.
 
@@ -38,7 +42,7 @@ The event lifecycle includes preparation, active sales and printing, post-event 
 
 The product deliberately avoids back-office complexity. There is no dashboard in the MVP, no separate article management, no invoices, no receipts, no taxes, and no accounting.
 
-Stripe later handles event booking, organizer payment, paid extensions, and invoice/payment handling for the eventBon usage period. This remains separate from visitor payments and Bon sales. eventBon remains not a cash register.
+Stripe later handles event booking payment, event activation, paid extensions, and invoice/payment handling for the organizer. This remains separate from visitor payments and Bon sales. Stripe is never used for Bon sales to visitors. Visitor payments remain outside Stripe unless a future SumUp integration confirms an external payment. eventBon remains not a cash register.
 
 ## Design Principles
 

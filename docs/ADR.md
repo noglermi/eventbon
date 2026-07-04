@@ -98,3 +98,33 @@ Organizers book eventBon for specific events. The UI and data model should refle
 - Helpers are not global users in the product concept.
 - Each booked event has a preparation period, active sales and printing period, post-event statistics and export period, archive or retention period, and optional paid extension.
 - Opening an event from Meine Veranstaltungen leads into the sales terminal for that selected event.
+
+## ADR-008 Pay-Per-Event Commercial Model
+
+### Decision
+
+eventBon starts with a registered organizer user. The organizer account owns events and can create multiple events over time.
+
+Each new event requires a separate payment before it becomes active. eventBon is pay-per-event first, not primarily a subscription model.
+
+The organizer's past events remain visible in Meine Veranstaltungen according to the configured access, archive, and retention periods.
+
+Stripe is used only for:
+
+- event booking payment
+- event activation
+- paid extension
+- invoices and payment handling for the organizer
+
+Stripe is never used for Bon sales to visitors.
+
+### Reason
+
+eventBon is rented for temporary events. A pay-per-event model matches the product's event lifecycle, keeps Stripe tied to organizer booking and activation, and avoids turning the sales terminal into a cash register or POS payment system.
+
+### Implications
+
+- Organizer accounts are long-lived, but paid access is event-specific.
+- Each booked event has its own payment, active usage window, post-event access, and possible extension.
+- Meine Veranstaltungen contains current and past events owned by the organizer.
+- Bon sales remain separate from Stripe. Visitor payments remain outside Stripe unless a future SumUp integration confirms payment externally.

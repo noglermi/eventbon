@@ -18,6 +18,8 @@ eventBon is event-booking based. The customer books eventBon for a specific even
 
 The organizer-facing navigation starts with Meine Veranstaltungen, not a generic dashboard. User-facing language uses Veranstalter; tenant and tenant_id remain internal data model terms only.
 
+The commercial model starts with a registered organizer user. The organizer account owns events, can create multiple events over time, and each new event requires a separate payment before it becomes active. eventBon is pay-per-event first, not primarily a subscription model. Past events remain visible in Meine Veranstaltungen according to access, archive, and retention rules.
+
 Booking lifecycle:
 
 - booking or purchase
@@ -121,9 +123,9 @@ Stripe-ready architecture must also support eventBon event booking purchases sep
 - post-event access period
 - optional paid extension
 
-Stripe must later be able to support event booking, organizer payment, duration-based access, paid extensions, renewal/extension flow, invoice/payment handling outside the Bon sales workflow, and a license activation token for future offline use.
+Stripe must later be able to support event booking payment, event activation, organizer payment handling, duration-based access, paid extensions, renewal/extension flow, invoice/payment handling outside the Bon sales workflow, and a license activation token for future offline use.
 
-eventBon must not process event visitor payments as a cash register.
+Stripe is never used for Bon sales to visitors. Visitor payments remain outside Stripe unless a future SumUp integration confirms payment externally. eventBon must not process event visitor payments as a cash register.
 
 ## Phase 3b: Future Offline License Readiness
 

@@ -8,6 +8,8 @@ It helps event teams sell vouchers, calculate cash change, print vouchers in the
 
 eventBon is event-booking based. The customer books eventBon for a specific event and usage period instead of primarily subscribing to a generic permanent software workspace.
 
+The commercial user model starts with a registered organizer user. The organizer account owns events, can create multiple events over time, and pays separately for each new event before that event becomes active. eventBon is pay-per-event first, not primarily a subscription model.
+
 The user-facing product language is centered on the Veranstalter. Internally, the data model may still use tenant and tenant_id, but user-facing concepts should avoid Mandant. The main organizer-facing entry point is Meine Veranstaltungen.
 
 ## Mission
@@ -50,6 +52,8 @@ Example:
 
 The eventBon rental payment is separate from Bon sales. eventBon does not process event visitor payments as a cash register.
 
+Stripe is used only for event booking payment, event activation, paid extension, and invoices or payment handling for the organizer. Stripe is never used for Bon sales to visitors. Visitor payments remain outside Stripe unless a future SumUp integration confirms payment externally.
+
 ## Roles
 
 ### Organizer
@@ -57,6 +61,8 @@ The eventBon rental payment is separate from Bon sales. eventBon does not proces
 The organizer books the event, pays for the eventBon usage period, defines event name, date range, print mode, products, groups, and access rules, and can invite helpers.
 
 An organizer can own multiple booked events over time. Each booked event has its own lifecycle, configuration, helpers, and access periods.
+
+The organizer's past events remain visible in Meine Veranstaltungen according to archive and retention rules, so the organizer can return to previous event records without turning eventBon into a permanent POS workspace.
 
 ### Helpers And Volunteers
 

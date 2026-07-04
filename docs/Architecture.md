@@ -58,6 +58,8 @@ Tenant separation should be enforced at the data access layer and, where applica
 
 The organizer account may own multiple booked events over time. Helpers and volunteers are invited into specific booked events and should not automatically gain access to other events owned by the same organizer. Helpers are not global users in the product concept.
 
+The commercial account model starts with a registered organizer user. The organizer account owns events and can create multiple events over time. Past events remain visible in Meine Veranstaltungen according to their access, archive, and retention periods.
+
 ## Supabase
 
 Supabase is the central online data store for eventBon.
@@ -95,6 +97,8 @@ Deployment should remain simple:
 eventBon is built around booked events, not generic permanent software workspaces.
 
 The core business object is a booked event. A customer books eventBon for a specific event and usage period. For example, a riding tournament organizer can book eventBon for a tournament from 28.07. to 30.07.
+
+Each new event requires a separate payment before it becomes active. This makes eventBon pay-per-event first, not primarily a subscription product. A registered organizer account can therefore own a history of paid, active, post-event, and archived events.
 
 Each booked event has:
 
@@ -183,14 +187,15 @@ Payment providers should be modeled as replaceable adapters. The sales terminal 
 
 Stripe readiness is for eventBon event booking, organizer payment, paid extension, and account access, separate from Bon sales. Stripe rental and payment handling must remain outside the Bon sales workflow. Stripe must later support:
 
-- event rental purchase
+- event booking payment
+- event activation after successful payment
 - duration-based access
 - paid extension
 - license activation token for offline use
 - renewal/extension flow
 - invoice and payment handling for the organizer outside the Bon sales workflow
 
-eventBon still does not process event visitor payments as a cash register.
+Stripe is never used for Bon sales to visitors. Visitor payments remain outside Stripe unless a future SumUp integration confirms payment externally. eventBon still does not process event visitor payments as a cash register.
 
 ## Printing
 
