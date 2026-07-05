@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { createEvent, listEvents } from "@/lib/repositories/events";
 import { getOrganizerForAuthenticatedUser, mockOrganizer } from "@/lib/repositories/organizers";
 import { formatDate, formatDateRange } from "@/lib/date-format";
@@ -105,16 +105,37 @@ function DatePickerField({
   required?: boolean;
   value: string;
 }) {
+  const inputRef = useRef<HTMLInputElement>(null);
   const visibleValue = value ? formatDate(value, language) : placeholder;
+
+  function openDatePicker() {
+    const input = inputRef.current;
+    if (!input) {
+      return;
+    }
+
+    if (typeof input.showPicker === "function") {
+      input.showPicker();
+      return;
+    }
+
+    input.focus();
+    input.click();
+  }
 
   return (
     <label className="grid gap-2 text-sm font-bold uppercase tracking-widest text-slate-500">
       {label}
       <span className={"relative block rounded-lg focus-within:ring-4 " + (invalid ? "focus-within:ring-rose-100" : "focus-within:ring-emerald-100")}>
-        <span className={"flex min-h-14 items-center rounded-lg border px-4 text-xl font-bold normal-case tracking-normal outline-none ring-offset-0 " + (invalid ? "border-rose-400 bg-rose-50 text-rose-950" : "border-slate-200 bg-white text-slate-950")}>
+        <button
+          type="button"
+          onClick={openDatePicker}
+          className={"flex min-h-14 w-full items-center rounded-lg border px-4 text-left text-xl font-bold normal-case tracking-normal outline-none ring-offset-0 " + (invalid ? "border-rose-400 bg-rose-50 text-rose-950" : "border-slate-200 bg-white text-slate-950")}
+        >
           {visibleValue}
-        </span>
+        </button>
         <input
+          ref={inputRef}
           name={name}
           type="date"
           required={required}
@@ -125,7 +146,7 @@ function DatePickerField({
           aria-label={label}
           aria-invalid={invalid}
           aria-describedby={describedBy}
-          className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+          className="pointer-events-none absolute left-4 top-1/2 h-px w-px -translate-y-1/2 opacity-0"
         />
       </span>
     </label>

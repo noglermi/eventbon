@@ -181,7 +181,7 @@ export const translations = {
     change: "Change",
     chooseColor: "Choose color",
     chooseIcon: "Choose icon",
-    chooseDate: "Choose date",
+    chooseDate: "Select date",
     clearSale: "New Sale",
     closeAddTileDialog: "Close add tile dialog",
     color: "Color",
