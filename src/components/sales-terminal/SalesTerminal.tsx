@@ -6,6 +6,7 @@ import { listProducts, saveProduct } from "@/lib/repositories/products";
 import { listRecentSales, saveCompletedSale } from "@/lib/repositories/sales";
 import type { RecentSale } from "@/lib/repositories/sales";
 import { updateEventBasics } from "@/lib/repositories/events";
+import { formatDateRange } from "@/lib/date-format";
 import { logSupabaseError } from "@/lib/supabase/diagnostics";
 import { supabaseConfigWarning } from "@/lib/supabase/client";
 import { AddTileDialog } from "./AddTileDialog";
@@ -147,23 +148,6 @@ function CalendarIcon() {
       <path d="M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" />
     </svg>
   );
-}
-
-function formatEventDate(eventSettings: EventSettings, language: Language) {
-  const locale = language === "de" ? "de-AT" : "en-US";
-  const formatter = new Intl.DateTimeFormat(locale, { dateStyle: "medium" });
-  const from = new Date(eventSettings.dateFrom + "T12:00:00");
-  const to = new Date(eventSettings.dateTo + "T12:00:00");
-
-  if (Number.isNaN(from.getTime())) {
-    return "";
-  }
-
-  if (!eventSettings.dateTo || eventSettings.dateFrom === eventSettings.dateTo || Number.isNaN(to.getTime())) {
-    return formatter.format(from);
-  }
-
-  return formatter.format(from) + " - " + formatter.format(to);
 }
 
 type SalesTerminalProps = {
@@ -591,7 +575,7 @@ export function SalesTerminal({
                     <h1 className="text-3xl font-black tracking-tight text-slate-950">{labels.articles}</h1>
                     <p className="mt-1 flex items-center gap-2 text-sm font-bold text-slate-500">
                       <CalendarIcon />
-                      {formatEventDate(eventSettings, language)}
+                      {formatDateRange(eventSettings, language)}
                     </p>
                   </div>
                   <span className="rounded-2xl bg-slate-50 px-4 py-3 text-sm font-black text-slate-600 ring-1 ring-slate-200/75">

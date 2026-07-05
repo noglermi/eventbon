@@ -1,3 +1,4 @@
+import { formatDateTime } from "@/lib/date-format";
 import type { Translation } from "./i18n";
 import type { CartItem, Language, PrintMode, ProductTileData } from "./types";
 
@@ -17,13 +18,6 @@ type VoucherPrintPreviewProps = {
   printedAt: Date;
   onCancel: () => void;
 };
-
-function formatDateTime(date: Date, language: Language) {
-  return new Intl.DateTimeFormat(language === "de" ? "de-AT" : "en-US", {
-    dateStyle: "short",
-    timeStyle: "short",
-  }).format(date);
-}
 
 function buildLines(cartItems: CartItem[], productsById: Map<string, ProductTileData>, language: Language) {
   return cartItems.flatMap((item) => {

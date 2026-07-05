@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { getSalesAnalytics } from "@/lib/repositories/sales";
 import type { SalesAnalyticsSummary } from "@/lib/repositories/sales";
+import { formatDateRange } from "@/lib/date-format";
 import { logSupabaseError } from "@/lib/supabase/diagnostics";
 import { supabaseConfigWarning } from "@/lib/supabase/client";
 import { defaultLanguage, translations } from "@/components/sales-terminal/i18n";
@@ -31,22 +32,6 @@ const emptySummary: SalesAnalyticsSummary = {
 
 function formatCurrency(cents: number, language: Language) {
   return new Intl.NumberFormat(language === "de" ? "de-AT" : "en-US", { style: "currency", currency: "EUR" }).format(cents / 100);
-}
-
-function formatDateRange(event: EventSettings, language: Language) {
-  const formatter = new Intl.DateTimeFormat(language === "de" ? "de-AT" : "en-US", { dateStyle: "medium" });
-  const from = new Date(event.dateFrom + "T12:00:00");
-  const to = new Date(event.dateTo + "T12:00:00");
-
-  if (Number.isNaN(from.getTime())) {
-    return "";
-  }
-
-  if (!event.dateTo || event.dateFrom === event.dateTo || Number.isNaN(to.getTime())) {
-    return formatter.format(from);
-  }
-
-  return formatter.format(from) + " - " + formatter.format(to);
 }
 
 function getTodayRange() {

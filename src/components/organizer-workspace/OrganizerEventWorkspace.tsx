@@ -3,6 +3,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { createEvent, listEvents } from "@/lib/repositories/events";
 import { getOrganizerForAuthenticatedUser, mockOrganizer } from "@/lib/repositories/organizers";
+import { formatDate, formatDateRange } from "@/lib/date-format";
 import { logSupabaseError } from "@/lib/supabase/diagnostics";
 import { supabase, supabaseConfigWarning } from "@/lib/supabase/client";
 import { SalesTerminal } from "@/components/sales-terminal/SalesTerminal";
@@ -24,31 +25,6 @@ type BookedEvent = {
   accessUntil: string;
   isPersisted: boolean;
 };
-
-function formatDateRange(event: EventSettings) {
-  const formatter = new Intl.DateTimeFormat("de-AT", { dateStyle: "medium" });
-  const from = new Date(event.dateFrom + "T12:00:00");
-  const to = new Date(event.dateTo + "T12:00:00");
-
-  if (Number.isNaN(from.getTime())) {
-    return "";
-  }
-
-  if (!event.dateTo || event.dateFrom === event.dateTo || Number.isNaN(to.getTime())) {
-    return formatter.format(from);
-  }
-
-  return formatter.format(from) + " - " + formatter.format(to);
-}
-
-function formatDate(value: string) {
-  const date = new Date(value + "T12:00:00");
-  if (Number.isNaN(date.getTime())) {
-    return "";
-  }
-
-  return new Intl.DateTimeFormat("de-AT", { dateStyle: "medium" }).format(date);
-}
 
 function toDateInput(value: string) {
   return value.slice(0, 10);
@@ -119,8 +95,11 @@ export function OrganizerEventWorkspace() {
   const [selectedEvent, setSelectedEvent] = useState<BookedEvent | null>(null);
   const [dashboardEvent, setDashboardEvent] = useState<BookedEvent | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [newEventDateFrom, setNewEventDateFrom] = useState("");
+  const [newEventDateTo, setNewEventDateTo] = useState("");
   const [isLoadingEvents, setIsLoadingEvents] = useState(false);
   const [eventError, setEventError] = useState<string | null>(null);
+  const isNewEventDateInvalid = Boolean(newEventDateFrom && newEventDateTo && newEventDateTo < newEventDateFrom);
 
   const statusLabels: Record<BookedEventStatus, string> = {
     draft: labels.statusPreparation,
@@ -301,6 +280,10 @@ export function OrganizerEventWorkspace() {
     const dateTo = dateToEntry || dateFrom;
     const printMode = String(formData.get("printMode") ?? "single_vouchers") as PrintMode;
 
+    if (dateTo < dateFrom) {
+      return;
+    }
+
     try {
       if (!supabaseConfigWarning) {
         const persistedEvent = await createEvent({ name, organizerId: currentOrganizer.id, startsAt: dateFrom, endsAt: dateTo, printMode });
@@ -310,6 +293,8 @@ export function OrganizerEventWorkspace() {
 
           setEvents((current) => [...current, bookedEvent]);
           setIsCreateOpen(false);
+          setNewEventDateFrom("");
+          setNewEventDateTo("");
           setSelectedEvent(bookedEvent);
           return;
         }
@@ -336,6 +321,8 @@ export function OrganizerEventWorkspace() {
 
     setEvents((current) => [...current, bookedEvent]);
     setIsCreateOpen(false);
+    setNewEventDateFrom("");
+    setNewEventDateTo("");
     setSelectedEvent(bookedEvent);
   }
 
@@ -459,7 +446,11 @@ export function OrganizerEventWorkspace() {
             </button>
             <button
               type="button"
-              onClick={() => setIsCreateOpen(true)}
+              onClick={() => {
+                setNewEventDateFrom("");
+                setNewEventDateTo("");
+                setIsCreateOpen(true);
+              }}
               className="min-h-14 rounded-lg bg-emerald-600 px-6 text-lg font-black text-white shadow-sm shadow-emerald-700/20 transition active:scale-[0.98] focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200"
             >
               + {labels.bookNewEvent}
@@ -493,7 +484,7 @@ export function OrganizerEventWorkspace() {
                     {statusLabels[bookedEvent.status]}
                   </span>
                 </div>
-                <p className="mt-2 text-base font-bold text-slate-600">{formatDateRange(bookedEvent.settings)}</p>
+                <p className="mt-2 text-base font-bold text-slate-600">{formatDateRange(bookedEvent.settings, language)}</p>
               </div>
 
               <dl className="grid grid-cols-2 gap-3 text-sm">
@@ -503,7 +494,7 @@ export function OrganizerEventWorkspace() {
                 </div>
                 <div className="rounded-lg bg-slate-50 p-3">
                   <dt className="font-bold uppercase tracking-widest text-slate-500">{labels.accessUntil}</dt>
-                  <dd className="mt-1 text-lg font-black text-slate-900">{formatDate(bookedEvent.accessUntil)}</dd>
+                  <dd className="mt-1 text-lg font-black text-slate-900">{formatDate(bookedEvent.accessUntil, language)}</dd>
                 </div>
               </dl>
 
@@ -547,13 +538,16 @@ export function OrganizerEventWorkspace() {
               <div className="grid grid-cols-2 gap-4">
                 <label className="grid gap-2 text-sm font-bold uppercase tracking-widest text-slate-500">
                   {labels.eventDateFrom}
-                  <input name="dateFrom" type="date" required className="min-h-14 rounded-lg border border-slate-200 px-4 text-xl font-bold normal-case tracking-normal text-slate-950 outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100" />
+                  <input name="dateFrom" type="date" required value={newEventDateFrom} onChange={(event) => setNewEventDateFrom(event.target.value)} max={newEventDateTo || undefined} className={"min-h-14 rounded-lg border px-4 text-xl font-bold normal-case tracking-normal text-slate-950 outline-none focus:ring-4 " + (isNewEventDateInvalid ? "border-rose-400 bg-rose-50 focus:border-rose-500 focus:ring-rose-100" : "border-slate-200 focus:border-emerald-500 focus:ring-emerald-100")} />
                 </label>
                 <label className="grid gap-2 text-sm font-bold uppercase tracking-widest text-slate-500">
                   {labels.eventDateTo}
-                  <input name="dateTo" type="date" className="min-h-14 rounded-lg border border-slate-200 px-4 text-xl font-bold normal-case tracking-normal text-slate-950 outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100" />
+                  <input name="dateTo" type="date" value={newEventDateTo} onChange={(event) => setNewEventDateTo(event.target.value)} min={newEventDateFrom || undefined} aria-invalid={isNewEventDateInvalid} aria-describedby={isNewEventDateInvalid ? "new-event-date-error" : undefined} className={"min-h-14 rounded-lg border px-4 text-xl font-bold normal-case tracking-normal text-slate-950 outline-none focus:ring-4 " + (isNewEventDateInvalid ? "border-rose-400 bg-rose-50 focus:border-rose-500 focus:ring-rose-100" : "border-slate-200 focus:border-emerald-500 focus:ring-emerald-100")} />
                 </label>
               </div>
+              {isNewEventDateInvalid ? (
+                <p id="new-event-date-error" className="rounded-lg bg-rose-50 px-4 py-3 text-sm font-black text-rose-800 ring-1 ring-rose-200">{labels.eventEndBeforeStart}</p>
+              ) : null}
 
               <fieldset className="grid gap-2">
                 <legend className="text-sm font-bold uppercase tracking-widest text-slate-500">{labels.voucherPrinting}</legend>
@@ -571,7 +565,7 @@ export function OrganizerEventWorkspace() {
 
               <div className="flex justify-end gap-3">
                 <button type="button" onClick={() => setIsCreateOpen(false)} className="min-h-14 rounded-lg bg-slate-100 px-6 text-lg font-black text-slate-700 transition hover:bg-slate-200">{labels.cancel}</button>
-                <button type="submit" className="min-h-14 rounded-lg bg-emerald-600 px-6 text-lg font-black text-white transition hover:bg-emerald-700">{labels.openEvent}</button>
+                <button type="submit" disabled={isNewEventDateInvalid} className="min-h-14 rounded-lg bg-emerald-600 px-6 text-lg font-black text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500">{labels.openEvent}</button>
               </div>
             </form>
           </div>

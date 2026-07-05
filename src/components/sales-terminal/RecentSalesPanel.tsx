@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { RecentSale } from "@/lib/repositories/sales";
+import { formatDateTime } from "@/lib/date-format";
 import type { Translation } from "./i18n";
 import type { Language } from "./types";
 
@@ -26,20 +27,6 @@ function formatTime(value: string, language: Language) {
   return new Intl.DateTimeFormat(locale, {
     hour: "2-digit",
     minute: "2-digit",
-  }).format(date);
-}
-
-function formatDateTime(value: string, language: Language) {
-  const date = new Date(value);
-  const locale = language === "de" ? "de-AT" : "en-US";
-
-  if (Number.isNaN(date.getTime())) {
-    return "";
-  }
-
-  return new Intl.DateTimeFormat(locale, {
-    dateStyle: "medium",
-    timeStyle: "short",
   }).format(date);
 }
 
