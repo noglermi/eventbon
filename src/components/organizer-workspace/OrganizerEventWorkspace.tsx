@@ -10,7 +10,7 @@ import { SalesTerminal } from "@/components/sales-terminal/SalesTerminal";
 import { OrganizerSalesDashboard } from "@/components/organizer-workspace/OrganizerSalesDashboard";
 import { defaultLanguage, translations } from "@/components/sales-terminal/i18n";
 import type { Translation } from "@/components/sales-terminal/i18n";
-import type { EventSettings, PrintMode } from "@/components/sales-terminal/types";
+import type { EventSettings, Language, PrintMode } from "@/components/sales-terminal/types";
 import type { Event as PersistedEvent, Organizer } from "@/types/domain";
 import type { Session } from "@supabase/supabase-js";
 
@@ -78,6 +78,58 @@ function getFriendlyAuthError(error: unknown, labels: Translation) {
   }
 
   return labels.authGeneralError;
+}
+
+function DatePickerField({
+  describedBy,
+  invalid,
+  label,
+  language,
+  max,
+  min,
+  name,
+  onChange,
+  placeholder,
+  required = false,
+  value,
+}: {
+  describedBy?: string;
+  invalid?: boolean;
+  label: string;
+  language: Language;
+  max?: string;
+  min?: string;
+  name: string;
+  onChange: (value: string) => void;
+  placeholder: string;
+  required?: boolean;
+  value: string;
+}) {
+  const visibleValue = value ? formatDate(value, language) : placeholder;
+
+  return (
+    <label className="grid gap-2 text-sm font-bold uppercase tracking-widest text-slate-500">
+      {label}
+      <span className={"relative block rounded-lg focus-within:ring-4 " + (invalid ? "focus-within:ring-rose-100" : "focus-within:ring-emerald-100")}>
+        <span className={"flex min-h-14 items-center rounded-lg border px-4 text-xl font-bold normal-case tracking-normal outline-none ring-offset-0 " + (invalid ? "border-rose-400 bg-rose-50 text-rose-950" : "border-slate-200 bg-white text-slate-950")}>
+          {visibleValue}
+        </span>
+        <input
+          name={name}
+          type="date"
+          required={required}
+          value={value}
+          min={min}
+          max={max}
+          onChange={(event) => onChange(event.target.value)}
+          aria-label={label}
+          aria-invalid={invalid}
+          aria-describedby={describedBy}
+          className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+        />
+      </span>
+    </label>
+  );
 }
 
 export function OrganizerEventWorkspace() {
@@ -536,14 +588,26 @@ export function OrganizerEventWorkspace() {
               </label>
 
               <div className="grid grid-cols-2 gap-4">
-                <label className="grid gap-2 text-sm font-bold uppercase tracking-widest text-slate-500">
-                  {labels.eventDateFrom}
-                  <input name="dateFrom" type="date" required value={newEventDateFrom} onChange={(event) => setNewEventDateFrom(event.target.value)} max={newEventDateTo || undefined} className={"min-h-14 rounded-lg border px-4 text-xl font-bold normal-case tracking-normal text-slate-950 outline-none focus:ring-4 " + (isNewEventDateInvalid ? "border-rose-400 bg-rose-50 focus:border-rose-500 focus:ring-rose-100" : "border-slate-200 focus:border-emerald-500 focus:ring-emerald-100")} />
-                </label>
-                <label className="grid gap-2 text-sm font-bold uppercase tracking-widest text-slate-500">
-                  {labels.eventDateTo}
-                  <input name="dateTo" type="date" value={newEventDateTo} onChange={(event) => setNewEventDateTo(event.target.value)} min={newEventDateFrom || undefined} aria-invalid={isNewEventDateInvalid} aria-describedby={isNewEventDateInvalid ? "new-event-date-error" : undefined} className={"min-h-14 rounded-lg border px-4 text-xl font-bold normal-case tracking-normal text-slate-950 outline-none focus:ring-4 " + (isNewEventDateInvalid ? "border-rose-400 bg-rose-50 focus:border-rose-500 focus:ring-rose-100" : "border-slate-200 focus:border-emerald-500 focus:ring-emerald-100")} />
-                </label>
+                <DatePickerField
+                  label={labels.eventDateFrom}
+                  language={language}
+                  name="dateFrom"
+                  required
+                  value={newEventDateFrom}
+                  invalid={isNewEventDateInvalid}
+                  placeholder={labels.chooseDate}
+                  onChange={setNewEventDateFrom}
+                />
+                <DatePickerField
+                  label={labels.eventDateTo}
+                  language={language}
+                  name="dateTo"
+                  value={newEventDateTo}
+                  invalid={isNewEventDateInvalid}
+                  describedBy={isNewEventDateInvalid ? "new-event-date-error" : undefined}
+                  placeholder={labels.chooseDate}
+                  onChange={setNewEventDateTo}
+                />
               </div>
               {isNewEventDateInvalid ? (
                 <p id="new-event-date-error" className="rounded-lg bg-rose-50 px-4 py-3 text-sm font-black text-rose-800 ring-1 ring-rose-200">{labels.eventEndBeforeStart}</p>
