@@ -70,7 +70,7 @@ export type SaleItem = {
   productId: string | null;
   nameSnapshot: string;
   groupKeySnapshot: string;
-  unitPriceCents: number;
+  priceCentsSnapshot: number;
   quantity: number;
   lineTotalCents: number;
   createdAt: string;

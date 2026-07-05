@@ -77,7 +77,7 @@ create table sale_items (
   product_id uuid,
   name_snapshot text not null,
   group_key_snapshot text not null,
-  unit_price_cents integer not null check (unit_price_cents >= 0),
+  price_cents_snapshot integer not null check (price_cents_snapshot >= 0),
   quantity integer not null check (quantity > 0),
   line_total_cents integer not null check (line_total_cents >= 0),
   created_at timestamptz not null default now(),

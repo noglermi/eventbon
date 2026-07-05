@@ -69,7 +69,7 @@ export async function saveCompletedSale(input: SaveCompletedSaleInput) {
       return [];
     }
 
-    const unitPriceCents = Math.round(product.price * 100);
+    const priceCentsSnapshot = Math.round(product.price * 100);
 
     return [{
       tenant_id: input.tenantId,
@@ -77,9 +77,9 @@ export async function saveCompletedSale(input: SaveCompletedSaleInput) {
       product_id: uuidPattern.test(product.id) ? product.id : null,
       name_snapshot: product.name[input.language],
       group_key_snapshot: product.group,
-      unit_price_cents: unitPriceCents,
+      price_cents_snapshot: priceCentsSnapshot,
       quantity: item.quantity,
-      line_total_cents: unitPriceCents * item.quantity,
+      line_total_cents: priceCentsSnapshot * item.quantity,
       created_at: createdAt,
     }];
   });
