@@ -79,6 +79,7 @@ Potential improvements after the MVP:
 - clearer print layouts
 - better mobile and tablet terminal behavior
 - organizer onboarding flow
+- organizer profile settings, including persisted organizer language preference
 - event setup guardrails
 - event-scoped helper invitations
 - audit-friendly sale history

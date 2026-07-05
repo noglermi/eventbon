@@ -72,6 +72,16 @@ Helper navigation:
 
 Helpers do not use event selection, do not see the organizer dashboard, and cannot access other events. Dashboard and statistics views are organizer-only. Operational recent sales can appear inside the Sales Terminal because they support the cashier during the event.
 
+## Language Preferences
+
+Language preferences are split by product surface.
+
+Organizer-facing areas use an organizer language preference. This includes login and registration, Meine Veranstaltungen, event booking, dashboard and statistics, and later account settings. During the current implementation this preference lives in UI state. A future organizer profile field in Supabase should persist it.
+
+Sales terminal and helper devices use device-local language as part of local view settings. This is stored in localStorage with other device-specific presentation settings and must not be treated as event data.
+
+This separation lets an organizer use one language while helper devices at the same event use another language.
+
 ## Multi-Tenant Design
 
 eventBon must support multiple tenants even if the MVP interface exposes only a single event flow.

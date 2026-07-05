@@ -7,6 +7,7 @@ import { formatDate, formatDateRange } from "@/lib/date-format";
 import { logSupabaseError } from "@/lib/supabase/diagnostics";
 import { supabase, supabaseConfigWarning } from "@/lib/supabase/client";
 import { SalesTerminal } from "@/components/sales-terminal/SalesTerminal";
+import { LanguageSwitch } from "@/components/organizer-workspace/LanguageSwitch";
 import { OrganizerSalesDashboard } from "@/components/organizer-workspace/OrganizerSalesDashboard";
 import { defaultLanguage, translations } from "@/components/sales-terminal/i18n";
 import type { Translation } from "@/components/sales-terminal/i18n";
@@ -154,7 +155,8 @@ function DatePickerField({
 }
 
 export function OrganizerEventWorkspace() {
-  const language = defaultLanguage;
+  const [organizerLanguage, setOrganizerLanguage] = useState<Language>(defaultLanguage);
+  const language = organizerLanguage;
   const labels = translations[language];
   const [session, setSession] = useState<Session | null>(null);
   const [isAuthLoading, setIsAuthLoading] = useState(!supabaseConfigWarning);
@@ -411,7 +413,10 @@ export function OrganizerEventWorkspace() {
     return (
       <main className="flex min-h-screen items-center justify-center bg-[#f6f7f5] p-6 text-slate-950">
         <section className="w-full max-w-xl rounded-lg bg-white p-7 shadow-sm ring-1 ring-slate-200">
-          <p className="text-2xl font-black tracking-normal text-emerald-600">eventBon</p>
+          <div className="flex items-start justify-between gap-4">
+            <p className="text-2xl font-black tracking-normal text-emerald-600">eventBon</p>
+            <LanguageSwitch language={language} labels={labels} onLanguageChange={setOrganizerLanguage} />
+          </div>
           <h1 className="mt-4 text-4xl font-black tracking-tight">{labels.authTitle}</h1>
           <p className="mt-2 text-lg font-semibold text-slate-600">{labels.authRequiredIntro}</p>
 
@@ -493,6 +498,8 @@ export function OrganizerEventWorkspace() {
       <OrganizerSalesDashboard
         eventId={dashboardEvent.isPersisted ? dashboardEvent.id : null}
         eventSettings={dashboardEvent.settings}
+        language={language}
+        onLanguageChange={setOrganizerLanguage}
         tenantId={dashboardEvent.tenantId}
         onBackToEvents={() => setDashboardEvent(null)}
       />
@@ -510,6 +517,7 @@ export function OrganizerEventWorkspace() {
             <p className="mt-2 text-base font-black text-slate-700">{currentOrganizer.name}</p>
           </div>
           <div className="flex flex-wrap justify-end gap-3">
+            <LanguageSwitch language={language} labels={labels} onLanguageChange={setOrganizerLanguage} />
             <button
               type="button"
               onClick={logout}

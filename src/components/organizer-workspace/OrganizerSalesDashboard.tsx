@@ -7,7 +7,8 @@ import { saveSalesWorkbook } from "@/lib/excel/sales-workbook";
 import { formatDate, formatDateRange } from "@/lib/date-format";
 import { logSupabaseError } from "@/lib/supabase/diagnostics";
 import { supabaseConfigWarning } from "@/lib/supabase/client";
-import { defaultLanguage, translations } from "@/components/sales-terminal/i18n";
+import { LanguageSwitch } from "@/components/organizer-workspace/LanguageSwitch";
+import { translations } from "@/components/sales-terminal/i18n";
 import type { EventSettings, Language } from "@/components/sales-terminal/types";
 
 type TimeFilter = "all" | "eventDay" | "today";
@@ -15,6 +16,8 @@ type TimeFilter = "all" | "eventDay" | "today";
 type OrganizerSalesDashboardProps = {
   eventId: string | null;
   eventSettings: EventSettings;
+  language: Language;
+  onLanguageChange: (language: Language) => void;
   tenantId: string | null;
   onBackToEvents: () => void;
 };
@@ -85,8 +88,7 @@ function getEventDays(eventSettings: EventSettings) {
   return days;
 }
 
-export function OrganizerSalesDashboard({ eventId, eventSettings, tenantId, onBackToEvents }: OrganizerSalesDashboardProps) {
-  const language = defaultLanguage;
+export function OrganizerSalesDashboard({ eventId, eventSettings, language, onLanguageChange, tenantId, onBackToEvents }: OrganizerSalesDashboardProps) {
   const labels = translations[language];
   const [timeFilter, setTimeFilter] = useState<TimeFilter>("all");
   const [selectedEventDay, setSelectedEventDay] = useState(eventSettings.dateFrom);
@@ -200,13 +202,16 @@ export function OrganizerSalesDashboard({ eventId, eventSettings, tenantId, onBa
             <h1 className="mt-4 text-4xl font-black tracking-tight">{eventName}</h1>
             <p className="mt-2 text-lg font-semibold text-slate-600">{formatDateRange(eventSettings, language)}</p>
           </div>
-          <button
-            type="button"
-            onClick={onBackToEvents}
-            className="min-h-14 rounded-lg bg-slate-100 px-5 text-lg font-black text-slate-700 ring-1 ring-slate-200 transition active:scale-[0.98] focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200"
-          >
-            {labels.backToEvents}
-          </button>
+          <div className="flex flex-wrap justify-end gap-3">
+            <LanguageSwitch language={language} labels={labels} onLanguageChange={onLanguageChange} />
+            <button
+              type="button"
+              onClick={onBackToEvents}
+              className="min-h-14 rounded-lg bg-slate-100 px-5 text-lg font-black text-slate-700 ring-1 ring-slate-200 transition active:scale-[0.98] focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200"
+            >
+              {labels.backToEvents}
+            </button>
+          </div>
         </header>
 
         <div className="flex flex-wrap items-end gap-3">

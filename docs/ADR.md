@@ -338,3 +338,26 @@ eventBon is a commercial product. Product icons and images appear in the sales t
 - Before public rollout, document the chosen icon library and license in the project documentation.
 - Before public rollout, add a note to terms or usage guidance that organizers are responsible for uploaded images.
 - Development and design work must not use copied product photos or unclear internet image sources as shipped defaults.
+
+## ADR-014 Organizer and Device Language Preferences
+
+### Decision
+
+eventBon has two language preference levels.
+
+Organizer-facing areas use the organizer language preference. This includes login and registration, Meine Veranstaltungen, event booking, dashboard and statistics, and later account or settings pages. For now this preference is held in the organizer UI state. A later version should persist it in the organizer profile in Supabase.
+
+Sales terminal and helper devices use a device language preference. This preference is stored in localStorage together with other device-local view settings. It is intentionally browser-specific so different devices at the same event can use different languages.
+
+German remains the default language.
+
+### Reason
+
+Organizer language is part of the organizer account experience. Terminal language is part of the device setup on the event floor. Mixing both would make helper devices unexpectedly change when an organizer changes their own preference.
+
+### Implications
+
+- Organizer language changes must update organizer-facing UI.
+- Sales terminal language changes must remain device-local.
+- Device language is not event data and must not be stored in Supabase.
+- No database migration is required until organizer profile persistence is implemented.
