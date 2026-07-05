@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { CSSProperties } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { listProducts, saveProduct } from "@/lib/repositories/products";
 import { saveCompletedSale } from "@/lib/repositories/sales";
 import { updateEventBasics } from "@/lib/repositories/events";
@@ -94,6 +94,46 @@ function getScaledBlockStyle(value: number): CSSProperties {
     width: 100 / scale + "%",
     minWidth: 100 / scale + "%",
   };
+}
+
+function ScaledBlock({ children, className, zoom }: { children: ReactNode; className?: string; zoom: number }) {
+  const contentRef = useRef<HTMLDivElement | null>(null);
+  const [reservedHeight, setReservedHeight] = useState<number | null>(null);
+  const scale = zoom / 100;
+
+  useEffect(() => {
+    const content = contentRef.current;
+    if (!content) {
+      return undefined;
+    }
+
+    function updateReservedHeight() {
+      if (!content) {
+        return;
+      }
+
+      setReservedHeight(Math.ceil(content.scrollHeight * scale));
+    }
+
+    updateReservedHeight();
+
+    const resizeObserver = new ResizeObserver(updateReservedHeight);
+    resizeObserver.observe(content);
+    window.addEventListener("resize", updateReservedHeight);
+
+    return () => {
+      resizeObserver.disconnect();
+      window.removeEventListener("resize", updateReservedHeight);
+    };
+  }, [scale]);
+
+  return (
+    <div className="relative w-full" style={{ height: reservedHeight ?? undefined }}>
+      <div ref={contentRef} className={className} style={getScaledBlockStyle(zoom)}>
+        {children}
+      </div>
+    </div>
+  );
 }
 
 function CalendarIcon() {
@@ -375,7 +415,7 @@ export function SalesTerminal({
 
   return (
     <main className="grid h-screen grid-rows-[5rem_minmax(0,1fr)_7rem] overflow-hidden bg-[#f6f7f5] text-slate-950">
-      <header className="flex items-center justify-between border-b border-slate-200/70 bg-white/95 px-7 shadow-[0_1px_0_rgba(15,23,42,0.04)] backdrop-blur">
+      <header className="relative z-50 flex items-center justify-between border-b border-slate-200/70 bg-white/95 px-7 shadow-[0_1px_0_rgba(15,23,42,0.04)] backdrop-blur">
         <div className="flex items-center gap-4">
           <button type="button" className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100 transition active:scale-95 focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200" aria-label={labels.menu}>
             <MenuIcon />
@@ -404,7 +444,7 @@ export function SalesTerminal({
               <span className="rounded-xl bg-white/20 px-2 py-1 text-sm tabular-nums">{blockZoom.articles}%</span>
             </button>
             {isViewPanelOpen ? (
-              <div className="absolute left-0 top-14 z-40 w-[23rem] rounded-2xl bg-white p-4 shadow-2xl ring-1 ring-slate-200">
+              <div className="absolute left-0 top-14 z-[100] w-[23rem] rounded-2xl bg-white p-4 shadow-2xl ring-1 ring-slate-200">
                 {([
                   ["articles", labels.articlesZoom],
                   ["cart", labels.cartZoom],
@@ -455,7 +495,7 @@ export function SalesTerminal({
       <div className="grid min-h-0 grid-cols-[minmax(0,1.35fr)_minmax(300px,0.95fr)_minmax(280px,0.8fr)] gap-4 p-4 xl:gap-6 xl:p-6">
         <section className="flex min-h-0 flex-col overflow-hidden rounded-[2.25rem] bg-white/95 shadow-[0_18px_50px_rgba(15,23,42,0.06)] ring-1 ring-slate-200/75">
           <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
-            <div style={getScaledBlockStyle(blockZoom.articles)}>
+            <ScaledBlock zoom={blockZoom.articles}>
               <div className="border-b border-slate-100 px-7 py-6">
                 <div className="flex items-start justify-between gap-4">
                   <div>
@@ -520,21 +560,21 @@ export function SalesTerminal({
                   <p className="mt-4 rounded-2xl bg-slate-50 px-4 py-3 text-sm font-black text-slate-600 ring-1 ring-slate-200">{labels.loadingProducts}</p>
                 ) : null}
               </div>
-            </div>
+            </ScaledBlock>
           </div>
         </section>
 
         <div className="min-h-0 overflow-y-auto overflow-x-hidden rounded-[2.25rem]">
-          <div style={getScaledBlockStyle(blockZoom.cart)}>
+          <ScaledBlock zoom={blockZoom.cart}>
             <Cart items={cartItems} language={language} labels={labels} productsById={productsById} totalCents={totalCents} onIncrease={increaseItem} onDecrease={decreaseItem} onRemove={removeItem} />
-          </div>
+          </ScaledBlock>
         </div>
 
         <div className="min-h-0 overflow-y-auto overflow-x-hidden rounded-[2.25rem]">
-          <div className="flex min-h-0 flex-col gap-5" style={getScaledBlockStyle(blockZoom.payment)}>
+          <ScaledBlock zoom={blockZoom.payment} className="flex min-h-0 flex-col gap-5">
             <PaymentPanel labels={labels} language={language} totalCents={totalCents} receivedCents={receivedCents} receivedEntry={receivedEntry} receivedInputRef={receivedInputRef} onReceivedEntryChange={setReceivedEntry} />
             <PrintModeSetting labels={labels} printMode={eventSettings.printMode} onPrintModeChange={updatePrintMode} />
-          </div>
+          </ScaledBlock>
         </div>
       </div>
 
