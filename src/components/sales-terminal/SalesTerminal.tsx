@@ -386,20 +386,18 @@ export function SalesTerminal({
             <p className="text-2xl font-black tracking-normal text-emerald-600">eventBon</p>
             <p className="text-sm font-semibold text-slate-500">{eventName}</p>
           </div>
-        </div>
-
-        <div className="flex items-center gap-3">
           <div className="relative">
             <button
               type="button"
               onClick={() => setIsViewPanelOpen((current) => !current)}
-              className="min-h-12 rounded-2xl bg-slate-100 px-5 text-base font-black text-slate-700 ring-1 ring-slate-200/75 transition active:scale-[0.98] focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200"
+              className="flex min-h-12 items-center gap-2 rounded-2xl bg-emerald-600 px-5 text-base font-black text-white shadow-sm shadow-emerald-600/20 ring-1 ring-emerald-700/20 transition active:scale-[0.98] focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200"
               aria-expanded={isViewPanelOpen}
             >
-              {labels.view}
+              {labels.view} / {labels.zoom}
+              <span className="rounded-xl bg-white/20 px-2 py-1 text-sm tabular-nums">{blockZoom.articles}%</span>
             </button>
             {isViewPanelOpen ? (
-              <div className="absolute right-0 top-14 z-40 w-[23rem] rounded-2xl bg-white p-4 shadow-2xl ring-1 ring-slate-200">
+              <div className="absolute left-0 top-14 z-40 w-[23rem] rounded-2xl bg-white p-4 shadow-2xl ring-1 ring-slate-200">
                 {([
                   ["articles", labels.articlesZoom],
                   ["cart", labels.cartZoom],
@@ -424,6 +422,9 @@ export function SalesTerminal({
               </div>
             ) : null}
           </div>
+        </div>
+
+        <div className="flex items-center gap-3">
           <div className="flex min-h-12 items-center rounded-2xl bg-slate-100/80 px-2 ring-1 ring-slate-200/70" aria-label={labels.language}>
             <button
               type="button"
