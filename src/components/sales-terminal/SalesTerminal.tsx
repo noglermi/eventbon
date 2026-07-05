@@ -205,6 +205,7 @@ export function SalesTerminal({
   const [isLoadingProducts, setIsLoadingProducts] = useState(false);
   const [isSavingSale, setIsSavingSale] = useState(false);
   const [persistenceMessage, setPersistenceMessage] = useState<string | null>(supabaseConfigWarning ? translations[defaultLanguage].mockFallbackWarning + " " + supabaseConfigWarning : null);
+  const [persistenceDetails, setPersistenceDetails] = useState<string | null>(null);
   const [tileEditor, setTileEditor] = useState<{ tile: ProductTileData | null; group: TileGroupName } | null>(null);
   const [printPreviewDate, setPrintPreviewDate] = useState<Date | null>(null);
   const labels = getLabels(language);
@@ -257,6 +258,7 @@ export function SalesTerminal({
 
       setIsLoadingProducts(true);
       setPersistenceMessage(null);
+      setPersistenceDetails(null);
 
       try {
         const loadedProducts = await listProducts(eventId);
@@ -268,6 +270,7 @@ export function SalesTerminal({
           const diagnostic = logSupabaseError("load products", error);
           setProducts(productTiles);
           setPersistenceMessage(labels.productLoadError + " " + labels.supabaseDiagnosticPrefix + ": " + diagnostic);
+          setPersistenceDetails(null);
         }
       } finally {
         if (isActive) {
@@ -358,9 +361,16 @@ export function SalesTerminal({
       return;
     }
 
+    if (eventId && !tenantId && !supabaseConfigWarning) {
+      setPersistenceMessage(labels.saleSaveError);
+      setPersistenceDetails("save completed sale | message=Selected event has no tenant_id and cannot be persisted.");
+      return;
+    }
+
     if (eventId && tenantId && !supabaseConfigWarning) {
       setIsSavingSale(true);
       setPersistenceMessage(null);
+      setPersistenceDetails(null);
 
       try {
         await saveCompletedSale({
@@ -375,7 +385,8 @@ export function SalesTerminal({
         });
       } catch (error) {
         const diagnostic = logSupabaseError("save completed sale", error);
-        setPersistenceMessage(labels.saleSaveError + " " + labels.supabaseDiagnosticPrefix + ": " + diagnostic);
+        setPersistenceMessage(labels.saleSaveError);
+        setPersistenceDetails(diagnostic);
         setIsSavingSale(false);
         return;
       }
@@ -400,10 +411,12 @@ export function SalesTerminal({
         });
         savedTile = await saveProduct({ tenantId, eventId, product: tile, position: existingPosition >= 0 ? existingPosition : products.length });
         setPersistenceMessage(null);
+        setPersistenceDetails(null);
       } catch (error) {
         const diagnostic = logSupabaseError("save product", error);
         const message = tile.imageFile ? labels.imageUploadError : labels.saveError;
         setPersistenceMessage(message + " " + labels.supabaseDiagnosticPrefix + ": " + diagnostic);
+        setPersistenceDetails(null);
         return { diagnostic, message, ok: false };
       }
     }
@@ -437,9 +450,11 @@ export function SalesTerminal({
       });
       onEventUpdated?.(updatedEvent);
       setPersistenceMessage(null);
+      setPersistenceDetails(null);
     } catch (error) {
       const diagnostic = logSupabaseError("update event basics", error);
       setPersistenceMessage(labels.saveError + " " + labels.supabaseDiagnosticPrefix + ": " + diagnostic);
+      setPersistenceDetails(null);
     }
   }
 
@@ -585,7 +600,15 @@ export function SalesTerminal({
                   ))}
                 </div>
                 {persistenceMessage ? (
-                  <p className="mt-4 rounded-2xl bg-amber-50 px-4 py-3 text-sm font-bold text-amber-900 ring-1 ring-amber-200">{persistenceMessage}</p>
+                  <div className="mt-4 rounded-2xl bg-amber-50 px-4 py-3 text-sm font-bold text-amber-900 ring-1 ring-amber-200">
+                    <p>{persistenceMessage}</p>
+                    {persistenceDetails ? (
+                      <details className="mt-3 text-xs font-semibold text-amber-950">
+                        <summary className="cursor-pointer font-black">{labels.technicalDetails}</summary>
+                        <pre className="mt-2 whitespace-pre-wrap break-words rounded-xl bg-white/70 p-3 font-mono text-[11px] leading-relaxed">{persistenceDetails}</pre>
+                      </details>
+                    ) : null}
+                  </div>
                 ) : null}
                 {isLoadingProducts ? (
                   <p className="mt-4 rounded-2xl bg-slate-50 px-4 py-3 text-sm font-black text-slate-600 ring-1 ring-slate-200">{labels.loadingProducts}</p>

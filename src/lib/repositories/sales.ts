@@ -16,6 +16,18 @@ type SaveCompletedSaleInput = {
   totalCents: number;
 };
 
+type SaleItemPayload = {
+  tenant_id: string;
+  sale_id: string;
+  product_id: string | null;
+  name_snapshot: string;
+  group_key_snapshot: string;
+  price_cents_snapshot: number;
+  quantity: number;
+  line_total_cents: number;
+  created_at: string;
+};
+
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 function requireSupabase() {
@@ -36,6 +48,12 @@ export async function saveCompletedSale(input: SaveCompletedSaleInput) {
     tenantId: input.tenantId,
     totalCents: input.totalCents,
   });
+
+  for (const item of input.cartItems) {
+    if (!input.productsById.has(item.productId)) {
+      throw new Error("Cannot persist sale because product " + item.productId + " is missing from the current product list.");
+    }
+  }
 
   const { data: sale, error: saleError } = await client
     .from("sales")
@@ -62,16 +80,16 @@ export async function saveCompletedSale(input: SaveCompletedSaleInput) {
   }
 
   const saleId = (sale as SaleRow).id;
-  const saleItems = input.cartItems.flatMap((item) => {
+  const saleItems = input.cartItems.map((item): SaleItemPayload => {
     const product = input.productsById.get(item.productId);
 
     if (!product) {
-      return [];
+      throw new Error("Cannot persist sale item because product " + item.productId + " is missing from the current product list.");
     }
 
     const priceCentsSnapshot = Math.round(product.price * 100);
 
-    return [{
+    return {
       tenant_id: input.tenantId,
       sale_id: saleId,
       product_id: uuidPattern.test(product.id) ? product.id : null,
@@ -81,7 +99,7 @@ export async function saveCompletedSale(input: SaveCompletedSaleInput) {
       quantity: item.quantity,
       line_total_cents: priceCentsSnapshot * item.quantity,
       created_at: createdAt,
-    }];
+    };
   });
 
   const { error: saleItemsError } = await client
