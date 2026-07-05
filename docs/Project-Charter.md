@@ -29,6 +29,10 @@ Helper access should be deliberately lightweight. The product concept is:
 
 In Version 1, helper registration should take less than one minute. Helpers can join through a QR code, invitation link, or event access code and only enter their name. No email and no password are required in Version 1.
 
+The navigation model follows the role split. Organizers use login, Meine Veranstaltungen, the selected event dashboard or statistics, the event sales terminal, and event settings or products. Helpers use an invitation link, QR code, or event access code, enter their name, and directly enter the assigned event sales terminal. Helpers do not see event selection, do not see the organizer dashboard, and cannot access other events.
+
+Dashboard and statistics views are organizer-only. Helpers and cashiers only need the operational sales terminal during the event.
+
 ## Mission
 
 Sell vouchers.
@@ -96,6 +100,8 @@ Helpers and volunteers can access only the booked event they were invited to. Th
 Helpers are event-scoped in the product concept. They are not global users across all organizer events.
 
 Helpers can open the assigned event, sell Bons, and print Bons. They cannot manage subscriptions, change organizer information, access other events, or manage billing.
+
+Helpers also do not navigate through Meine Veranstaltungen or the event dashboard. Their entry point is always the assigned event sales terminal.
 
 Later, helpers may optionally create permanent accounts if they work at several events, the same club uses eventBon repeatedly, or helper activity needs to be tracked over time. This must remain optional; the default flow remains QR code or invitation link, enter name, and start working.
 

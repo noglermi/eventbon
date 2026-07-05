@@ -54,6 +54,24 @@ There is no dashboard in the MVP.
 
 User-facing product language should use Veranstalter for the organizer. Internally, the data model may still use tenant and tenant_id for multi-tenant boundaries, but the user-facing product should avoid Mandant.
 
+## Navigation Model
+
+Organizer navigation:
+
+- Login
+- Meine Veranstaltungen
+- Event dashboard or statistics
+- Event sales terminal
+- Event settings and products
+
+Helper navigation:
+
+- Invitation link, QR code, or event access code
+- Enter name
+- Directly enter the assigned event sales terminal
+
+Helpers do not use event selection, do not see the organizer dashboard, and cannot access other events. Dashboard and statistics views are organizer-only. Operational recent sales can appear inside the Sales Terminal because they support the cashier during the event.
+
 ## Multi-Tenant Design
 
 eventBon must support multiple tenants even if the MVP interface exposes only a single event flow.

@@ -3,7 +3,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import { listProducts, saveProduct } from "@/lib/repositories/products";
-import { saveCompletedSale } from "@/lib/repositories/sales";
+import { listRecentSales, saveCompletedSale } from "@/lib/repositories/sales";
+import type { RecentSale } from "@/lib/repositories/sales";
 import { updateEventBasics } from "@/lib/repositories/events";
 import { logSupabaseError } from "@/lib/supabase/diagnostics";
 import { supabaseConfigWarning } from "@/lib/supabase/client";
@@ -14,6 +15,7 @@ import { initialCart, mockEventSettings, productTiles, tileGroups } from "./mock
 import { PaymentPanel } from "./PaymentPanel";
 import { ProductTile } from "./ProductTile";
 import { PrintModeSetting } from "./PrintModeSetting";
+import { RecentSalesPanel } from "./RecentSalesPanel";
 import { VoucherPrintPreview } from "./VoucherPrintPreview";
 import type { CartItem, EventSettings, Language, ProductTileData, TileGroupName } from "./types";
 import type { Event as PersistedEvent, PrintMode } from "@/types/domain";
@@ -204,6 +206,7 @@ export function SalesTerminal({
   const [receivedEntry, setReceivedEntry] = useState("");
   const [isLoadingProducts, setIsLoadingProducts] = useState(false);
   const [isSavingSale, setIsSavingSale] = useState(false);
+  const [recentSales, setRecentSales] = useState<RecentSale[]>([]);
   const [persistenceMessage, setPersistenceMessage] = useState<string | null>(supabaseConfigWarning ? translations[defaultLanguage].mockFallbackWarning + " " + supabaseConfigWarning : null);
   const [persistenceDetails, setPersistenceDetails] = useState<string | null>(null);
   const [tileEditor, setTileEditor] = useState<{ tile: ProductTileData | null; group: TileGroupName } | null>(null);
@@ -285,6 +288,37 @@ export function SalesTerminal({
       isActive = false;
     };
   }, [eventId, labels.productLoadError, labels.supabaseDiagnosticPrefix]);
+
+  useEffect(() => {
+    let isActive = true;
+
+    async function loadRecentEventSales() {
+      if (!eventId || !tenantId || supabaseConfigWarning) {
+        setRecentSales([]);
+        return;
+      }
+
+      try {
+        const loadedSales = await listRecentSales({ eventId, tenantId, limit: 10 });
+        if (isActive) {
+          setRecentSales(loadedSales);
+        }
+      } catch (error) {
+        if (isActive) {
+          const diagnostic = logSupabaseError("load recent sales", error);
+          setRecentSales([]);
+          setPersistenceMessage(labels.recentSalesLoadError);
+          setPersistenceDetails(diagnostic);
+        }
+      }
+    }
+
+    loadRecentEventSales();
+
+    return () => {
+      isActive = false;
+    };
+  }, [eventId, labels.recentSalesLoadError, tenantId]);
 
   const productsById = useMemo(
     () => new Map(products.map((product) => [product.id, product])),
@@ -389,6 +423,15 @@ export function SalesTerminal({
         setPersistenceDetails(diagnostic);
         setIsSavingSale(false);
         return;
+      }
+
+      try {
+        const loadedSales = await listRecentSales({ eventId, tenantId, limit: 10 });
+        setRecentSales(loadedSales);
+      } catch (error) {
+        const diagnostic = logSupabaseError("reload recent sales after sale save", error);
+        setPersistenceMessage(labels.recentSalesLoadError);
+        setPersistenceDetails(diagnostic);
       }
 
       setIsSavingSale(false);
@@ -628,6 +671,7 @@ export function SalesTerminal({
           <ScaledBlock zoom={blockZoom.payment} className="flex min-h-0 flex-col gap-5">
             <PaymentPanel labels={labels} language={language} totalCents={totalCents} receivedCents={receivedCents} receivedEntry={receivedEntry} receivedInputRef={receivedInputRef} onReceivedEntryChange={setReceivedEntry} />
             <PrintModeSetting labels={labels} printMode={eventSettings.printMode} onPrintModeChange={updatePrintMode} />
+            <RecentSalesPanel labels={labels} language={language} recentSales={recentSales} />
           </ScaledBlock>
         </div>
       </div>

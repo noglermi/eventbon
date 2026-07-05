@@ -263,3 +263,41 @@ The cashier needs speed. The organizer needs information.
 - Analytics should not clutter the Sales Terminal.
 - The organizer-facing analytics page can aggregate sales, sale items, payment methods, and time data.
 - CSV export remains a later separate milestone.
+
+## ADR-012 Organizer Dashboard vs Helper Sales Terminal
+
+### Decision
+
+Organizer and helper navigation are separate product flows.
+
+Organizer flow:
+
+- Login
+- Meine Veranstaltungen
+- Event dashboard or statistics
+- Event sales terminal
+- Event settings and products
+
+Helper flow:
+
+- Invitation link, QR code, or event access code
+- Enter name
+- Directly enter the assigned event sales terminal
+
+Helpers do not use event selection, do not see the organizer dashboard, and cannot access other events.
+
+Dashboard, analytics, statistics, settings, products, billing, and booking management are organizer-facing surfaces. The Sales Terminal remains the focused helper and cashier surface during the event.
+
+### Reason
+
+Organizers need ownership, configuration, booking, and event review. Helpers need the shortest possible path to selling Bons at one assigned event.
+
+Keeping these flows separate protects the event-floor workflow from organizer-only complexity.
+
+### Implications
+
+- Meine Veranstaltungen remains organizer-only.
+- Event dashboards and analytics are organizer-only.
+- Helpers enter directly into the assigned event terminal.
+- Operational recent sales can live inside the Sales Terminal because they support cashier control during the event.
+- Future helper invitations must not require a dashboard or global event selection.

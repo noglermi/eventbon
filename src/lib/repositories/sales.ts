@@ -5,6 +5,28 @@ type SaleRow = {
   id: string;
 };
 
+type RecentSaleRow = {
+  id: string;
+  tenant_id: string;
+  event_id: string;
+  total_cents: number;
+  payment_method: string;
+  cash_received_cents: number | null;
+  change_cents: number | null;
+  created_at: string;
+};
+
+type RecentSaleItemRow = {
+  id: string;
+  sale_id: string;
+  product_id: string | null;
+  name_snapshot: string;
+  price_cents_snapshot: number;
+  quantity: number;
+  line_total_cents: number;
+  created_at: string;
+};
+
 type SaveCompletedSaleInput = {
   cartItems: CartItem[];
   changeCents: number;
@@ -14,6 +36,29 @@ type SaveCompletedSaleInput = {
   receivedCents: number;
   tenantId: string;
   totalCents: number;
+};
+
+export type RecentSaleItem = {
+  id: string;
+  productId: string | null;
+  nameSnapshot: string;
+  priceCentsSnapshot: number;
+  quantity: number;
+  lineTotalCents: number;
+  createdAt: string;
+};
+
+export type RecentSale = {
+  id: string;
+  tenantId: string;
+  eventId: string;
+  totalCents: number;
+  paymentMethod: "cash" | "manual_card";
+  cashReceivedCents: number | null;
+  changeCents: number | null;
+  createdAt: string;
+  itemCount: number;
+  items: RecentSaleItem[];
 };
 
 type SaleItemPayload = {
@@ -36,6 +81,86 @@ function requireSupabase() {
   }
 
   return supabase;
+}
+
+function mapRecentSale(row: RecentSaleRow, items: RecentSaleItemRow[]): RecentSale {
+  const mappedItems = items.map((item) => ({
+    id: item.id,
+    productId: item.product_id,
+    nameSnapshot: item.name_snapshot,
+    priceCentsSnapshot: item.price_cents_snapshot,
+    quantity: item.quantity,
+    lineTotalCents: item.line_total_cents,
+    createdAt: item.created_at,
+  }));
+
+  return {
+    id: row.id,
+    tenantId: row.tenant_id,
+    eventId: row.event_id,
+    totalCents: row.total_cents,
+    paymentMethod: row.payment_method === "manual_card" ? "manual_card" : "cash",
+    cashReceivedCents: row.cash_received_cents,
+    changeCents: row.change_cents,
+    createdAt: row.created_at,
+    itemCount: mappedItems.reduce((sum, item) => sum + item.quantity, 0),
+    items: mappedItems,
+  };
+}
+
+export async function listRecentSales(input: { eventId: string; tenantId: string; limit?: number }) {
+  const client = requireSupabase();
+  const limit = input.limit ?? 10;
+
+  const { data: saleRows, error: salesError } = await client
+    .from("sales")
+    .select("id, tenant_id, event_id, total_cents, payment_method, cash_received_cents, change_cents, created_at")
+    .eq("tenant_id", input.tenantId)
+    .eq("event_id", input.eventId)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+
+  if (salesError) {
+    console.error("Recent sales load failed", {
+      error: salesError,
+      eventId: input.eventId,
+      tenantId: input.tenantId,
+    });
+    throw salesError;
+  }
+
+  const sales = (saleRows ?? []) as RecentSaleRow[];
+  const saleIds = sales.map((sale) => sale.id);
+
+  if (saleIds.length === 0) {
+    return [];
+  }
+
+  const { data: itemRows, error: itemsError } = await client
+    .from("sale_items")
+    .select("id, sale_id, product_id, name_snapshot, price_cents_snapshot, quantity, line_total_cents, created_at")
+    .eq("tenant_id", input.tenantId)
+    .in("sale_id", saleIds)
+    .order("created_at", { ascending: true });
+
+  if (itemsError) {
+    console.error("Recent sale items load failed", {
+      error: itemsError,
+      eventId: input.eventId,
+      saleIds,
+      tenantId: input.tenantId,
+    });
+    throw itemsError;
+  }
+
+  const itemsBySale = ((itemRows ?? []) as RecentSaleItemRow[]).reduce((groups, item) => {
+    const current = groups.get(item.sale_id) ?? [];
+    current.push(item);
+    groups.set(item.sale_id, current);
+    return groups;
+  }, new Map<string, RecentSaleItemRow[]>());
+
+  return sales.map((sale) => mapRecentSale(sale, itemsBySale.get(sale.id) ?? []));
 }
 
 export async function saveCompletedSale(input: SaveCompletedSaleInput) {

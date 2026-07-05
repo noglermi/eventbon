@@ -24,6 +24,8 @@ The organizer is the commercial customer. The product hierarchy is Organizer -> 
 
 Helper access starts simple: QR code, invitation link, or event access code; helper enters a name and works only in the assigned event. No helper email, password, or permanent helper account is required in Version 1.
 
+Organizer navigation is login, Meine Veranstaltungen, event dashboard or statistics, event sales terminal, and event settings or products. Helper navigation is invitation link, QR code, or event access code, enter name, then directly into the assigned event sales terminal. Helpers do not see event selection, organizer dashboard, or other events. Dashboard and analytics remain organizer-only.
+
 Booking lifecycle:
 
 - booking or purchase
@@ -162,23 +164,41 @@ Scope:
 - no statistics UI
 - no CSV export
 
-## Milestone 5.3: Recent Sales
+## Milestone 5.3: Organizer Authentication Foundation
 
 Goal:
 
-Cashiers can quickly review recent operational sales during the event.
+Organizers can register, log in, log out, and reach Meine Veranstaltungen.
 
 Scope:
 
-- compact Letzte Verkäufe panel in the Sales Terminal
-- approximately last 10 sales
-- time, total amount, payment type, number of Bons
-- read-only detail view with sold products, quantities, payment, change, and print mode
+- Supabase Auth registration and login
+- authenticated organizer workspace
+- organizer-owned events
+- no helper invitation implementation
+- no Stripe
+- no SumUp
+- no sales analytics dashboard
+
+## Milestone 5.4: Recent Sales
+
+Goal:
+
+Cashiers can review the latest completed sales inside the Sales Terminal.
+
+Scope:
+
+- last 10 sales for the current event
+- time, total amount, payment method, and number of Bons
+- read-only sale detail dialog
+- sold products, quantities, total, payment method, received amount, change, and created_at
 - no edit
 - no delete
-- no cancellation workflow in the MVP
+- no cancellation workflow
 
-## Milestone 5.4: Sales Analytics Dashboard
+This is an operational helper/cashier feature. It is not the organizer analytics dashboard.
+
+## Milestone 5.5: Sales Analytics Dashboard
 
 Goal:
 
@@ -194,7 +214,7 @@ Suggested sections:
 
 The analytics dashboard is separate from the Sales Terminal recent sales panel.
 
-## Milestone 5.5: CSV Export
+## Milestone 5.6: CSV Export
 
 Goal:
 

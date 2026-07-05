@@ -48,6 +48,10 @@ Version 1 helper access should be as simple as possible. The organizer books an 
 
 Helpers cannot manage billing, organizer information, subscriptions, bookings, or other events. A permanent helper account may be added later, but it must remain optional and must never be required for the simple event workflow.
 
+The navigation model separates organizer work from helper work. Organizers log in, open "Meine Veranstaltungen", then move between the selected event dashboard or statistics, the event sales terminal, and event settings or products. Helpers do not use this organizer navigation. A helper enters through an invitation link, QR code, or event access code, enters a name, and directly opens the assigned event sales terminal. Helpers have no event selection, no organizer dashboard, and no access to other events.
+
+Dashboard and analytics views are organizer-only. During the event, helpers and cashiers stay in the sales terminal and may use compact operational tools such as recent sales.
+
 The event lifecycle includes preparation, active sales and printing, post-event statistics and export access, archive or retention, and optional paid extension.
 
 Sales data has two different purposes. During the event, the cashier needs operational control: a compact "Letzte Verkäufe" panel in the Sales Terminal should later show roughly the last 10 sales with time, total amount, payment type, and number of Bons. A sale entry can open a read-only detail view with sold products, quantities, payment, change, and print mode. Sales cannot be edited, deleted, or cancelled in the MVP.
