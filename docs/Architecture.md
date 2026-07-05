@@ -100,6 +100,32 @@ Supabase should be treated as the source of truth for sales and voucher records.
 
 A future offline-capable version may use a local storage layer or local database during the booked license period. That local layer must remain separate from the online source-of-truth model and must reconcile with the hosted model only when offline mode is explicitly designed.
 
+## Sales History And Analytics
+
+Sales records support two different use cases.
+
+Operational sales history belongs near the Sales Terminal. It helps the cashier quickly answer event-floor questions about recent sales, wrong payments, wrong Bon counts, or accidental double sales. A later terminal view should show a compact Letzte Verkäufe panel with approximately the last 10 sales. Each entry should show:
+
+- time
+- total amount
+- payment type
+- number of Bons
+
+Clicking an entry should open a read-only detail view with sold products, quantities, payment, change, and print mode. Sales cannot be edited. There is no delete function and no cancellation workflow in the MVP.
+
+Sales analytics is a separate organizer-facing use case. The organizer does not need to browse individual sales; the organizer needs event-level business information. A dedicated analytics page should summarize:
+
+- total revenue
+- number of sales
+- number of printed Bons
+- average sale value
+- top products by quantity and revenue
+- payment summary for cash and card
+- revenue by hour
+- filters for today, entire event, and later custom periods
+
+Architecture principle: operational sales history and business analytics must remain separated. The cashier needs speed. The organizer needs information.
+
 ## Vercel
 
 Vercel hosts the Next.js application.

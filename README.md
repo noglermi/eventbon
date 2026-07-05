@@ -50,6 +50,10 @@ Helpers cannot manage billing, organizer information, subscriptions, bookings, o
 
 The event lifecycle includes preparation, active sales and printing, post-event statistics and export access, archive or retention, and optional paid extension.
 
+Sales data has two different purposes. During the event, the cashier needs operational control: a compact "Letzte Verkäufe" panel in the Sales Terminal should later show roughly the last 10 sales with time, total amount, payment type, and number of Bons. A sale entry can open a read-only detail view with sold products, quantities, payment, change, and print mode. Sales cannot be edited, deleted, or cancelled in the MVP.
+
+The organizer needs business information, not a list of individual sales. eventBon should therefore provide a separate analytics page for total revenue, number of sales, printed Bons, average sale value, top products, payment summary, revenue by hour, and filters such as today, entire event, and later custom periods.
+
 The product deliberately avoids back-office complexity. There is no dashboard in the MVP, no separate article management, no invoices, no receipts, no taxes, and no accounting.
 
 Stripe later handles event booking payment, event activation, paid extensions, and invoice/payment handling for the organizer. This remains separate from visitor payments and Bon sales. Stripe is never used for Bon sales to visitors. Visitor payments remain outside Stripe unless a future SumUp integration confirms an external payment. eventBon remains not a cash register.

@@ -147,6 +147,61 @@ Future architecture:
 - Events
 - Event-scoped helpers
 
+## Milestone 5.2: Persist Sales
+
+Goal:
+
+Completed sales are stored in Supabase before printing.
+
+Scope:
+
+- sales
+- sale items
+- product name and price snapshots
+- existing print preview flow
+- no statistics UI
+- no CSV export
+
+## Milestone 5.3: Recent Sales
+
+Goal:
+
+Cashiers can quickly review recent operational sales during the event.
+
+Scope:
+
+- compact Letzte Verkäufe panel in the Sales Terminal
+- approximately last 10 sales
+- time, total amount, payment type, number of Bons
+- read-only detail view with sold products, quantities, payment, change, and print mode
+- no edit
+- no delete
+- no cancellation workflow in the MVP
+
+## Milestone 5.4: Sales Analytics Dashboard
+
+Goal:
+
+Organizers can understand event business performance without browsing individual sales.
+
+Suggested sections:
+
+- Overview: total revenue, number of sales, number of printed Bons, average sale value
+- Top Products: product, quantity, revenue
+- Payment Summary: cash and card
+- Time Analysis: revenue by hour
+- Filters: today, entire event, custom period later
+
+The analytics dashboard is separate from the Sales Terminal recent sales panel.
+
+## Milestone 5.5: CSV Export
+
+Goal:
+
+Organizers can export event sales data for simple review outside eventBon.
+
+The CSV export remains a reporting aid, not an invoice, receipt, tax report, or accounting export.
+
 ## Milestone 3: Event Setup
 
 Goal:

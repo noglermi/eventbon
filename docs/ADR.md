@@ -216,3 +216,50 @@ Helpers never own events. Helpers are always assigned to one event.
 Later, a helper may optionally create a permanent account if the same helper works at several events, the same club uses eventBon repeatedly, or helper activity needs to be tracked over time. This is optional. The default helper flow remains QR code or invitation link, enter name, and start working.
 
 Future versions may optionally support email login, Supabase Auth accounts, reusable helper accounts, permission profiles, and activity history per helper. These are not part of the MVP.
+
+## ADR-011 Operational Sales History vs Business Analytics
+
+### Decision
+
+Sales have two different purposes and therefore need two separate product surfaces.
+
+Operational sales history belongs in the Sales Terminal. It supports the cashier during the event. A later compact panel named Letzte Verkäufe should show approximately the last 10 sales. Each entry should contain:
+
+- time
+- total amount
+- payment type
+- number of Bons
+
+Clicking an entry opens a read-only detail view with:
+
+- sold products
+- quantities
+- payment
+- change
+- print mode
+
+Sales cannot be edited. There is no delete function and no cancellation workflow in the MVP.
+
+Sales analytics belongs on a dedicated organizer-facing analytics page. The organizer does not need to browse individual sales; the organizer needs an event-level business overview.
+
+Suggested analytics sections:
+
+- Overview: total revenue, number of sales, number of printed Bons, average sale value
+- Top Products: product, quantity, revenue
+- Payment Summary: cash and card
+- Time Analysis: revenue by hour
+- Filters: today, entire event, and later custom period
+
+### Reason
+
+Operational sales history and business analytics are two different use cases.
+
+The cashier needs speed. The organizer needs information.
+
+### Implications
+
+- Recent sales should stay compact and close to the active selling workflow.
+- Recent sales should help resolve customer questions, wrong payments, wrong Bon counts, and accidental double sales.
+- Analytics should not clutter the Sales Terminal.
+- The organizer-facing analytics page can aggregate sales, sale items, payment methods, and time data.
+- CSV export remains a later separate milestone.

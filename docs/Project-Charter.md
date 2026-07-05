@@ -71,6 +71,12 @@ The eventBon rental payment is separate from Bon sales. eventBon does not proces
 
 Stripe is used only for event booking payment, event activation, paid extension, and invoices or payment handling for the organizer. Stripe is never used for Bon sales to visitors. Visitor payments remain outside Stripe unless a future SumUp integration confirms payment externally.
 
+Sales records serve two different product purposes.
+
+Operational control supports the cashier during the event. The cashier may need to review recent sales because of customer questions, wrong payment, wrong Bon count, or accidental double sale. A future Sales Terminal should therefore include a compact Letzte Verkäufe panel with approximately the last 10 sales. Sales remain read-only and cannot be edited, deleted, or cancelled in the MVP.
+
+Sales analytics supports the organizer after or during the event. The organizer does not need to browse individual sales. Instead, eventBon should provide a dedicated analytics page for revenue, sale count, printed Bons, average sale value, top products, payment summary, revenue by hour, and event-level filters.
+
 ## Roles
 
 ### Organizer
@@ -108,6 +114,8 @@ Each booked event moves through:
 ### Simple for the User
 
 The sales terminal is the product. Users should not need training, setup knowledge, or back-office navigation during active sales.
+
+Operational sales history and business analytics should remain separated. The cashier needs speed. The organizer needs information.
 
 ### Scalable in the Architecture
 
