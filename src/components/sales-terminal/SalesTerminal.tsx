@@ -17,12 +17,14 @@ import { PaymentPanel } from "./PaymentPanel";
 import { ProductTile } from "./ProductTile";
 import { PrintModeSetting } from "./PrintModeSetting";
 import { RecentSalesPanel } from "./RecentSalesPanel";
+import { readViewSettings, writeViewSettings } from "./view-settings-storage";
 import { VoucherPrintPreview } from "./VoucherPrintPreview";
 import type { CartItem, EventSettings, Language, ProductTileData, TileGroupName } from "./types";
+import type { ViewSettings } from "./view-settings-storage";
 import type { Event as PersistedEvent, PrintMode } from "@/types/domain";
 
 type ProductFilter = "all" | TileGroupName;
-type ZoomArea = "articles" | "cart" | "payment";
+type ZoomArea = keyof ViewSettings["blockZoom"];
 
 const productFilters: ProductFilter[] = ["all", ...tileGroups];
 const zoomOptions = [60, 70, 80, 90, 100, 110, 120, 130] as const;
@@ -171,18 +173,7 @@ export function SalesTerminal({
 }: SalesTerminalProps) {
   const receivedInputRef = useRef<HTMLInputElement>(null);
   const viewPanelRef = useRef<HTMLDivElement | null>(null);
-  const [language, setLanguage] = useState<Language>(defaultLanguage);
-  const [visibleCategories, setVisibleCategories] = useState<Record<TileGroupName, boolean>>({
-    Drinks: true,
-    Food: true,
-    Desserts: true,
-    Other: true,
-  });
-  const [blockZoom, setBlockZoom] = useState<Record<ZoomArea, number>>({
-    articles: 100,
-    cart: 100,
-    payment: 100,
-  });
+  const [viewSettings, setViewSettings] = useState<ViewSettings>(() => readViewSettings());
   const [isViewPanelOpen, setIsViewPanelOpen] = useState(false);
   const [eventSettings, setEventSettings] = useState<EventSettings>(initialEventSettings);
   const [products, setProducts] = useState<ProductTileData[]>(productTiles);
@@ -195,12 +186,17 @@ export function SalesTerminal({
   const [persistenceDetails, setPersistenceDetails] = useState<string | null>(null);
   const [tileEditor, setTileEditor] = useState<{ tile: ProductTileData | null; group: TileGroupName } | null>(null);
   const [printPreviewDate, setPrintPreviewDate] = useState<Date | null>(null);
+  const { blockZoom, language, visibleCategories } = viewSettings;
   const labels = getLabels(language);
   const eventName = eventSettings.name[language];
 
   useEffect(() => {
     receivedInputRef.current?.focus();
   }, []);
+
+  useEffect(() => {
+    writeViewSettings(viewSettings);
+  }, [viewSettings]);
 
   useEffect(() => {
     if (!isViewPanelOpen) {
@@ -359,18 +355,24 @@ export function SalesTerminal({
 
   function toggleCategory(filter: ProductFilter) {
     if (filter === "all") {
-      setVisibleCategories({
-        Drinks: true,
-        Food: true,
-        Desserts: true,
-        Other: true,
-      });
+      setViewSettings((current) => ({
+        ...current,
+        visibleCategories: {
+          Drinks: true,
+          Food: true,
+          Desserts: true,
+          Other: true,
+        },
+      }));
       return;
     }
 
-    setVisibleCategories((current) => ({
+    setViewSettings((current) => ({
       ...current,
-      [filter]: !current[filter],
+      visibleCategories: {
+        ...current.visibleCategories,
+        [filter]: !current.visibleCategories[filter],
+      },
     }));
   }
 
@@ -530,7 +532,13 @@ export function SalesTerminal({
                         <button
                           key={area + option}
                           type="button"
-                          onClick={() => setBlockZoom((current) => ({ ...current, [area]: option }))}
+                          onClick={() => setViewSettings((current) => ({
+                            ...current,
+                            blockZoom: {
+                              ...current.blockZoom,
+                              [area]: option,
+                            },
+                          }))}
                           className={"min-h-10 rounded-xl text-sm font-black transition active:scale-[0.98] focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200 " + (blockZoom[area] === option ? "bg-emerald-600 text-white" : "bg-slate-50 text-slate-600 ring-1 ring-slate-200/75")}
                         >
                           {option}
@@ -548,7 +556,7 @@ export function SalesTerminal({
           <div className="flex min-h-12 items-center rounded-2xl bg-slate-100/80 px-2 ring-1 ring-slate-200/70" aria-label={labels.language}>
             <button
               type="button"
-              onClick={() => setLanguage("de")}
+              onClick={() => setViewSettings((current) => ({ ...current, language: "de" }))}
               className={"rounded-xl px-4 py-2 text-base font-black transition focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200 " + (language === "de" ? "bg-white text-slate-950 shadow-sm" : "text-slate-500")}
             >
               DE
@@ -556,7 +564,7 @@ export function SalesTerminal({
             <span className="px-1 text-slate-300" aria-hidden="true">|</span>
             <button
               type="button"
-              onClick={() => setLanguage("en")}
+              onClick={() => setViewSettings((current) => ({ ...current, language: "en" }))}
               className={"rounded-xl px-4 py-2 text-base font-black transition focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200 " + (language === "en" ? "bg-white text-slate-950 shadow-sm" : "text-slate-500")}
             >
               EN
