@@ -301,3 +301,40 @@ Keeping these flows separate protects the event-floor workflow from organizer-on
 - Helpers enter directly into the assigned event terminal.
 - Operational recent sales can live inside the Sales Terminal because they support cashier control during the event.
 - Future helper invitations must not require a dashboard or global event selection.
+
+## ADR-013 Icon and Image Licensing
+
+### Decision
+
+eventBon must only use icons and images with clear commercial usage rights.
+
+Standard product icons must come only from commercially usable open-source icon libraries. Preferred examples are:
+
+- Lucide
+- Tabler Icons
+- Heroicons
+- Material Symbols
+
+The exact icon library and license must be documented before production release.
+
+Unicode emojis may be used as fallback or simple symbols. They are rendered by the operating system or browser.
+
+eventBon must not ship with copied product photos from the internet. No icons or images may be copied from Google Images or other unclear sources.
+
+Product images are uploaded by the organizer. The organizer is responsible for having the rights to uploaded images.
+
+The product principle is:
+
+- Default: safe open-source icon.
+- Optional: organizer-uploaded image.
+
+### Reason
+
+eventBon is a commercial product. Product icons and images appear in the sales terminal, print workflows, and potentially organizer-facing exports or public material. Assets with unclear rights create unnecessary legal and operational risk.
+
+### Implications
+
+- Before public rollout, verify the chosen icon library license.
+- Before public rollout, document the chosen icon library and license in the project documentation.
+- Before public rollout, add a note to terms or usage guidance that organizers are responsible for uploaded images.
+- Development and design work must not use copied product photos or unclear internet image sources as shipped defaults.

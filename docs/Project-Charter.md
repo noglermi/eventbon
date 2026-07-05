@@ -133,6 +133,14 @@ Tenant separation, storage, deployment, permissions, and payment readiness belon
 
 Future offline readiness also belongs in the architecture. If an offline-capable version is introduced, the booked usage period must be represented as a local license period so the app can run without internet during the booked time window. After expiry, sales access should stop while statistics and export can remain read-only for a defined grace period.
 
+### Asset Rights
+
+eventBon must only use icons and images with clear commercial usage rights.
+
+Default product symbols should come from commercially usable open-source icon libraries. Unicode emojis may be used as fallback or simple symbols. eventBon must not ship copied product photos or unclear internet assets.
+
+Organizer-uploaded product images are optional, and the organizer is responsible for having the rights to uploaded images.
+
 ## Scope Control
 
 Every proposed feature should be checked against the mission:

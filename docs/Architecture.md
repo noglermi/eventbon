@@ -280,6 +280,20 @@ Printing should be generated from recorded sales data so the printed result can 
 
 Bon printing is an event-period capability. Outside the active event period or an explicitly enabled usage window, printing should be inactive even if product setup and read-only statistics access are still available.
 
+## Icon And Image Assets
+
+Product icons and images must have clear commercial usage rights.
+
+Default product symbols should use commercially usable open-source icon libraries. Preferred examples are Lucide, Tabler Icons, Heroicons, and Material Symbols. The exact library and license must be verified and documented before production release.
+
+Unicode emojis may be used as fallback or simple symbols because they are rendered by the operating system or browser.
+
+eventBon must not ship copied product photos from the internet. No icons or images may be copied from Google Images or unclear sources.
+
+Organizer-uploaded product images are optional. The organizer is responsible for having the rights to uploaded images.
+
+The product principle is: default to a safe open-source icon, and allow an optional organizer-uploaded image.
+
 ## Explicit Exclusions
 
 The architecture should not introduce systems for:

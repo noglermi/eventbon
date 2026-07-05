@@ -70,6 +70,8 @@ Stripe later handles event booking payment, event activation, paid extensions, a
 
 The interface should feel immediate and obvious. The architecture should still be ready for multiple tenants, hosted deployment, and future payment integrations without exposing that complexity to event staff.
 
+Product icons and images must follow clear commercial usage rights. Default product symbols should use safe open-source icon libraries, while optional product images are uploaded by the organizer. eventBon must not ship copied product photos or assets from unclear internet sources. See ADR-013 for the licensing rules.
+
 ## Technology Direction
 
 eventBon is built around:

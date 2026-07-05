@@ -87,6 +87,13 @@ Potential improvements after the MVP:
 
 These improvements should not add accounting, inventory, or POS complexity.
 
+Before public rollout:
+
+- verify the chosen product icon library license
+- document the chosen icon library and license
+- add terms or usage guidance noting that organizers are responsible for uploaded product images
+- ensure shipped default assets do not include copied product photos or unclear internet sources
+
 ## Helper Access Version 1
 
 Goal:
