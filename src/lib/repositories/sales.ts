@@ -27,6 +27,20 @@ type RecentSaleItemRow = {
   created_at: string;
 };
 
+type AnalyticsSaleRow = {
+  id: string;
+  total_cents: number;
+  payment_method: string;
+  created_at: string;
+};
+
+type AnalyticsSaleItemRow = {
+  sale_id: string;
+  name_snapshot: string;
+  quantity: number;
+  line_total_cents: number;
+};
+
 type SaveCompletedSaleInput = {
   cartItems: CartItem[];
   changeCents: number;
@@ -59,6 +73,24 @@ export type RecentSale = {
   createdAt: string;
   itemCount: number;
   items: RecentSaleItem[];
+};
+
+export type SalesAnalyticsProduct = {
+  name: string;
+  quantity: number;
+  revenueCents: number;
+};
+
+export type SalesAnalyticsSummary = {
+  totalRevenueCents: number;
+  saleCount: number;
+  voucherCount: number;
+  averageSaleCents: number;
+  paymentTotals: {
+    cashCents: number;
+    cardCents: number;
+  };
+  topProducts: SalesAnalyticsProduct[];
 };
 
 type SaleItemPayload = {
@@ -161,6 +193,99 @@ export async function listRecentSales(input: { eventId: string; tenantId: string
   }, new Map<string, RecentSaleItemRow[]>());
 
   return sales.map((sale) => mapRecentSale(sale, itemsBySale.get(sale.id) ?? []));
+}
+
+export async function getSalesAnalytics(input: { createdFrom?: string; createdTo?: string; eventId: string; tenantId: string }): Promise<SalesAnalyticsSummary> {
+  const client = requireSupabase();
+
+  let salesQuery = client
+    .from("sales")
+    .select("id, total_cents, payment_method, created_at")
+    .eq("tenant_id", input.tenantId)
+    .eq("event_id", input.eventId)
+    .eq("status", "completed")
+    .order("created_at", { ascending: false });
+
+  if (input.createdFrom) {
+    salesQuery = salesQuery.gte("created_at", input.createdFrom);
+  }
+
+  if (input.createdTo) {
+    salesQuery = salesQuery.lt("created_at", input.createdTo);
+  }
+
+  const { data: saleRows, error: salesError } = await salesQuery;
+
+  if (salesError) {
+    console.error("Sales analytics load failed", {
+      error: salesError,
+      eventId: input.eventId,
+      tenantId: input.tenantId,
+    });
+    throw salesError;
+  }
+
+  const sales = (saleRows ?? []) as AnalyticsSaleRow[];
+  const saleIds = sales.map((sale) => sale.id);
+
+  if (saleIds.length === 0) {
+    return {
+      totalRevenueCents: 0,
+      saleCount: 0,
+      voucherCount: 0,
+      averageSaleCents: 0,
+      paymentTotals: {
+        cashCents: 0,
+        cardCents: 0,
+      },
+      topProducts: [],
+    };
+  }
+
+  const { data: itemRows, error: itemsError } = await client
+    .from("sale_items")
+    .select("sale_id, name_snapshot, quantity, line_total_cents")
+    .eq("tenant_id", input.tenantId)
+    .in("sale_id", saleIds);
+
+  if (itemsError) {
+    console.error("Sales analytics item load failed", {
+      error: itemsError,
+      eventId: input.eventId,
+      saleIds,
+      tenantId: input.tenantId,
+    });
+    throw itemsError;
+  }
+
+  const items = (itemRows ?? []) as AnalyticsSaleItemRow[];
+  const totalRevenueCents = sales.reduce((sum, sale) => sum + sale.total_cents, 0);
+  const voucherCount = items.reduce((sum, item) => sum + item.quantity, 0);
+  const productTotals = new Map<string, SalesAnalyticsProduct>();
+
+  for (const item of items) {
+    const current = productTotals.get(item.name_snapshot) ?? {
+      name: item.name_snapshot,
+      quantity: 0,
+      revenueCents: 0,
+    };
+
+    current.quantity += item.quantity;
+    current.revenueCents += item.line_total_cents;
+    productTotals.set(item.name_snapshot, current);
+  }
+
+  return {
+    totalRevenueCents,
+    saleCount: sales.length,
+    voucherCount,
+    averageSaleCents: Math.round(totalRevenueCents / sales.length),
+    paymentTotals: {
+      cashCents: sales.filter((sale) => sale.payment_method !== "manual_card").reduce((sum, sale) => sum + sale.total_cents, 0),
+      cardCents: sales.filter((sale) => sale.payment_method === "manual_card").reduce((sum, sale) => sum + sale.total_cents, 0),
+    },
+    topProducts: [...productTotals.values()].sort((first, second) => second.revenueCents - first.revenueCents || second.quantity - first.quantity || first.name.localeCompare(second.name)),
+  };
 }
 
 export async function saveCompletedSale(input: SaveCompletedSaleInput) {

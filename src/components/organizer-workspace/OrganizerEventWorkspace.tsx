@@ -6,6 +6,7 @@ import { getOrganizerForAuthenticatedUser, mockOrganizer } from "@/lib/repositor
 import { logSupabaseError } from "@/lib/supabase/diagnostics";
 import { supabase, supabaseConfigWarning } from "@/lib/supabase/client";
 import { SalesTerminal } from "@/components/sales-terminal/SalesTerminal";
+import { OrganizerSalesDashboard } from "@/components/organizer-workspace/OrganizerSalesDashboard";
 import { defaultLanguage, translations } from "@/components/sales-terminal/i18n";
 import type { Translation } from "@/components/sales-terminal/i18n";
 import type { EventSettings, PrintMode } from "@/components/sales-terminal/types";
@@ -116,6 +117,7 @@ export function OrganizerEventWorkspace() {
   const [currentOrganizer, setCurrentOrganizer] = useState<Organizer>(mockOrganizer);
   const [events, setEvents] = useState<BookedEvent[]>([]);
   const [selectedEvent, setSelectedEvent] = useState<BookedEvent | null>(null);
+  const [dashboardEvent, setDashboardEvent] = useState<BookedEvent | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isLoadingEvents, setIsLoadingEvents] = useState(false);
   const [eventError, setEventError] = useState<string | null>(null);
@@ -155,6 +157,7 @@ export function OrganizerEventWorkspace() {
     const { data: authListener } = supabase.auth.onAuthStateChange((_event, nextSession) => {
       setSession(nextSession);
       setSelectedEvent(null);
+      setDashboardEvent(null);
       if (!nextSession) {
         setEvents([]);
         setCurrentOrganizer(mockOrganizer);
@@ -425,6 +428,17 @@ export function OrganizerEventWorkspace() {
     );
   }
 
+  if (dashboardEvent) {
+    return (
+      <OrganizerSalesDashboard
+        eventId={dashboardEvent.isPersisted ? dashboardEvent.id : null}
+        eventSettings={dashboardEvent.settings}
+        tenantId={dashboardEvent.tenantId}
+        onBackToEvents={() => setDashboardEvent(null)}
+      />
+    );
+  }
+
   return (
     <main className="min-h-screen bg-[#f6f7f5] px-6 py-7 text-slate-950">
       <div className="mx-auto flex max-w-6xl flex-col gap-7">
@@ -493,13 +507,22 @@ export function OrganizerEventWorkspace() {
                 </div>
               </dl>
 
-              <button
-                type="button"
-                onClick={() => setSelectedEvent(bookedEvent)}
-                className="min-h-14 rounded-lg bg-slate-950 px-5 text-lg font-black text-white transition active:scale-[0.98] focus:outline-none focus-visible:ring-4 focus-visible:ring-slate-300"
-              >
-                {labels.openEvent}
-              </button>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <button
+                  type="button"
+                  onClick={() => setSelectedEvent(bookedEvent)}
+                  className="min-h-14 rounded-lg bg-slate-950 px-5 text-lg font-black text-white transition active:scale-[0.98] focus:outline-none focus-visible:ring-4 focus-visible:ring-slate-300"
+                >
+                  {labels.openEvent}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDashboardEvent(bookedEvent)}
+                  className="min-h-14 rounded-lg bg-white px-5 text-lg font-black text-slate-800 ring-1 ring-slate-300 transition active:scale-[0.98] focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200"
+                >
+                  {labels.statistics}
+                </button>
+              </div>
             </article>
           ))}
         </section>
