@@ -3,13 +3,13 @@
 import { useEffect, useState } from "react";
 import { getSalesAnalytics } from "@/lib/repositories/sales";
 import type { SalesAnalyticsSummary } from "@/lib/repositories/sales";
-import { formatDateRange } from "@/lib/date-format";
+import { formatDate, formatDateRange } from "@/lib/date-format";
 import { logSupabaseError } from "@/lib/supabase/diagnostics";
 import { supabaseConfigWarning } from "@/lib/supabase/client";
 import { defaultLanguage, translations } from "@/components/sales-terminal/i18n";
 import type { EventSettings, Language } from "@/components/sales-terminal/types";
 
-type TimeFilter = "all" | "today";
+type TimeFilter = "all" | "eventDay" | "today";
 
 type OrganizerSalesDashboardProps = {
   eventId: string | null;
@@ -34,8 +34,12 @@ function formatCurrency(cents: number, language: Language) {
   return new Intl.NumberFormat(language === "de" ? "de-AT" : "en-US", { style: "currency", currency: "EUR" }).format(cents / 100);
 }
 
-function getTodayRange() {
-  const from = new Date();
+function formatNumber(value: number, language: Language) {
+  return new Intl.NumberFormat(language === "de" ? "de-AT" : "en-US").format(value);
+}
+
+function getDayRange(dateInput: Date | string) {
+  const from = dateInput instanceof Date ? new Date(dateInput) : new Date(dateInput + "T12:00:00");
   from.setHours(0, 0, 0, 0);
 
   const to = new Date(from);
@@ -47,14 +51,42 @@ function getTodayRange() {
   };
 }
 
+function getEventDays(eventSettings: EventSettings) {
+  const from = new Date(eventSettings.dateFrom + "T12:00:00");
+  const to = new Date(eventSettings.dateTo + "T12:00:00");
+
+  if (Number.isNaN(from.getTime())) {
+    return [];
+  }
+
+  const lastDay = Number.isNaN(to.getTime()) || !eventSettings.dateTo ? from : to;
+  const days: string[] = [];
+  const current = new Date(from);
+
+  while (current <= lastDay) {
+    days.push(current.toISOString().slice(0, 10));
+    current.setDate(current.getDate() + 1);
+  }
+
+  return days;
+}
+
+function escapeCsvCell(value: string | number) {
+  const text = String(value);
+  return /[",\n\r;]/.test(text) ? '"' + text.replace(/"/g, '""') + '"' : text;
+}
+
 export function OrganizerSalesDashboard({ eventId, eventSettings, tenantId, onBackToEvents }: OrganizerSalesDashboardProps) {
   const language = defaultLanguage;
   const labels = translations[language];
   const [timeFilter, setTimeFilter] = useState<TimeFilter>("all");
+  const [selectedEventDay, setSelectedEventDay] = useState(eventSettings.dateFrom);
   const [summary, setSummary] = useState<SalesAnalyticsSummary>(emptySummary);
   const [isLoading, setIsLoading] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(supabaseConfigWarning);
   const eventName = eventSettings.name[language];
+  const eventDays = getEventDays(eventSettings);
+  const hasMultipleEventDays = eventDays.length > 1;
 
   useEffect(() => {
     let isActive = true;
@@ -69,11 +101,15 @@ export function OrganizerSalesDashboard({ eventId, eventSettings, tenantId, onBa
       setLoadError(null);
 
       try {
-        const todayRange = timeFilter === "today" ? getTodayRange() : {};
+        const dateRange = timeFilter === "today"
+          ? getDayRange(new Date())
+          : timeFilter === "eventDay"
+            ? getDayRange(selectedEventDay)
+            : {};
         const analytics = await getSalesAnalytics({
           eventId,
           tenantId,
-          ...todayRange,
+          ...dateRange,
         });
 
         if (isActive) {
@@ -97,14 +133,38 @@ export function OrganizerSalesDashboard({ eventId, eventSettings, tenantId, onBa
     return () => {
       isActive = false;
     };
-  }, [eventId, labels.statisticsLoadError, labels.supabaseDiagnosticPrefix, tenantId, timeFilter]);
+  }, [eventId, labels.statisticsLoadError, labels.supabaseDiagnosticPrefix, selectedEventDay, tenantId, timeFilter]);
 
   const overviewCards = [
     { label: labels.totalRevenue, value: formatCurrency(summary.totalRevenueCents, language) },
-    { label: labels.salesCount, value: summary.saleCount.toLocaleString("de-AT") },
-    { label: labels.voucherCount, value: summary.voucherCount.toLocaleString("de-AT") },
+    { label: labels.salesCount, value: formatNumber(summary.saleCount, language) },
+    { label: labels.voucherCount, value: formatNumber(summary.voucherCount, language) },
     { label: labels.averageSale, value: formatCurrency(summary.averageSaleCents, language) },
   ];
+
+  function exportProductSummaryCsv() {
+    const delimiter = language === "de" ? ";" : ",";
+    const header = [labels.product, labels.productCount, labels.revenue];
+    const rows = summary.topProducts.map((product) => [
+      product.name,
+      product.quantity,
+      (product.revenueCents / 100).toFixed(2),
+    ]);
+    const csv = [header, ...rows]
+      .map((row) => row.map(escapeCsvCell).join(delimiter))
+      .join("\r\n");
+    const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    const safeEventName = eventName.toLowerCase().replace(/[^a-z0-9]+/gi, "-").replace(/(^-|-$)/g, "") || "event";
+
+    link.href = url;
+    link.download = safeEventName + "-product-summary.csv";
+    document.body.append(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  }
 
   return (
     <main className="min-h-screen bg-[#f6f7f5] px-6 py-7 text-slate-950">
@@ -124,7 +184,7 @@ export function OrganizerSalesDashboard({ eventId, eventSettings, tenantId, onBa
           </button>
         </header>
 
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-wrap items-end gap-3">
           {([
             ["today", labels.today],
             ["all", labels.allTime],
@@ -139,6 +199,31 @@ export function OrganizerSalesDashboard({ eventId, eventSettings, tenantId, onBa
               {label}
             </button>
           ))}
+          {hasMultipleEventDays ? (
+            <label className="grid gap-2 text-sm font-bold uppercase tracking-widest text-slate-500">
+              {labels.eventDaySelect}
+              <select
+                value={selectedEventDay}
+                onChange={(event) => {
+                  setSelectedEventDay(event.target.value);
+                  setTimeFilter("eventDay");
+                }}
+                className="min-h-12 rounded-lg border border-slate-200 bg-white px-4 text-base font-black normal-case tracking-normal text-slate-800 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
+              >
+                {eventDays.map((day) => (
+                  <option key={day} value={day}>{formatDate(day, language)}</option>
+                ))}
+              </select>
+            </label>
+          ) : null}
+          <button
+            type="button"
+            onClick={exportProductSummaryCsv}
+            disabled={summary.topProducts.length === 0}
+            className="min-h-12 rounded-lg bg-slate-950 px-5 text-base font-black text-white transition active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 focus:outline-none focus-visible:ring-4 focus-visible:ring-slate-300"
+          >
+            {labels.exportCsv}
+          </button>
         </div>
 
         {loadError ? (
@@ -170,15 +255,15 @@ export function OrganizerSalesDashboard({ eventId, eventSettings, tenantId, onBa
                 <thead>
                   <tr className="border-b border-slate-200 text-sm font-bold uppercase tracking-widest text-slate-500">
                     <th className="py-3 pr-4">{labels.product}</th>
-                    <th className="px-4 py-3 text-right">{labels.quantity}</th>
-                    <th className="py-3 pl-4 text-right">{labels.sum}</th>
+                    <th className="px-4 py-3 text-right">{labels.productCount}</th>
+                    <th className="py-3 pl-4 text-right">{labels.revenue}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {summary.topProducts.map((product) => (
                     <tr key={product.name} className="border-b border-slate-100 last:border-0">
                       <td className="py-4 pr-4 text-lg font-black text-slate-900">{product.name}</td>
-                      <td className="px-4 py-4 text-right text-lg font-bold tabular-nums text-slate-700">{product.quantity.toLocaleString("de-AT")}</td>
+                      <td className="px-4 py-4 text-right text-lg font-bold tabular-nums text-slate-700">{formatNumber(product.quantity, language)}</td>
                       <td className="py-4 pl-4 text-right text-lg font-black tabular-nums text-slate-900">{formatCurrency(product.revenueCents, language)}</td>
                     </tr>
                   ))}
