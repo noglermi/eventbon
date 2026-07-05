@@ -2,6 +2,7 @@ create extension if not exists pgcrypto;
 
 create table organizers (
   id uuid primary key default gen_random_uuid(),
+  auth_user_id uuid unique,
   email text not null unique,
   name text not null,
   company text,

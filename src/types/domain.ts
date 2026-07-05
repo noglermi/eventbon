@@ -11,6 +11,7 @@ export type Tenant = {
 
 export type Organizer = {
   id: string;
+  authUserId: string | null;
   email: string;
   name: string;
   company: string | null;

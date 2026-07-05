@@ -2,13 +2,14 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import { createEvent, listEvents } from "@/lib/repositories/events";
-import { getCurrentOrganizer, mockOrganizer } from "@/lib/repositories/organizers";
+import { getOrganizerForAuthenticatedUser, mockOrganizer } from "@/lib/repositories/organizers";
 import { logSupabaseError } from "@/lib/supabase/diagnostics";
-import { supabaseConfigWarning } from "@/lib/supabase/client";
+import { supabase, supabaseConfigWarning } from "@/lib/supabase/client";
 import { SalesTerminal } from "@/components/sales-terminal/SalesTerminal";
 import { defaultLanguage, translations } from "@/components/sales-terminal/i18n";
 import type { EventSettings, PrintMode } from "@/components/sales-terminal/types";
 import type { Event as PersistedEvent, Organizer } from "@/types/domain";
+import type { Session } from "@supabase/supabase-js";
 
 type BookedEventStatus = "preparation" | "active" | "stats_available" | "post_event_read_only" | "expired" | "archived" | "draft";
 
@@ -21,37 +22,6 @@ type BookedEvent = {
   accessUntil: string;
   isPersisted: boolean;
 };
-
-const mockBookedEvents: BookedEvent[] = [
-  {
-    id: "reitturnier-2026",
-    organizerId: mockOrganizer.id,
-    tenantId: null,
-    settings: {
-      name: { de: "Reitturnier 2026", en: "Riding Tournament 2026" },
-      dateFrom: "2026-07-28",
-      dateTo: "2026-07-30",
-      printMode: "single_vouchers",
-    },
-    status: "preparation",
-    accessUntil: "2026-08-06",
-    isPersisted: false,
-  },
-  {
-    id: "sommerfest-oberperfuss",
-    organizerId: mockOrganizer.id,
-    tenantId: null,
-    settings: {
-      name: { de: "Sommerfest Oberperfuss", en: "Oberperfuss Summer Fest" },
-      dateFrom: "2026-08-15",
-      dateTo: "2026-08-15",
-      printMode: "combined_voucher",
-    },
-    status: "active",
-    accessUntil: "2026-08-22",
-    isPersisted: false,
-  },
-];
 
 function formatDateRange(event: EventSettings) {
   const formatter = new Intl.DateTimeFormat("de-AT", { dateStyle: "medium" });
@@ -99,15 +69,35 @@ function mapPersistedEvent(event: PersistedEvent): BookedEvent {
   };
 }
 
+function getSessionOrganizerName(session: Session | null) {
+  const metadataName = session?.user.user_metadata?.name;
+  if (typeof metadataName === "string" && metadataName.trim()) {
+    return metadataName.trim();
+  }
+
+  const email = session?.user.email;
+  if (email) {
+    return email.split("@")[0] || mockOrganizer.name;
+  }
+
+  return mockOrganizer.name;
+}
+
 export function OrganizerEventWorkspace() {
   const language = defaultLanguage;
   const labels = translations[language];
+  const [session, setSession] = useState<Session | null>(null);
+  const [isAuthLoading, setIsAuthLoading] = useState(!supabaseConfigWarning);
+  const [authMode, setAuthMode] = useState<"login" | "register">("login");
+  const [authMessage, setAuthMessage] = useState<string | null>(null);
+  const [authError, setAuthError] = useState<string | null>(supabaseConfigWarning);
+  const [isAuthSubmitting, setIsAuthSubmitting] = useState(false);
   const [currentOrganizer, setCurrentOrganizer] = useState<Organizer>(mockOrganizer);
-  const [events, setEvents] = useState<BookedEvent[]>(supabaseConfigWarning ? mockBookedEvents : []);
+  const [events, setEvents] = useState<BookedEvent[]>([]);
   const [selectedEvent, setSelectedEvent] = useState<BookedEvent | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isLoadingEvents, setIsLoadingEvents] = useState(false);
-  const [eventError, setEventError] = useState<string | null>(supabaseConfigWarning ? labels.mockFallbackWarning + " " + supabaseConfigWarning : null);
+  const [eventError, setEventError] = useState<string | null>(null);
 
   const statusLabels: Record<BookedEventStatus, string> = {
     draft: labels.statusPreparation,
@@ -120,11 +110,46 @@ export function OrganizerEventWorkspace() {
   };
 
   useEffect(() => {
+    if (!supabase) {
+      return undefined;
+    }
+
+    let isActive = true;
+
+    supabase.auth.getSession().then(({ data, error }) => {
+      if (!isActive) {
+        return;
+      }
+
+      if (error) {
+        const diagnostic = logSupabaseError("load auth session", error);
+        setAuthError(labels.supabaseDiagnosticPrefix + ": " + diagnostic);
+      }
+
+      setSession(data.session);
+      setIsAuthLoading(false);
+    });
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      setSession(nextSession);
+      setSelectedEvent(null);
+      if (!nextSession) {
+        setEvents([]);
+        setCurrentOrganizer(mockOrganizer);
+      }
+    });
+
+    return () => {
+      isActive = false;
+      authListener.subscription.unsubscribe();
+    };
+  }, [labels.supabaseDiagnosticPrefix]);
+
+  useEffect(() => {
     let isActive = true;
 
     async function loadEvents() {
-      if (supabaseConfigWarning) {
-        console.warn(labels.supabaseDiagnosticPrefix + ": " + supabaseConfigWarning);
+      if (!session || supabaseConfigWarning) {
         return;
       }
 
@@ -132,15 +157,24 @@ export function OrganizerEventWorkspace() {
       setEventError(null);
 
       try {
-        const organizer = await getCurrentOrganizer();
-        if (organizer && isActive) {
-          setCurrentOrganizer(organizer);
+        const email = session.user.email;
+        if (!email) {
+          throw new Error("Authenticated organizer has no email address.");
         }
 
-        const loadedEvents = await listEvents({ organizerId: organizer?.id ?? null });
-        if (isActive) {
-          setEvents(loadedEvents.map(mapPersistedEvent));
+        const organizer = await getOrganizerForAuthenticatedUser({
+          email,
+          name: getSessionOrganizerName(session),
+          userId: session.user.id,
+        });
+
+        if (!isActive) {
+          return;
         }
+
+        setCurrentOrganizer(organizer);
+        const loadedEvents = await listEvents({ organizerId: organizer.id });
+        setEvents(loadedEvents.map(mapPersistedEvent));
       } catch (error) {
         if (isActive) {
           const diagnostic = logSupabaseError("load events", error);
@@ -159,7 +193,74 @@ export function OrganizerEventWorkspace() {
     return () => {
       isActive = false;
     };
-  }, [labels.eventLoadError, labels.supabaseDiagnosticPrefix]);
+  }, [labels.eventLoadError, labels.supabaseDiagnosticPrefix, session]);
+
+  async function submitAuth(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!supabase) {
+      setAuthError(supabaseConfigWarning);
+      return;
+    }
+
+    const formData = new FormData(event.currentTarget);
+    const email = String(formData.get("email") ?? "").trim();
+    const password = String(formData.get("password") ?? "");
+    const name = String(formData.get("name") ?? "").trim() || mockOrganizer.name;
+
+    setAuthError(null);
+    setAuthMessage(null);
+    setIsAuthSubmitting(true);
+
+    try {
+      if (authMode === "register") {
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: { name },
+          },
+        });
+
+        if (error) {
+          throw error;
+        }
+
+        if (data.session) {
+          setSession(data.session);
+        } else {
+          setAuthMessage(labels.registrationConfirmation);
+          setAuthMode("login");
+        }
+      } else {
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+
+        if (error) {
+          throw error;
+        }
+
+        setSession(data.session);
+      }
+    } catch (error) {
+      const diagnostic = logSupabaseError("organizer auth", error);
+      setAuthError(labels.supabaseDiagnosticPrefix + ": " + diagnostic);
+    } finally {
+      setIsAuthSubmitting(false);
+    }
+  }
+
+  async function logout() {
+    if (!supabase) {
+      return;
+    }
+
+    setAuthError(null);
+    setAuthMessage(null);
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      const diagnostic = logSupabaseError("organizer logout", error);
+      setAuthError(labels.supabaseDiagnosticPrefix + ": " + diagnostic);
+    }
+  }
 
   async function createBookedEvent(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -208,6 +309,68 @@ export function OrganizerEventWorkspace() {
     setSelectedEvent(bookedEvent);
   }
 
+  if (isAuthLoading) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-[#f6f7f5] p-6 text-slate-950">
+        <p className="rounded-lg bg-white px-5 py-4 text-lg font-black text-slate-700 ring-1 ring-slate-200">{labels.authLoading}</p>
+      </main>
+    );
+  }
+
+  if (!session) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-[#f6f7f5] p-6 text-slate-950">
+        <section className="w-full max-w-xl rounded-lg bg-white p-7 shadow-sm ring-1 ring-slate-200">
+          <p className="text-2xl font-black tracking-normal text-emerald-600">eventBon</p>
+          <h1 className="mt-4 text-4xl font-black tracking-tight">{labels.authTitle}</h1>
+          <p className="mt-2 text-lg font-semibold text-slate-600">{labels.authRequiredIntro}</p>
+
+          {authError ? (
+            <p className="mt-5 rounded-lg bg-amber-50 px-4 py-3 text-sm font-bold text-amber-900 ring-1 ring-amber-200">{authError}</p>
+          ) : null}
+          {authMessage ? (
+            <p className="mt-5 rounded-lg bg-emerald-50 px-4 py-3 text-sm font-bold text-emerald-900 ring-1 ring-emerald-200">{authMessage}</p>
+          ) : null}
+
+          <form onSubmit={submitAuth} className="mt-6 grid gap-5">
+            {authMode === "register" ? (
+              <label className="grid gap-2 text-sm font-bold uppercase tracking-widest text-slate-500">
+                {labels.name}
+                <input name="name" defaultValue={mockOrganizer.name} className="min-h-14 rounded-lg border border-slate-200 px-4 text-xl font-bold normal-case tracking-normal text-slate-950 outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100" />
+              </label>
+            ) : null}
+
+            <label className="grid gap-2 text-sm font-bold uppercase tracking-widest text-slate-500">
+              {labels.email}
+              <input name="email" type="email" required defaultValue={authMode === "register" ? mockOrganizer.email : undefined} className="min-h-14 rounded-lg border border-slate-200 px-4 text-xl font-bold normal-case tracking-normal text-slate-950 outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100" />
+            </label>
+
+            <label className="grid gap-2 text-sm font-bold uppercase tracking-widest text-slate-500">
+              {labels.password}
+              <input name="password" type="password" required minLength={6} className="min-h-14 rounded-lg border border-slate-200 px-4 text-xl font-bold normal-case tracking-normal text-slate-950 outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100" />
+            </label>
+
+            <button type="submit" disabled={Boolean(supabaseConfigWarning) || isAuthSubmitting} className="min-h-14 rounded-lg bg-emerald-600 px-6 text-lg font-black text-white shadow-sm shadow-emerald-700/20 transition active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200">
+              {isAuthSubmitting ? labels.saving : authMode === "register" ? labels.register : labels.login}
+            </button>
+          </form>
+
+          <button
+            type="button"
+            onClick={() => {
+              setAuthMode((current) => current === "login" ? "register" : "login");
+              setAuthError(supabaseConfigWarning);
+              setAuthMessage(null);
+            }}
+            className="mt-5 min-h-12 w-full rounded-lg bg-slate-100 px-5 text-base font-black text-slate-700 transition active:scale-[0.98] focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200"
+          >
+            {authMode === "login" ? labels.switchToRegistration : labels.alreadyRegistered}
+          </button>
+        </section>
+      </main>
+    );
+  }
+
   if (selectedEvent) {
     return (
       <SalesTerminal
@@ -236,13 +399,22 @@ export function OrganizerEventWorkspace() {
             <p className="mt-2 text-lg font-semibold text-slate-600">{labels.organizerWorkspaceIntro}</p>
             <p className="mt-2 text-base font-black text-slate-700">{currentOrganizer.name}</p>
           </div>
-          <button
-            type="button"
-            onClick={() => setIsCreateOpen(true)}
-            className="min-h-14 rounded-lg bg-emerald-600 px-6 text-lg font-black text-white shadow-sm shadow-emerald-700/20 transition active:scale-[0.98] focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200"
-          >
-            + {labels.bookNewEvent}
-          </button>
+          <div className="flex flex-wrap justify-end gap-3">
+            <button
+              type="button"
+              onClick={logout}
+              className="min-h-14 rounded-lg bg-slate-100 px-5 text-lg font-black text-slate-700 ring-1 ring-slate-200 transition active:scale-[0.98] focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200"
+            >
+              {labels.logout}
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsCreateOpen(true)}
+              className="min-h-14 rounded-lg bg-emerald-600 px-6 text-lg font-black text-white shadow-sm shadow-emerald-700/20 transition active:scale-[0.98] focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200"
+            >
+              + {labels.bookNewEvent}
+            </button>
+          </div>
         </header>
 
         {eventError ? (
@@ -254,7 +426,7 @@ export function OrganizerEventWorkspace() {
         ) : null}
 
         {!isLoadingEvents && events.length === 0 ? (
-          <p className="rounded-lg bg-white px-4 py-6 text-lg font-black text-slate-600 ring-1 ring-slate-200">{labels.noEvents}</p>
+          <p className="rounded-lg bg-white px-4 py-6 text-lg font-black text-slate-600 ring-1 ring-slate-200">{labels.noEventsYet}</p>
         ) : null}
 
         <section className="grid gap-4 md:grid-cols-2" aria-label={labels.myEvents}>
