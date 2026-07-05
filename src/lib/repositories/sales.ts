@@ -41,6 +41,10 @@ type AnalyticsSaleItemRow = {
   line_total_cents: number;
 };
 
+type ExportSaleItemRow = AnalyticsSaleItemRow & {
+  price_cents_snapshot: number;
+};
+
 type SaveCompletedSaleInput = {
   cartItems: CartItem[];
   changeCents: number;
@@ -97,6 +101,25 @@ export type SalesAnalyticsSummary = {
   };
   hourlyRevenue: SalesAnalyticsHour[];
   topProducts: SalesAnalyticsProduct[];
+};
+
+export type SalesExportSaleItem = {
+  saleId: string;
+  nameSnapshot: string;
+  priceCentsSnapshot: number;
+  quantity: number;
+  lineTotalCents: number;
+};
+
+export type SalesExportSale = {
+  id: string;
+  totalCents: number;
+  paymentMethod: "cash" | "manual_card";
+  cashReceivedCents: number | null;
+  changeCents: number | null;
+  createdAt: string;
+  itemCount: number;
+  items: SalesExportSaleItem[];
 };
 
 type SaleItemPayload = {
@@ -304,6 +327,89 @@ export async function getSalesAnalytics(input: { createdFrom?: string; createdTo
     hourlyRevenue,
     topProducts: [...productTotals.values()].sort((first, second) => second.revenueCents - first.revenueCents || second.quantity - first.quantity || first.name.localeCompare(second.name)),
   };
+}
+
+export async function listSalesForExport(input: { createdFrom?: string; createdTo?: string; eventId: string; tenantId: string }): Promise<SalesExportSale[]> {
+  const client = requireSupabase();
+
+  let salesQuery = client
+    .from("sales")
+    .select("id, total_cents, payment_method, cash_received_cents, change_cents, created_at")
+    .eq("tenant_id", input.tenantId)
+    .eq("event_id", input.eventId)
+    .eq("status", "completed")
+    .order("created_at", { ascending: true });
+
+  if (input.createdFrom) {
+    salesQuery = salesQuery.gte("created_at", input.createdFrom);
+  }
+
+  if (input.createdTo) {
+    salesQuery = salesQuery.lt("created_at", input.createdTo);
+  }
+
+  const { data: saleRows, error: salesError } = await salesQuery;
+
+  if (salesError) {
+    console.error("Sales export load failed", {
+      error: salesError,
+      eventId: input.eventId,
+      tenantId: input.tenantId,
+    });
+    throw salesError;
+  }
+
+  const sales = (saleRows ?? []) as Array<Pick<RecentSaleRow, "id" | "total_cents" | "payment_method" | "cash_received_cents" | "change_cents" | "created_at">>;
+  const saleIds = sales.map((sale) => sale.id);
+
+  if (saleIds.length === 0) {
+    return [];
+  }
+
+  const { data: itemRows, error: itemsError } = await client
+    .from("sale_items")
+    .select("sale_id, name_snapshot, price_cents_snapshot, quantity, line_total_cents")
+    .eq("tenant_id", input.tenantId)
+    .in("sale_id", saleIds)
+    .order("created_at", { ascending: true });
+
+  if (itemsError) {
+    console.error("Sales export item load failed", {
+      error: itemsError,
+      eventId: input.eventId,
+      saleIds,
+      tenantId: input.tenantId,
+    });
+    throw itemsError;
+  }
+
+  const itemsBySale = ((itemRows ?? []) as ExportSaleItemRow[]).reduce((groups, item) => {
+    const current = groups.get(item.sale_id) ?? [];
+    current.push({
+      saleId: item.sale_id,
+      nameSnapshot: item.name_snapshot,
+      priceCentsSnapshot: item.price_cents_snapshot,
+      quantity: item.quantity,
+      lineTotalCents: item.line_total_cents,
+    });
+    groups.set(item.sale_id, current);
+    return groups;
+  }, new Map<string, SalesExportSaleItem[]>());
+
+  return sales.map((sale) => {
+    const items = itemsBySale.get(sale.id) ?? [];
+
+    return {
+      id: sale.id,
+      totalCents: sale.total_cents,
+      paymentMethod: sale.payment_method === "manual_card" ? "manual_card" : "cash",
+      cashReceivedCents: sale.cash_received_cents,
+      changeCents: sale.change_cents,
+      createdAt: sale.created_at,
+      itemCount: items.reduce((sum, item) => sum + item.quantity, 0),
+      items,
+    };
+  });
 }
 
 export async function saveCompletedSale(input: SaveCompletedSaleInput) {

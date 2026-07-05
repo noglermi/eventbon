@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getSalesAnalytics } from "@/lib/repositories/sales";
+import { getSalesAnalytics, listSalesForExport } from "@/lib/repositories/sales";
 import type { SalesAnalyticsSummary } from "@/lib/repositories/sales";
+import { saveSalesWorkbook } from "@/lib/excel/sales-workbook";
 import { formatDate, formatDateRange } from "@/lib/date-format";
 import { logSupabaseError } from "@/lib/supabase/diagnostics";
 import { supabaseConfigWarning } from "@/lib/supabase/client";
@@ -84,11 +85,6 @@ function getEventDays(eventSettings: EventSettings) {
   return days;
 }
 
-function escapeCsvCell(value: string | number) {
-  const text = String(value);
-  return /[",\n\r;]/.test(text) ? '"' + text.replace(/"/g, '""') + '"' : text;
-}
-
 export function OrganizerSalesDashboard({ eventId, eventSettings, tenantId, onBackToEvents }: OrganizerSalesDashboardProps) {
   const language = defaultLanguage;
   const labels = translations[language];
@@ -96,6 +92,7 @@ export function OrganizerSalesDashboard({ eventId, eventSettings, tenantId, onBa
   const [selectedEventDay, setSelectedEventDay] = useState(eventSettings.dateFrom);
   const [summary, setSummary] = useState<SalesAnalyticsSummary>(emptySummary);
   const [isLoading, setIsLoading] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(supabaseConfigWarning);
   const eventName = eventSettings.name[language];
   const eventDays = getEventDays(eventSettings);
@@ -159,28 +156,39 @@ export function OrganizerSalesDashboard({ eventId, eventSettings, tenantId, onBa
   const maxProductRevenue = Math.max(...topProductsChart.map((product) => product.revenueCents), 0);
   const paymentTotalCents = summary.paymentTotals.cashCents + summary.paymentTotals.cardCents;
 
-  function exportProductSummaryCsv() {
-    const delimiter = language === "de" ? ";" : ",";
-    const header = [labels.product, labels.productCount, labels.revenue];
-    const rows = summary.topProducts.map((product) => [
-      product.name,
-      product.quantity,
-      (product.revenueCents / 100).toFixed(2),
-    ]);
-    const csv = [header, ...rows]
-      .map((row) => row.map(escapeCsvCell).join(delimiter))
-      .join("\r\n");
-    const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    const safeEventName = eventName.toLowerCase().replace(/[^a-z0-9]+/gi, "-").replace(/(^-|-$)/g, "") || "event";
+  async function exportExcelWorkbook() {
+    if (!eventId || !tenantId || isExporting) {
+      return;
+    }
 
-    link.href = url;
-    link.download = safeEventName + "-product-summary.csv";
-    document.body.append(link);
-    link.click();
-    link.remove();
-    URL.revokeObjectURL(url);
+    setIsExporting(true);
+
+    try {
+      const dateRange = timeFilter === "today"
+        ? getDayRange(new Date())
+        : timeFilter === "eventDay"
+          ? getDayRange(selectedEventDay)
+          : {};
+      const sales = await listSalesForExport({
+        eventId,
+        tenantId,
+        ...dateRange,
+      });
+
+      await saveSalesWorkbook({
+        eventName,
+        eventSettings,
+        exportDate: new Date(),
+        language,
+        sales,
+        summary,
+      });
+    } catch (error) {
+      const diagnostic = logSupabaseError("export organizer sales workbook", error);
+      setLoadError(labels.statisticsLoadError + " " + labels.supabaseDiagnosticPrefix + ": " + diagnostic);
+    } finally {
+      setIsExporting(false);
+    }
   }
 
   return (
@@ -235,11 +243,11 @@ export function OrganizerSalesDashboard({ eventId, eventSettings, tenantId, onBa
           ) : null}
           <button
             type="button"
-            onClick={exportProductSummaryCsv}
-            disabled={summary.topProducts.length === 0}
+            onClick={exportExcelWorkbook}
+            disabled={summary.saleCount === 0 || isExporting}
             className="min-h-12 rounded-lg bg-slate-950 px-5 text-base font-black text-white transition active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 focus:outline-none focus-visible:ring-4 focus-visible:ring-slate-300"
           >
-            {labels.exportCsv}
+            {isExporting ? labels.exportLoading : labels.exportExcel}
           </button>
         </div>
 
