@@ -4,6 +4,14 @@ import { useRef, useState } from "react";
 import type { ChangeEvent, DragEvent, FormEvent } from "react";
 import type { Translation } from "./i18n";
 import { groupLabels } from "./i18n";
+import {
+  getProductIconCategoryLabel,
+  getProductIconLabel,
+  getProductIconSearchText,
+  productIconCatalog,
+  productIconCategories,
+} from "./product-icon-catalog";
+import type { ProductIconCategoryId } from "./product-icon-catalog";
 import type { ImageCrop, Language, ProductTileData, TileGroupName } from "./types";
 
 type AddTileDialogProps = {
@@ -23,74 +31,6 @@ type ProductSaveResult = {
 
 const colors = ["#f8c755", "#81d4f7", "#83c57c", "#f5a8c7", "#b49af4"];
 const defaultImageCrop: ImageCrop = { zoom: 1, x: 50, y: 50 };
-const iconCategories = ["Drinks", "Food", "Desserts", "Coffee", "Wine", "Beer", "Soft drinks", "Other"] as const;
-
-type IconCategory = (typeof iconCategories)[number];
-
-type ProductIcon = {
-  label: string;
-  labelDe?: string;
-  labelEn?: string;
-  icon: string;
-  category: IconCategory;
-};
-
-const iconLibrary: ProductIcon[] = [
-  { label: "Cocktail", icon: "\u{1F379}", category: "Drinks" },
-  { label: "Long Drink", icon: "\u{1F378}", category: "Drinks" },
-  { label: "Shot", icon: "\u{1F943}", category: "Drinks" },
-  { label: "Punch", icon: "\u{1F964}", category: "Drinks" },
-  { label: "Bratwurst", icon: "\u{1F32D}", category: "Food" },
-  { label: "Sausage", labelDe: "W\u00fcrstel", labelEn: "Sausage", icon: "\u{1F32D}", category: "Food" },
-  { label: "Leberk\u00e4se roll", labelDe: "Leberk\u00e4ssemmel", labelEn: "Leberk\u00e4se roll", icon: "\u{1F96A}", category: "Food" },
-  { label: "Wiener schnitzel", labelDe: "Wienerschnitzel", labelEn: "Wiener schnitzel", icon: "\u{1F37D}\uFE0F", category: "Food" },
-  { label: "Cordon bleu", labelDe: "Cordon bleu", labelEn: "Cordon bleu", icon: "\u{1F37D}\uFE0F", category: "Food" },
-  { label: "Hot Dog", icon: "\u{1F32D}", category: "Food" },
-  { label: "Fries", icon: "\u{1F35F}", category: "Food" },
-  { label: "Pizza", icon: "\u{1F355}", category: "Food" },
-  { label: "Pizza Salami", icon: "\u{1F355}", category: "Food" },
-  { label: "Pizza Margherita", icon: "\u{1F355}", category: "Food" },
-  { label: "Toast", icon: "\u{1F96A}", category: "Food" },
-  { label: "Pretzel", icon: "\u{1F968}", category: "Food" },
-  { label: "Soup", icon: "\u{1F372}", category: "Food" },
-  { label: "Burger", icon: "\u{1F354}", category: "Food" },
-  { label: "Salad", icon: "\u{1F957}", category: "Food" },
-  { label: "Fish", icon: "\u{1F41F}", category: "Food" },
-  { label: "Vegan", icon: "\u{1F331}", category: "Food" },
-  { label: "Schnitzel", icon: "\u{1F37D}\uFE0F", category: "Food" },
-  { label: "Kebab", icon: "\u{1F959}", category: "Food" },
-  { label: "Taco", icon: "\u{1F32E}", category: "Food" },
-  { label: "Cake", icon: "\u{1F370}", category: "Desserts" },
-  { label: "Ice Cream", icon: "\u{1F366}", category: "Desserts" },
-  { label: "Apple Strudel", icon: "\u{1F967}", category: "Desserts" },
-  { label: "Chocolate", icon: "\u{1F36B}", category: "Desserts" },
-  { label: "Muffin", icon: "\u{1F9C1}", category: "Desserts" },
-  { label: "Donut", icon: "\u{1F369}", category: "Desserts" },
-  { label: "Coffee", icon: "\u2615", category: "Coffee" },
-  { label: "Espresso", icon: "\u2615", category: "Coffee" },
-  { label: "Cappuccino", icon: "\u2615", category: "Coffee" },
-  { label: "Tea", icon: "\u{1FAD6}", category: "Coffee" },
-  { label: "Wine", icon: "\u{1F377}", category: "Wine" },
-  { label: "Red Wine", icon: "\u{1F377}", category: "Wine" },
-  { label: "White Wine", icon: "\u{1F942}", category: "Wine" },
-  { label: "Spritzer", icon: "\u{1F37E}", category: "Wine" },
-  { label: "Champagne", icon: "\u{1F942}", category: "Wine" },
-  { label: "Beer", icon: "\u{1F37A}", category: "Beer" },
-  { label: "Radler", icon: "\u{1F37B}", category: "Beer" },
-  { label: "Pils", icon: "\u{1F37A}", category: "Beer" },
-  { label: "Cola", icon: "\u{1F964}", category: "Soft drinks" },
-  { label: "Fanta", icon: "\u{1F7E0}", category: "Soft drinks" },
-  { label: "Sprite", icon: "\u{1F7E2}", category: "Soft drinks" },
-  { label: "Water", icon: "\u{1F4A7}", category: "Soft drinks" },
-  { label: "Lemonade", icon: "\u{1F34B}", category: "Soft drinks" },
-  { label: "Juice", icon: "\u{1F9C3}", category: "Soft drinks" },
-  { label: "Popcorn", icon: "\u{1F37F}", category: "Other" },
-  { label: "Chips", icon: "\u{1F954}", category: "Other" },
-  { label: "Token", icon: "\u{1F39F}\uFE0F", category: "Other" },
-  { label: "Donation", icon: "\u2B50", category: "Other" },
-  { label: "Merch", icon: "\u{1F6CD}\uFE0F", category: "Other" },
-  { label: "Special", icon: "\u2728", category: "Other" },
-];
 
 const textColorByColor: Record<string, string> = {
   "#f8c755": "#3a2500",
@@ -153,25 +93,6 @@ function CropSlider({
   );
 }
 
-function getIconCategoryLabel(category: IconCategory, language: Language) {
-  const labels: Record<IconCategory, Record<Language, string>> = {
-    Drinks: { de: "Getr\u00e4nke", en: "Drinks" },
-    Food: { de: "Essen", en: "Food" },
-    Desserts: { de: "Desserts", en: "Desserts" },
-    Coffee: { de: "Kaffee", en: "Coffee" },
-    Wine: { de: "Wein", en: "Wine" },
-    Beer: { de: "Bier", en: "Beer" },
-    "Soft drinks": { de: "Alkoholfrei", en: "Soft drinks" },
-    Other: { de: "Sonstiges", en: "Other" },
-  };
-
-  return labels[category][language];
-}
-
-function getProductIconLabel(item: ProductIcon, language: Language) {
-  return language === "de" ? item.labelDe ?? item.label : item.labelEn ?? item.label;
-}
-
 function IconPickerDialog({
   labels,
   language,
@@ -186,14 +107,13 @@ function IconPickerDialog({
   onSelect: (icon: string) => void;
 }) {
   const [query, setQuery] = useState("");
-  const [category, setCategory] = useState<IconCategory | "all">("all");
+  const [category, setCategory] = useState<ProductIconCategoryId | "all">("all");
   const normalizedQuery = query.trim().toLowerCase();
-  const filteredIconsByCategory = iconCategories.map((itemCategory) => {
-    const icons = iconLibrary.filter((item) => {
-      const matchesCategory = category === "all" || item.category === category;
-      const searchableLabels = [item.label, item.labelDe, item.labelEn].filter(Boolean).join(" ").toLowerCase();
-      const matchesQuery = !normalizedQuery || searchableLabels.includes(normalizedQuery);
-      return item.category === itemCategory && matchesCategory && matchesQuery;
+  const filteredIconsByCategory = productIconCategories.map((itemCategory) => {
+    const icons = productIconCatalog.filter((item) => {
+      const matchesCategory = normalizedQuery ? true : category === "all" || item.categoryId === category;
+      const matchesQuery = !normalizedQuery || getProductIconSearchText(item).includes(normalizedQuery);
+      return item.categoryId === itemCategory.id && matchesCategory && matchesQuery;
     });
 
     return { category: itemCategory, icons };
@@ -231,14 +151,14 @@ function IconPickerDialog({
               >
                 {labels.all}
               </button>
-              {iconCategories.map((item) => (
+              {productIconCategories.map((item) => (
                 <button
-                  key={item}
+                  key={item.id}
                   type="button"
-                  onClick={() => setCategory(item)}
-                  className={"min-h-12 shrink-0 rounded-2xl px-5 text-base font-black transition focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200 " + (category === item ? "bg-emerald-600 text-white" : "bg-slate-50 text-slate-600 ring-1 ring-slate-200/75")}
+                  onClick={() => setCategory(item.id)}
+                  className={"min-h-12 shrink-0 rounded-2xl px-5 text-base font-black transition focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200 " + (category === item.id ? "bg-emerald-600 text-white" : "bg-slate-50 text-slate-600 ring-1 ring-slate-200/75")}
                 >
-                  {getIconCategoryLabel(item, language)}
+                  {getProductIconCategoryLabel(item, language)}
                 </button>
               ))}
             </div>
@@ -247,12 +167,12 @@ function IconPickerDialog({
 
         <div className="min-h-0 flex-1 space-y-8 overflow-y-auto p-7">
           {filteredIconsByCategory.map((group) => (
-            <section key={group.category} className="space-y-4" aria-label={getIconCategoryLabel(group.category, language)}>
-              <h4 className="text-2xl font-black tracking-normal text-slate-950">{getIconCategoryLabel(group.category, language)}</h4>
+            <section key={group.category.id} className="space-y-4" aria-label={getProductIconCategoryLabel(group.category, language)}>
+              <h4 className="text-2xl font-black tracking-normal text-slate-950">{getProductIconCategoryLabel(group.category, language)}</h4>
               <div className="grid grid-cols-3 gap-4 md:grid-cols-4 xl:grid-cols-6">
                 {group.icons.map((item) => (
                   <button
-                    key={item.category + item.label}
+                    key={item.id}
                     type="button"
                     onClick={() => chooseIcon(item.icon)}
                     className={"flex min-h-32 flex-col items-center justify-center rounded-2xl p-4 text-center transition active:scale-[0.98] focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200 " + (selectedIcon === item.icon ? "bg-emerald-50 text-emerald-900 ring-4 ring-emerald-400" : "bg-slate-50 text-slate-700 ring-1 ring-slate-200/75")}
