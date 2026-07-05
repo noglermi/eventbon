@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import type { CSSProperties } from "react";
 import { listProducts, saveProduct } from "@/lib/repositories/products";
 import { saveCompletedSale } from "@/lib/repositories/sales";
 import { updateEventBasics } from "@/lib/repositories/events";
@@ -18,8 +19,10 @@ import type { CartItem, EventSettings, Language, ProductTileData, TileGroupName 
 import type { Event as PersistedEvent, PrintMode } from "@/types/domain";
 
 type ProductFilter = "all" | TileGroupName;
+type ZoomArea = "articles" | "cart" | "payment";
 
 const productFilters: ProductFilter[] = ["all", ...tileGroups];
+const zoomOptions = [80, 90, 100, 110, 120] as const;
 
 function parseAmountToCents(value: string) {
   const normalizedValue = value.trim().replace(",", ".");
@@ -82,6 +85,10 @@ function getLabels(language: Language) {
   return translations[language];
 }
 
+function getZoomStyle(value: number): CSSProperties {
+  return { zoom: value / 100 } as CSSProperties;
+}
+
 function CalendarIcon() {
   return (
     <svg aria-hidden="true" viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round">
@@ -131,7 +138,18 @@ export function SalesTerminal({
 }: SalesTerminalProps) {
   const receivedInputRef = useRef<HTMLInputElement>(null);
   const [language, setLanguage] = useState<Language>(defaultLanguage);
-  const [activeFilter, setActiveFilter] = useState<ProductFilter>("all");
+  const [visibleCategories, setVisibleCategories] = useState<Record<TileGroupName, boolean>>({
+    Drinks: true,
+    Food: true,
+    Desserts: true,
+    Other: true,
+  });
+  const [blockZoom, setBlockZoom] = useState<Record<ZoomArea, number>>({
+    articles: 100,
+    cart: 100,
+    payment: 100,
+  });
+  const [isViewPanelOpen, setIsViewPanelOpen] = useState(false);
   const [eventSettings, setEventSettings] = useState<EventSettings>(initialEventSettings);
   const [products, setProducts] = useState<ProductTileData[]>(productTiles);
   const [cartItems, setCartItems] = useState<CartItem[]>(initialCart);
@@ -193,7 +211,8 @@ export function SalesTerminal({
     [products],
   );
 
-  const visibleGroups = useMemo(() => activeFilter === "all" ? tileGroups : [activeFilter], [activeFilter]);
+  const visibleGroups = useMemo(() => tileGroups.filter((group) => visibleCategories[group]), [visibleCategories]);
+  const areAllCategoriesVisible = visibleGroups.length === tileGroups.length;
 
   const productsByGroup = useMemo(() => {
     return tileGroups.reduce((groups, group) => {
@@ -238,6 +257,23 @@ export function SalesTerminal({
     setCartItems([]);
     setReceivedEntry("");
     requestAnimationFrame(() => receivedInputRef.current?.focus());
+  }
+
+  function toggleCategory(filter: ProductFilter) {
+    if (filter === "all") {
+      setVisibleCategories({
+        Drinks: true,
+        Food: true,
+        Desserts: true,
+        Other: true,
+      });
+      return;
+    }
+
+    setVisibleCategories((current) => ({
+      ...current,
+      [filter]: !current[filter],
+    }));
   }
 
   async function openPrintPreview() {
@@ -353,6 +389,41 @@ export function SalesTerminal({
         </div>
 
         <div className="flex items-center gap-3">
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setIsViewPanelOpen((current) => !current)}
+              className="min-h-12 rounded-2xl bg-slate-100 px-5 text-base font-black text-slate-700 ring-1 ring-slate-200/75 transition active:scale-[0.98] focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200"
+              aria-expanded={isViewPanelOpen}
+            >
+              {labels.view}
+            </button>
+            {isViewPanelOpen ? (
+              <div className="absolute right-0 top-14 z-40 w-[23rem] rounded-2xl bg-white p-4 shadow-2xl ring-1 ring-slate-200">
+                {([
+                  ["articles", labels.articlesZoom],
+                  ["cart", labels.cartZoom],
+                  ["payment", labels.paymentZoom],
+                ] as Array<[ZoomArea, string]>).map(([area, label]) => (
+                  <div key={area} className="grid gap-2 py-2 first:pt-0 last:pb-0">
+                    <p className="text-sm font-black uppercase tracking-widest text-slate-500">{label}</p>
+                    <div className="grid grid-cols-5 gap-2">
+                      {zoomOptions.map((option) => (
+                        <button
+                          key={area + option}
+                          type="button"
+                          onClick={() => setBlockZoom((current) => ({ ...current, [area]: option }))}
+                          className={"min-h-10 rounded-xl text-sm font-black transition active:scale-[0.98] focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200 " + (blockZoom[area] === option ? "bg-emerald-600 text-white" : "bg-slate-50 text-slate-600 ring-1 ring-slate-200/75")}
+                        >
+                          {option}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : null}
+          </div>
           <div className="flex min-h-12 items-center rounded-2xl bg-slate-100/80 px-2 ring-1 ring-slate-200/70" aria-label={labels.language}>
             <button
               type="button"
@@ -374,8 +445,9 @@ export function SalesTerminal({
       </header>
 
       <div className="grid min-h-0 grid-cols-[minmax(0,1.35fr)_minmax(360px,0.95fr)_minmax(320px,0.8fr)] gap-6 p-6">
-        <section className="flex min-h-0 flex-col rounded-[2.25rem] bg-white/95 shadow-[0_18px_50px_rgba(15,23,42,0.06)] ring-1 ring-slate-200/75">
-          <div className="shrink-0 border-b border-slate-100 px-7 py-6">
+        <section className="flex min-h-0 flex-col overflow-hidden rounded-[2.25rem] bg-white/95 shadow-[0_18px_50px_rgba(15,23,42,0.06)] ring-1 ring-slate-200/75">
+          <div className="min-h-0 flex-1 overflow-auto" style={getZoomStyle(blockZoom.articles)}>
+          <div className="border-b border-slate-100 px-7 py-6">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <h1 className="text-3xl font-black tracking-tight text-slate-950">{labels.articles}</h1>
@@ -390,13 +462,14 @@ export function SalesTerminal({
             </div>
             <div className="mt-5 flex gap-2.5 overflow-x-auto pb-1">
               {productFilters.map((filter) => {
-                const isActive = activeFilter === filter;
+                const isActive = filter === "all" ? areAllCategoriesVisible : visibleCategories[filter];
                 return (
                   <button
                     key={filter}
                     type="button"
-                    onClick={() => setActiveFilter(filter)}
+                    onClick={() => toggleCategory(filter)}
                     className={"min-h-12 shrink-0 rounded-2xl px-5 text-base font-black transition active:scale-[0.98] focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200 " + (isActive ? "bg-emerald-600 text-white shadow-sm shadow-emerald-600/20" : "bg-slate-50 text-slate-600 ring-1 ring-slate-200/75")}
+                    aria-pressed={isActive}
                   >
                     {getFilterLabel(filter, labels, language)}
                   </button>
@@ -405,13 +478,16 @@ export function SalesTerminal({
             </div>
           </div>
 
-          <div className="min-h-0 flex-1 overflow-y-auto p-6">
+          <div className="p-6">
             <div className="space-y-7">
+              {visibleGroups.length === 0 ? (
+                <div className="flex min-h-48 items-center justify-center rounded-[1.75rem] bg-slate-50 p-6 text-center text-xl font-black text-slate-500 ring-1 ring-slate-200/75">
+                  {labels.noVisibleCategories}
+                </div>
+              ) : null}
               {visibleGroups.map((group) => (
                 <section key={group} className="space-y-3" aria-label={groupLabels[group][language]}>
-                  {activeFilter === "all" ? (
-                    <h2 className="text-xl font-black tracking-tight text-slate-800">{groupLabels[group][language]}</h2>
-                  ) : null}
+                  <h2 className="text-xl font-black tracking-tight text-slate-800">{groupLabels[group][language]}</h2>
                   <div className="grid grid-cols-2 gap-5 xl:grid-cols-3 2xl:grid-cols-4">
                     {productsByGroup[group].map((product) => (
                       <ProductTile key={product.id} language={language} product={product} editLabel={labels.edit} onSelect={addProduct} onEdit={(selectedTile) => setTileEditor({ tile: selectedTile, group: selectedTile.group })} />
@@ -435,11 +511,14 @@ export function SalesTerminal({
               <p className="mt-4 rounded-2xl bg-slate-50 px-4 py-3 text-sm font-black text-slate-600 ring-1 ring-slate-200">{labels.loadingProducts}</p>
             ) : null}
           </div>
+          </div>
         </section>
 
-        <Cart items={cartItems} language={language} labels={labels} productsById={productsById} totalCents={totalCents} onIncrease={increaseItem} onDecrease={decreaseItem} onRemove={removeItem} />
+        <div className="min-h-0 overflow-hidden rounded-[2.25rem]" style={getZoomStyle(blockZoom.cart)}>
+          <Cart items={cartItems} language={language} labels={labels} productsById={productsById} totalCents={totalCents} onIncrease={increaseItem} onDecrease={decreaseItem} onRemove={removeItem} />
+        </div>
 
-        <div className="flex min-h-0 flex-col gap-5">
+        <div className="flex min-h-0 flex-col gap-5 overflow-hidden rounded-[2.25rem]" style={getZoomStyle(blockZoom.payment)}>
           <PaymentPanel labels={labels} language={language} totalCents={totalCents} receivedCents={receivedCents} receivedEntry={receivedEntry} receivedInputRef={receivedInputRef} onReceivedEntryChange={setReceivedEntry} />
           <PrintModeSetting labels={labels} printMode={eventSettings.printMode} onPrintModeChange={updatePrintMode} />
         </div>
