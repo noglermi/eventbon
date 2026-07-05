@@ -44,7 +44,15 @@ Before the event, the organizer may configure products and settings. Active Bon 
 
 The organizer books the event, pays for the eventBon usage period, configures event settings, and can invite helpers in later milestones.
 
+The organizer is the commercial customer and owner of booked events. The MVP structure is:
+
+- Organizer
+- Events owned by the organizer
+- Products, sales, and statistics inside each event
+
 Helpers and volunteers are event-scoped users. They can use the sales terminal for the booked event they were invited to, cannot change booking, payment, or license data, and may have restricted permissions.
+
+Helpers are not the same as the organizer and do not own events.
 
 ## Event-Level Print Mode
 

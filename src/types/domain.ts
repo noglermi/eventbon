@@ -9,8 +9,18 @@ export type Tenant = {
   updatedAt: string;
 };
 
+export type Organizer = {
+  id: string;
+  email: string;
+  name: string;
+  company: string | null;
+  phone: string | null;
+  createdAt: string;
+};
+
 export type Event = {
   id: string;
+  organizerId: string | null;
   tenantId: string | null;
   name: string;
   startsAt: string;

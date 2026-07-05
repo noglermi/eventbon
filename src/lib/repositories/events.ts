@@ -3,6 +3,7 @@ import type { Event, PrintMode } from "@/types/domain";
 
 type EventRow = {
   id: string;
+  organizer_id: string | null;
   tenant_id: string;
   name: string;
   starts_at: string;
@@ -16,6 +17,7 @@ type EventRow = {
 
 export type EventCreateInput = {
   name: string;
+  organizerId?: string | null;
   startsAt: string;
   endsAt: string;
   printMode: PrintMode;
@@ -23,6 +25,7 @@ export type EventCreateInput = {
 
 export type EventUpdateInput = {
   id: string;
+  organizerId?: string | null;
   tenantId: string;
   name: string;
   startsAt: string;
@@ -53,6 +56,7 @@ function addDays(value: string, days: number) {
 function mapEvent(row: EventRow): Event {
   return {
     id: row.id,
+    organizerId: row.organizer_id ?? null,
     tenantId: row.tenant_id,
     name: row.name,
     startsAt: row.starts_at,
@@ -84,13 +88,19 @@ async function getFirstTenantId() {
   return null;
 }
 
-export async function listEvents() {
+export async function listEvents(input: { organizerId?: string | null } = {}) {
   const client = requireSupabase();
 
-  const { data, error } = await client
+  let query = client
     .from("events")
     .select("*")
     .order("starts_at", { ascending: true });
+
+  if (input.organizerId) {
+    query = query.eq("organizer_id", input.organizerId);
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     throw error;
@@ -103,7 +113,7 @@ export async function createEvent(input: EventCreateInput) {
   const client = requireSupabase();
   const tenantId = await getFirstTenantId();
 
-  if (!tenantId) {
+  if (!tenantId || !input.organizerId) {
     return null;
   }
 
@@ -111,6 +121,7 @@ export async function createEvent(input: EventCreateInput) {
   const { data, error } = await client
     .from("events")
     .insert({
+      organizer_id: input.organizerId,
       tenant_id: tenantId,
       name: input.name,
       starts_at: toDateTime(input.startsAt),
@@ -153,3 +164,9 @@ export async function updateEventBasics(input: EventUpdateInput) {
 
   return mapEvent(data as EventRow);
 }
+
+export const EventRepository = {
+  create: createEvent,
+  list: listEvents,
+  updateBasics: updateEventBasics,
+};

@@ -30,6 +30,12 @@ The main organizer-facing entry point is:
 
 From there, the organizer opens a booked event and enters the sales terminal for that event.
 
+The organizer is the commercial customer and owner of booked events. The primary product hierarchy is:
+
+- Organizer
+- Events
+- Products, sales, and statistics inside each event
+
 The MVP application still centers operational work on one primary event experience:
 
 - Sales terminal for the selected booked event.
@@ -60,6 +66,15 @@ The organizer account may own multiple booked events over time. Helpers and volu
 
 The commercial account model starts with a registered organizer user. The organizer account owns events and can create multiple events over time. Past events remain visible in Meine Veranstaltungen according to their access, archive, and retention periods.
 
+During Milestone 5.1, organizer_id is introduced as the future primary ownership link for events. tenant_id remains in the schema as a temporary compatibility layer until authentication, Stripe, and full tenant handling are reintroduced.
+
+The future access chain is:
+
+- Supabase Auth user
+- Organizer
+- Events
+- Event-scoped helpers
+
 ## Supabase
 
 Supabase is the central online data store for eventBon.
@@ -68,6 +83,7 @@ All hosted application data is stored in Supabase. The online version treats Sup
 
 Supabase responsibilities:
 
+- organizers
 - tenants
 - events
 - products
@@ -102,7 +118,8 @@ Each new event requires a separate payment before it becomes active. This makes 
 
 Each booked event has:
 
-- organizer or tenant
+- organizer
+- tenant_id as temporary compatibility layer
 - event name
 - date range
 - access period

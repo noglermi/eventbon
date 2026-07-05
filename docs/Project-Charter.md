@@ -12,6 +12,15 @@ The commercial user model starts with a registered organizer user. The organizer
 
 The user-facing product language is centered on the Veranstalter. Internally, the data model may still use tenant and tenant_id, but user-facing concepts should avoid Mandant. The main organizer-facing entry point is Meine Veranstaltungen.
 
+The organizer is the commercial customer. The product ownership structure is:
+
+- Organizer owns events.
+- Events contain products.
+- Events contain sales.
+- Events produce statistics.
+
+Helpers belong to individual events only. They are not the organizer and do not own booked events.
+
 ## Mission
 
 Sell vouchers.
@@ -61,6 +70,8 @@ Stripe is used only for event booking payment, event activation, paid extension,
 The organizer books the event, pays for the eventBon usage period, defines event name, date range, print mode, products, groups, and access rules, and can invite helpers.
 
 An organizer can own multiple booked events over time. Each booked event has its own lifecycle, configuration, helpers, and access periods.
+
+The organizer is the commercial customer and future payment owner for booked event usage.
 
 The organizer's past events remain visible in Meine Veranstaltungen according to archive and retention rules, so the organizer can return to previous event records without turning eventBon into a permanent POS workspace.
 

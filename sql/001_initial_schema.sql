@@ -1,5 +1,14 @@
 create extension if not exists pgcrypto;
 
+create table organizers (
+  id uuid primary key default gen_random_uuid(),
+  email text not null unique,
+  name text not null,
+  company text,
+  phone text,
+  created_at timestamptz not null default now()
+);
+
 create table tenants (
   id uuid primary key default gen_random_uuid(),
   name text not null,
@@ -9,6 +18,8 @@ create table tenants (
 
 create table events (
   id uuid primary key default gen_random_uuid(),
+  organizer_id uuid not null references organizers(id) on delete cascade,
+  -- Temporary compatibility layer until authentication, Stripe, and tenant handling are reintroduced.
   tenant_id uuid not null references tenants(id) on delete cascade,
   name text not null,
   starts_at timestamptz not null,
@@ -86,6 +97,8 @@ create table access_extensions (
   check (new_access_until > previous_access_until)
 );
 
+create index organizers_email_idx on organizers(email);
+create index events_organizer_id_idx on events(organizer_id);
 create index events_tenant_id_idx on events(tenant_id);
 create index products_event_id_position_idx on products(event_id, position);
 create index sales_event_id_created_at_idx on sales(event_id, created_at);

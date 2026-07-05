@@ -20,6 +20,8 @@ The organizer-facing navigation starts with Meine Veranstaltungen, not a generic
 
 The commercial model starts with a registered organizer user. The organizer account owns events, can create multiple events over time, and each new event requires a separate payment before it becomes active. eventBon is pay-per-event first, not primarily a subscription model. Past events remain visible in Meine Veranstaltungen according to access, archive, and retention rules.
 
+The organizer is the commercial customer. The product hierarchy is Organizer -> Events -> Products, Sales, and Statistics. Helpers are event-scoped and are not the same as the organizer.
+
 Booking lifecycle:
 
 - booking or purchase
@@ -80,6 +82,31 @@ Potential improvements after the MVP:
 - improved image handling for sales tiles beyond the current Supabase Storage foundation
 
 These improvements should not add accounting, inventory, or POS complexity.
+
+## Milestone 5.1: Organizer Account Foundation
+
+Goal:
+
+Introduce the organizer structure without implementing authentication.
+
+Scope:
+
+- Organizer domain type
+- organizers table
+- organizer_id on events
+- tenant_id retained as temporary compatibility layer
+- mock organizer Dr. Michael Nogler
+- event repository prepared to query by organizer
+- no Supabase Auth UI
+- no helper invitation implementation
+- no Stripe
+
+Future architecture:
+
+- Supabase Auth user
+- Organizer
+- Events
+- Event-scoped helpers
 
 ## Milestone 3: Event Setup
 

@@ -128,3 +128,28 @@ eventBon is rented for temporary events. A pay-per-event model matches the produ
 - Each booked event has its own payment, active usage window, post-event access, and possible extension.
 - Meine Veranstaltungen contains current and past events owned by the organizer.
 - Bon sales remain separate from Stripe. Visitor payments remain outside Stripe unless a future SumUp integration confirms payment externally.
+
+## ADR-009 Organizer Account Foundation
+
+### Decision
+
+eventBon introduces Organizer as the explicit commercial owner of booked events before implementing authentication.
+
+The product hierarchy is:
+
+- Organizer
+- Events
+- Products, sales, and statistics inside each event
+
+tenant_id remains in the schema as a temporary compatibility layer until authentication, Stripe, and full tenant handling are reintroduced.
+
+### Reason
+
+The organizer is the customer who books and pays for eventBon usage. Helpers are invited to individual events later, but they are not the owner of events and are not global organizer accounts.
+
+### Implications
+
+- Events receive organizer_id.
+- The event repository can query by organizer.
+- The MVP can keep using a mock organizer until Supabase Auth is added.
+- Future access should flow from Supabase Auth user to Organizer, then Events, then event-scoped Helpers.

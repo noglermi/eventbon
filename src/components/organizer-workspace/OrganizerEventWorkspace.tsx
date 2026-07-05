@@ -2,17 +2,19 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import { createEvent, listEvents } from "@/lib/repositories/events";
+import { getCurrentOrganizer, mockOrganizer } from "@/lib/repositories/organizers";
 import { logSupabaseError } from "@/lib/supabase/diagnostics";
 import { supabaseConfigWarning } from "@/lib/supabase/client";
 import { SalesTerminal } from "@/components/sales-terminal/SalesTerminal";
 import { defaultLanguage, translations } from "@/components/sales-terminal/i18n";
 import type { EventSettings, PrintMode } from "@/components/sales-terminal/types";
-import type { Event as PersistedEvent } from "@/types/domain";
+import type { Event as PersistedEvent, Organizer } from "@/types/domain";
 
 type BookedEventStatus = "preparation" | "active" | "stats_available" | "post_event_read_only" | "expired" | "archived" | "draft";
 
 type BookedEvent = {
   id: string;
+  organizerId: string | null;
   tenantId: string | null;
   settings: EventSettings;
   status: BookedEventStatus;
@@ -23,6 +25,7 @@ type BookedEvent = {
 const mockBookedEvents: BookedEvent[] = [
   {
     id: "reitturnier-2026",
+    organizerId: mockOrganizer.id,
     tenantId: null,
     settings: {
       name: { de: "Reitturnier 2026", en: "Riding Tournament 2026" },
@@ -36,6 +39,7 @@ const mockBookedEvents: BookedEvent[] = [
   },
   {
     id: "sommerfest-oberperfuss",
+    organizerId: mockOrganizer.id,
     tenantId: null,
     settings: {
       name: { de: "Sommerfest Oberperfuss", en: "Oberperfuss Summer Fest" },
@@ -81,6 +85,7 @@ function toDateInput(value: string) {
 function mapPersistedEvent(event: PersistedEvent): BookedEvent {
   return {
     id: event.id,
+    organizerId: event.organizerId,
     tenantId: event.tenantId,
     settings: {
       name: { de: event.name, en: event.name },
@@ -97,6 +102,7 @@ function mapPersistedEvent(event: PersistedEvent): BookedEvent {
 export function OrganizerEventWorkspace() {
   const language = defaultLanguage;
   const labels = translations[language];
+  const [currentOrganizer, setCurrentOrganizer] = useState<Organizer>(mockOrganizer);
   const [events, setEvents] = useState<BookedEvent[]>(supabaseConfigWarning ? mockBookedEvents : []);
   const [selectedEvent, setSelectedEvent] = useState<BookedEvent | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -126,7 +132,12 @@ export function OrganizerEventWorkspace() {
       setEventError(null);
 
       try {
-        const loadedEvents = await listEvents();
+        const organizer = await getCurrentOrganizer();
+        if (organizer && isActive) {
+          setCurrentOrganizer(organizer);
+        }
+
+        const loadedEvents = await listEvents({ organizerId: organizer?.id ?? null });
         if (isActive) {
           setEvents(loadedEvents.map(mapPersistedEvent));
         }
@@ -161,7 +172,7 @@ export function OrganizerEventWorkspace() {
 
     try {
       if (!supabaseConfigWarning) {
-        const persistedEvent = await createEvent({ name, startsAt: dateFrom, endsAt: dateTo, printMode });
+        const persistedEvent = await createEvent({ name, organizerId: currentOrganizer.id, startsAt: dateFrom, endsAt: dateTo, printMode });
 
         if (persistedEvent) {
           const bookedEvent = mapPersistedEvent(persistedEvent);
@@ -179,6 +190,7 @@ export function OrganizerEventWorkspace() {
 
     const bookedEvent: BookedEvent = {
       id: "event-" + Date.now().toString(),
+      organizerId: currentOrganizer.id,
       tenantId: null,
       settings: {
         name: { de: name, en: name },
@@ -222,6 +234,7 @@ export function OrganizerEventWorkspace() {
             <p className="text-2xl font-black tracking-normal text-emerald-600">eventBon</p>
             <h1 className="mt-4 text-4xl font-black tracking-tight">{labels.myEvents}</h1>
             <p className="mt-2 text-lg font-semibold text-slate-600">{labels.organizerWorkspaceIntro}</p>
+            <p className="mt-2 text-base font-black text-slate-700">{currentOrganizer.name}</p>
           </div>
           <button
             type="button"

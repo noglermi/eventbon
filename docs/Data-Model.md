@@ -10,13 +10,37 @@ The core business object is a booked event. The organizer account may own multip
 
 User-facing product language uses Veranstalter. Internally, the data model may still use tenant and tenant_id for multi-tenant boundaries. Avoid user-facing Mandant.
 
+Milestone 5.1 introduces Organizer as the explicit commercial owner of booked events:
+
+- Organizer owns events.
+- Events contain products.
+- Events contain sales.
+- Events produce statistics.
+
+Helpers belong to individual events only. They are not the organizer and are not global users in the product concept.
+
 ## Core Entities
+
+### Organizer
+
+Represents the commercial customer that books and owns events.
+
+Suggested fields:
+
+- id
+- email
+- name
+- company
+- phone
+- created_at
+
+An organizer can own multiple events over time. Later authentication should connect a Supabase Auth user to an organizer record.
 
 ### Tenant
 
-Represents an organizer account or organization using eventBon.
+Temporary compatibility layer for the earlier multi-tenant schema.
 
-This entity may remain named Tenant internally, but user-facing product concepts should call it Veranstalter.
+tenant_id should remain in the implementation until authentication, Stripe, and full tenant handling are reintroduced. User-facing product concepts should use Organizer or Veranstalter, not tenant or Mandant.
 
 Suggested fields:
 
@@ -31,6 +55,7 @@ Represents a booked event where vouchers are configured, sold, printed, and late
 Suggested fields:
 
 - id
+- organizer_id
 - tenant_id
 - name
 - starts_at
@@ -55,7 +80,7 @@ Suggested statuses:
 - expired
 - archived
 
-Each event belongs to one organizer or tenant. Bon printing should only be allowed during the active print window or another explicitly activated usage window. Before the event, product and setting configuration may be allowed without active Bon printing. After the event, the sales terminal becomes inactive while statistics and export remain available during the post-event access period.
+Each event belongs to one organizer. tenant_id remains as a temporary compatibility layer. Bon printing should only be allowed during the active print window or another explicitly activated usage window. Before the event, product and setting configuration may be allowed without active Bon printing. After the event, the sales terminal becomes inactive while statistics and export remain available during the post-event access period.
 
 ### Event Helper Access
 
@@ -188,6 +213,13 @@ Tenant separation should be enforced consistently in application logic and Supab
 Event boundaries matter inside the tenant. A helper invited to one event should not automatically access another event owned by the same organizer.
 
 The organizer-facing navigation should start from Meine Veranstaltungen: a list of booked events owned by the organizer account.
+
+Future ownership and access should flow as:
+
+- Supabase Auth user
+- Organizer
+- Events
+- Event-scoped helpers
 
 ## Summary Data
 

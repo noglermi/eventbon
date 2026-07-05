@@ -32,11 +32,17 @@ The booked event is the core business object. The organizer account may own mult
 
 Commercially, eventBon starts with a registered organizer user. The organizer account owns events and can create multiple events over time. Each new event requires a separate payment before it becomes active. eventBon is therefore pay-per-event first, not primarily a subscription model.
 
+The organizer is the commercial customer and owner of booked events. The product structure is:
+
+- Organizer
+- Events owned by that organizer
+- Products, sales, and statistics contained within each event
+
 User-facing product language uses "Veranstalter" for the organizer. Internally, the data model may still use tenant and tenant_id for multi-tenant boundaries, but the user-facing product should avoid "Mandant". The main organizer-facing entry point is "Meine Veranstaltungen".
 
 Past events remain visible in "Meine Veranstaltungen" for review according to the configured access, archive, and retention periods.
 
-Helpers and volunteers are invited per event. They can access only the booked event they were invited to and are not global users in the product concept.
+Helpers and volunteers are invited per event. They can access only the booked event they were invited to and are not global users in the product concept. Helpers are not the same as the organizer and do not own events.
 
 The event lifecycle includes preparation, active sales and printing, post-event statistics and export access, archive or retention, and optional paid extension.
 
