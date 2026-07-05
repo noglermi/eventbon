@@ -184,6 +184,7 @@ export function SalesTerminal({
   tenantId = null,
 }: SalesTerminalProps) {
   const receivedInputRef = useRef<HTMLInputElement>(null);
+  const viewPanelRef = useRef<HTMLDivElement | null>(null);
   const [language, setLanguage] = useState<Language>(defaultLanguage);
   const [visibleCategories, setVisibleCategories] = useState<Record<TileGroupName, boolean>>({
     Drinks: true,
@@ -212,6 +213,35 @@ export function SalesTerminal({
   useEffect(() => {
     receivedInputRef.current?.focus();
   }, []);
+
+  useEffect(() => {
+    if (!isViewPanelOpen) {
+      return undefined;
+    }
+
+    function handlePointerDown(event: PointerEvent) {
+      const panel = viewPanelRef.current;
+      if (!panel || panel.contains(event.target as Node)) {
+        return;
+      }
+
+      setIsViewPanelOpen(false);
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setIsViewPanelOpen(false);
+      }
+    }
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isViewPanelOpen]);
 
   useEffect(() => {
     let isActive = true;
@@ -433,18 +463,19 @@ export function SalesTerminal({
             <p className="text-2xl font-black tracking-normal text-emerald-600">eventBon</p>
             <p className="text-sm font-semibold text-slate-500">{eventName}</p>
           </div>
-          <div className="relative">
+          <div ref={viewPanelRef} className="relative">
             <button
               type="button"
               onClick={() => setIsViewPanelOpen((current) => !current)}
               className="flex min-h-12 items-center gap-2 rounded-2xl bg-emerald-600 px-5 text-base font-black text-white shadow-sm shadow-emerald-600/20 ring-1 ring-emerald-700/20 transition active:scale-[0.98] focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200"
               aria-expanded={isViewPanelOpen}
+              aria-haspopup="dialog"
             >
               {labels.view} / {labels.zoom}
               <span className="rounded-xl bg-white/20 px-2 py-1 text-sm tabular-nums">{blockZoom.articles}%</span>
             </button>
             {isViewPanelOpen ? (
-              <div className="absolute left-0 top-14 z-[100] w-[23rem] rounded-2xl bg-white p-4 shadow-2xl ring-1 ring-slate-200">
+              <div className="absolute left-0 top-14 z-[200] w-[23rem] rounded-2xl bg-white p-4 shadow-2xl ring-1 ring-slate-200">
                 {([
                   ["articles", labels.articlesZoom],
                   ["cart", labels.cartZoom],
