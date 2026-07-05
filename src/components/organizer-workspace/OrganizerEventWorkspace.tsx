@@ -7,6 +7,7 @@ import { logSupabaseError } from "@/lib/supabase/diagnostics";
 import { supabase, supabaseConfigWarning } from "@/lib/supabase/client";
 import { SalesTerminal } from "@/components/sales-terminal/SalesTerminal";
 import { defaultLanguage, translations } from "@/components/sales-terminal/i18n";
+import type { Translation } from "@/components/sales-terminal/i18n";
 import type { EventSettings, PrintMode } from "@/components/sales-terminal/types";
 import type { Event as PersistedEvent, Organizer } from "@/types/domain";
 import type { Session } from "@supabase/supabase-js";
@@ -83,6 +84,25 @@ function getSessionOrganizerName(session: Session | null) {
   return mockOrganizer.name;
 }
 
+function getFriendlyAuthError(error: unknown, labels: Translation) {
+  if (!error || typeof error !== "object") {
+    return labels.authGeneralError;
+  }
+
+  const fields = error as { code?: string; message?: string };
+  const normalized = [fields.code, fields.message].filter(Boolean).join(" ").toLowerCase();
+
+  if (normalized.includes("email_not_confirmed") || normalized.includes("email not confirmed") || normalized.includes("not confirmed")) {
+    return labels.unconfirmedEmail;
+  }
+
+  if (normalized.includes("invalid_credentials") || normalized.includes("invalid login credentials") || normalized.includes("invalid credentials")) {
+    return labels.invalidLogin;
+  }
+
+  return labels.authGeneralError;
+}
+
 export function OrganizerEventWorkspace() {
   const language = defaultLanguage;
   const labels = translations[language];
@@ -91,6 +111,7 @@ export function OrganizerEventWorkspace() {
   const [authMode, setAuthMode] = useState<"login" | "register">("login");
   const [authMessage, setAuthMessage] = useState<string | null>(null);
   const [authError, setAuthError] = useState<string | null>(supabaseConfigWarning);
+  const [authErrorDetails, setAuthErrorDetails] = useState<string | null>(null);
   const [isAuthSubmitting, setIsAuthSubmitting] = useState(false);
   const [currentOrganizer, setCurrentOrganizer] = useState<Organizer>(mockOrganizer);
   const [events, setEvents] = useState<BookedEvent[]>([]);
@@ -123,7 +144,8 @@ export function OrganizerEventWorkspace() {
 
       if (error) {
         const diagnostic = logSupabaseError("load auth session", error);
-        setAuthError(labels.supabaseDiagnosticPrefix + ": " + diagnostic);
+        setAuthError(labels.authGeneralError);
+        setAuthErrorDetails(diagnostic);
       }
 
       setSession(data.session);
@@ -143,7 +165,7 @@ export function OrganizerEventWorkspace() {
       isActive = false;
       authListener.subscription.unsubscribe();
     };
-  }, [labels.supabaseDiagnosticPrefix]);
+  }, [labels.authGeneralError]);
 
   useEffect(() => {
     let isActive = true;
@@ -208,6 +230,7 @@ export function OrganizerEventWorkspace() {
     const name = String(formData.get("name") ?? "").trim() || mockOrganizer.name;
 
     setAuthError(null);
+    setAuthErrorDetails(null);
     setAuthMessage(null);
     setIsAuthSubmitting(true);
 
@@ -226,6 +249,7 @@ export function OrganizerEventWorkspace() {
         }
 
         if (data.session) {
+          setAuthMessage(labels.registrationReady);
           setSession(data.session);
         } else {
           setAuthMessage(labels.registrationConfirmation);
@@ -242,7 +266,8 @@ export function OrganizerEventWorkspace() {
       }
     } catch (error) {
       const diagnostic = logSupabaseError("organizer auth", error);
-      setAuthError(labels.supabaseDiagnosticPrefix + ": " + diagnostic);
+      setAuthError(getFriendlyAuthError(error, labels));
+      setAuthErrorDetails(diagnostic);
     } finally {
       setIsAuthSubmitting(false);
     }
@@ -254,11 +279,13 @@ export function OrganizerEventWorkspace() {
     }
 
     setAuthError(null);
+    setAuthErrorDetails(null);
     setAuthMessage(null);
     const { error } = await supabase.auth.signOut();
     if (error) {
       const diagnostic = logSupabaseError("organizer logout", error);
-      setAuthError(labels.supabaseDiagnosticPrefix + ": " + diagnostic);
+      setAuthError(labels.authGeneralError);
+      setAuthErrorDetails(diagnostic);
     }
   }
 
@@ -326,7 +353,15 @@ export function OrganizerEventWorkspace() {
           <p className="mt-2 text-lg font-semibold text-slate-600">{labels.authRequiredIntro}</p>
 
           {authError ? (
-            <p className="mt-5 rounded-lg bg-amber-50 px-4 py-3 text-sm font-bold text-amber-900 ring-1 ring-amber-200">{authError}</p>
+            <div className="mt-5 rounded-lg bg-amber-50 px-4 py-3 text-sm font-bold text-amber-900 ring-1 ring-amber-200">
+              <p>{authError}</p>
+              {authErrorDetails ? (
+                <details className="mt-3 text-xs font-semibold text-amber-950">
+                  <summary className="cursor-pointer font-black">{labels.technicalDetails}</summary>
+                  <pre className="mt-2 whitespace-pre-wrap break-words rounded-lg bg-white/70 p-3 font-mono text-[11px] leading-relaxed">{authErrorDetails}</pre>
+                </details>
+              ) : null}
+            </div>
           ) : null}
           {authMessage ? (
             <p className="mt-5 rounded-lg bg-emerald-50 px-4 py-3 text-sm font-bold text-emerald-900 ring-1 ring-emerald-200">{authMessage}</p>
@@ -360,6 +395,7 @@ export function OrganizerEventWorkspace() {
             onClick={() => {
               setAuthMode((current) => current === "login" ? "register" : "login");
               setAuthError(supabaseConfigWarning);
+              setAuthErrorDetails(null);
               setAuthMessage(null);
             }}
             className="mt-5 min-h-12 w-full rounded-lg bg-slate-100 px-5 text-base font-black text-slate-700 transition active:scale-[0.98] focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200"
@@ -416,6 +452,10 @@ export function OrganizerEventWorkspace() {
             </button>
           </div>
         </header>
+
+        {authMessage ? (
+          <p className="rounded-lg bg-emerald-50 px-4 py-3 text-sm font-bold text-emerald-900 ring-1 ring-emerald-200">{authMessage}</p>
+        ) : null}
 
         {eventError ? (
           <p className="rounded-lg bg-amber-50 px-4 py-3 text-sm font-bold text-amber-900 ring-1 ring-amber-200">{eventError}</p>
