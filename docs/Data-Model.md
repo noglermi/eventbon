@@ -269,6 +269,8 @@ Suggested columns:
 
 The CSV export is not an invoice, receipt, tax report, or accounting export.
 
+CSV is a temporary export format. For Version 1, an Excel export (`.xlsx`) is preferred for organizer-facing event review.
+
 ## Future Integration Readiness
 
 Stripe and SumUp readiness can be supported by reserving a payment reference model later.

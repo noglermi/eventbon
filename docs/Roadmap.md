@@ -221,6 +221,7 @@ Goal:
 Organizers can export event sales data for simple review outside eventBon.
 
 The CSV export remains a reporting aid, not an invoice, receipt, tax report, or accounting export.
+CSV is temporary; Version 1 should prefer Excel export (`.xlsx`) for organizer-facing event review.
 
 ## Milestone 3: Event Setup
 

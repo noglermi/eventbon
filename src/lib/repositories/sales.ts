@@ -81,6 +81,11 @@ export type SalesAnalyticsProduct = {
   revenueCents: number;
 };
 
+export type SalesAnalyticsHour = {
+  hour: number;
+  revenueCents: number;
+};
+
 export type SalesAnalyticsSummary = {
   totalRevenueCents: number;
   saleCount: number;
@@ -90,6 +95,7 @@ export type SalesAnalyticsSummary = {
     cashCents: number;
     cardCents: number;
   };
+  hourlyRevenue: SalesAnalyticsHour[];
   topProducts: SalesAnalyticsProduct[];
 };
 
@@ -106,6 +112,7 @@ type SaleItemPayload = {
 };
 
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const emptyHourlyRevenue = Array.from({ length: 24 }, (_, hour) => ({ hour, revenueCents: 0 }));
 
 function requireSupabase() {
   if (!supabase) {
@@ -238,6 +245,7 @@ export async function getSalesAnalytics(input: { createdFrom?: string; createdTo
         cashCents: 0,
         cardCents: 0,
       },
+      hourlyRevenue: emptyHourlyRevenue,
       topProducts: [],
     };
   }
@@ -262,6 +270,7 @@ export async function getSalesAnalytics(input: { createdFrom?: string; createdTo
   const totalRevenueCents = sales.reduce((sum, sale) => sum + sale.total_cents, 0);
   const voucherCount = items.reduce((sum, item) => sum + item.quantity, 0);
   const productTotals = new Map<string, SalesAnalyticsProduct>();
+  const hourlyRevenue = emptyHourlyRevenue.map((entry) => ({ ...entry }));
 
   for (const item of items) {
     const current = productTotals.get(item.name_snapshot) ?? {
@@ -275,6 +284,14 @@ export async function getSalesAnalytics(input: { createdFrom?: string; createdTo
     productTotals.set(item.name_snapshot, current);
   }
 
+  for (const sale of sales) {
+    const hour = new Date(sale.created_at).getHours();
+
+    if (hour >= 0 && hour < hourlyRevenue.length) {
+      hourlyRevenue[hour].revenueCents += sale.total_cents;
+    }
+  }
+
   return {
     totalRevenueCents,
     saleCount: sales.length,
@@ -284,6 +301,7 @@ export async function getSalesAnalytics(input: { createdFrom?: string; createdTo
       cashCents: sales.filter((sale) => sale.payment_method !== "manual_card").reduce((sum, sale) => sum + sale.total_cents, 0),
       cardCents: sales.filter((sale) => sale.payment_method === "manual_card").reduce((sum, sale) => sum + sale.total_cents, 0),
     },
+    hourlyRevenue,
     topProducts: [...productTotals.values()].sort((first, second) => second.revenueCents - first.revenueCents || second.quantity - first.quantity || first.name.localeCompare(second.name)),
   };
 }

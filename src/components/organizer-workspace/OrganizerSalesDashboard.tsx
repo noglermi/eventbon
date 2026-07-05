@@ -27,15 +27,28 @@ const emptySummary: SalesAnalyticsSummary = {
     cashCents: 0,
     cardCents: 0,
   },
+  hourlyRevenue: Array.from({ length: 24 }, (_, hour) => ({ hour, revenueCents: 0 })),
   topProducts: [],
 };
 
 function formatCurrency(cents: number, language: Language) {
-  return new Intl.NumberFormat(language === "de" ? "de-AT" : "en-US", { style: "currency", currency: "EUR" }).format(cents / 100);
+  return new Intl.NumberFormat(language === "de" ? "de-DE" : "en-US", { style: "currency", currency: "EUR" }).format(cents / 100);
 }
 
 function formatNumber(value: number, language: Language) {
-  return new Intl.NumberFormat(language === "de" ? "de-AT" : "en-US").format(value);
+  return new Intl.NumberFormat(language === "de" ? "de-DE" : "en-US").format(value);
+}
+
+function formatHour(hour: number) {
+  return String(hour).padStart(2, "0") + ":00";
+}
+
+function getBarSize(value: number, maxValue: number, minimumSize = 4) {
+  if (value <= 0 || maxValue <= 0) {
+    return "0%";
+  }
+
+  return Math.max(minimumSize, (value / maxValue) * 100) + "%";
 }
 
 function getDayRange(dateInput: Date | string) {
@@ -141,6 +154,10 @@ export function OrganizerSalesDashboard({ eventId, eventSettings, tenantId, onBa
     { label: labels.voucherCount, value: formatNumber(summary.voucherCount, language) },
     { label: labels.averageSale, value: formatCurrency(summary.averageSaleCents, language) },
   ];
+  const maxHourlyRevenue = Math.max(...summary.hourlyRevenue.map((entry) => entry.revenueCents), 0);
+  const topProductsChart = summary.topProducts.slice(0, 8);
+  const maxProductRevenue = Math.max(...topProductsChart.map((product) => product.revenueCents), 0);
+  const paymentTotalCents = summary.paymentTotals.cashCents + summary.paymentTotals.cardCents;
 
   function exportProductSummaryCsv() {
     const delimiter = language === "de" ? ";" : ",";
@@ -248,8 +265,74 @@ export function OrganizerSalesDashboard({ eventId, eventSettings, tenantId, onBa
         </section>
 
         <div className="grid gap-5 lg:grid-cols-[minmax(0,1.35fr)_minmax(280px,0.65fr)]">
+          <section className="rounded-lg bg-white p-5 shadow-sm ring-1 ring-slate-200" aria-label={labels.revenueByHour}>
+            <h2 className="text-2xl font-black tracking-tight">{labels.revenueByHour}</h2>
+            <div className="mt-6 flex h-56 items-end gap-1 border-b border-slate-200 pb-3">
+              {summary.hourlyRevenue.map((entry) => (
+                <div key={entry.hour} className="flex h-full flex-1 flex-col justify-end gap-2">
+                  <div className="flex min-h-0 flex-1 items-end">
+                    <div
+                      className="w-full rounded-t bg-emerald-500 transition-[height]"
+                      style={{ height: getBarSize(entry.revenueCents, maxHourlyRevenue) }}
+                      title={formatHour(entry.hour) + " · " + formatCurrency(entry.revenueCents, language)}
+                    />
+                  </div>
+                  <span className="h-4 text-center text-[10px] font-bold tabular-nums text-slate-500">
+                    {entry.hour % 3 === 0 ? formatHour(entry.hour) : ""}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <section className="rounded-lg bg-white p-5 shadow-sm ring-1 ring-slate-200" aria-label={labels.paymentMethods}>
+            <h2 className="text-2xl font-black tracking-tight">{labels.paymentMethods}</h2>
+            <div className="mt-6 grid gap-5">
+              {[
+                { label: labels.cash, value: summary.paymentTotals.cashCents, className: "bg-emerald-500" },
+                { label: labels.card, value: summary.paymentTotals.cardCents, className: "bg-sky-500" },
+              ].map((payment) => (
+                <div key={payment.label}>
+                  <div className="mb-2 flex items-baseline justify-between gap-3">
+                    <p className="text-sm font-bold uppercase tracking-widest text-slate-500">{payment.label}</p>
+                    <p className="text-lg font-black tabular-nums text-slate-950">{formatCurrency(payment.value, language)}</p>
+                  </div>
+                  <div className="h-5 overflow-hidden rounded-full bg-slate-100">
+                    <div
+                      className={"h-full rounded-full transition-[width] " + payment.className}
+                      style={{ width: getBarSize(payment.value, paymentTotalCents, 2) }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        </div>
+
+        <div className="grid gap-5 lg:grid-cols-[minmax(0,1.35fr)_minmax(280px,0.65fr)]">
           <section className="rounded-lg bg-white p-5 shadow-sm ring-1 ring-slate-200" aria-label={labels.topProducts}>
             <h2 className="text-2xl font-black tracking-tight">{labels.topProducts}</h2>
+            {topProductsChart.length > 0 ? (
+              <div className="mt-6 border-b border-slate-100 pb-6">
+                <h3 className="text-sm font-bold uppercase tracking-widest text-slate-500">{labels.topProductsByRevenue}</h3>
+                <div className="mt-4 grid gap-4">
+                  {topProductsChart.map((product) => (
+                    <div key={product.name} className="grid gap-2">
+                      <div className="flex items-baseline justify-between gap-3">
+                        <p className="min-w-0 truncate text-base font-black text-slate-900">{product.name}</p>
+                        <p className="shrink-0 text-base font-black tabular-nums text-slate-950">{formatCurrency(product.revenueCents, language)}</p>
+                      </div>
+                      <div className="h-4 overflow-hidden rounded-full bg-slate-100">
+                        <div
+                          className="h-full rounded-full bg-emerald-500 transition-[width]"
+                          style={{ width: getBarSize(product.revenueCents, maxProductRevenue, 3) }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : null}
             <div className="mt-5 overflow-x-auto">
               <table className="w-full min-w-[32rem] border-collapse text-left">
                 <thead>
