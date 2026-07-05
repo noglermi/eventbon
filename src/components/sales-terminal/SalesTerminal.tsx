@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { listProducts, saveProduct } from "@/lib/repositories/products";
+import { saveCompletedSale } from "@/lib/repositories/sales";
 import { updateEventBasics } from "@/lib/repositories/events";
 import { logSupabaseError } from "@/lib/supabase/diagnostics";
 import { supabaseConfigWarning } from "@/lib/supabase/client";
@@ -136,6 +137,7 @@ export function SalesTerminal({
   const [cartItems, setCartItems] = useState<CartItem[]>(initialCart);
   const [receivedEntry, setReceivedEntry] = useState("");
   const [isLoadingProducts, setIsLoadingProducts] = useState(false);
+  const [isSavingSale, setIsSavingSale] = useState(false);
   const [persistenceMessage, setPersistenceMessage] = useState<string | null>(supabaseConfigWarning ? translations[defaultLanguage].mockFallbackWarning + " " + supabaseConfigWarning : null);
   const [tileEditor, setTileEditor] = useState<{ tile: ProductTileData | null; group: TileGroupName } | null>(null);
   const [printPreviewDate, setPrintPreviewDate] = useState<Date | null>(null);
@@ -238,7 +240,36 @@ export function SalesTerminal({
     requestAnimationFrame(() => receivedInputRef.current?.focus());
   }
 
-  function openPrintPreview() {
+  async function openPrintPreview() {
+    if (cartItems.length === 0 || isSavingSale) {
+      return;
+    }
+
+    if (eventId && tenantId && !supabaseConfigWarning) {
+      setIsSavingSale(true);
+      setPersistenceMessage(null);
+
+      try {
+        await saveCompletedSale({
+          cartItems,
+          changeCents: Math.max(receivedCents - totalCents, 0),
+          eventId,
+          language,
+          productsById,
+          receivedCents,
+          tenantId,
+          totalCents,
+        });
+      } catch (error) {
+        const diagnostic = logSupabaseError("save completed sale", error);
+        setPersistenceMessage(labels.saleSaveError + " " + labels.supabaseDiagnosticPrefix + ": " + diagnostic);
+        setIsSavingSale(false);
+        return;
+      }
+
+      setIsSavingSale(false);
+    }
+
     setPrintPreviewDate(new Date());
   }
 
@@ -419,9 +450,9 @@ export function SalesTerminal({
           <TrashIcon />
           {labels.clearSale}
         </button>
-        <button type="button" onClick={openPrintPreview} className="flex min-h-20 items-center justify-center gap-4 rounded-[1.75rem] bg-emerald-600 px-8 text-2xl font-black tracking-normal text-white shadow-[0_18px_35px_rgba(5,150,105,0.28)] transition focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200 active:scale-[0.99]">
+        <button type="button" onClick={openPrintPreview} disabled={cartItems.length === 0 || isSavingSale} className="flex min-h-20 items-center justify-center gap-4 rounded-[1.75rem] bg-emerald-600 px-8 text-2xl font-black tracking-normal text-white shadow-[0_18px_35px_rgba(5,150,105,0.28)] transition focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200 active:scale-[0.99] disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 disabled:shadow-none">
           <PrinterIcon />
-          {labels.printVouchers}
+          {isSavingSale ? labels.saving : labels.printVouchers}
         </button>
       </footer>
 
