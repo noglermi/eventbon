@@ -22,6 +22,8 @@ The commercial model starts with a registered organizer user. The organizer acco
 
 The organizer is the commercial customer. The product hierarchy is Organizer -> Events -> Products, Sales, and Statistics. Helpers are event-scoped and are not the same as the organizer.
 
+Helper access starts simple: QR code, invitation link, or event access code; helper enters a name and works only in the assigned event. No helper email, password, or permanent helper account is required in Version 1.
+
 Booking lifecycle:
 
 - booking or purchase
@@ -82,6 +84,43 @@ Potential improvements after the MVP:
 - improved image handling for sales tiles beyond the current Supabase Storage foundation
 
 These improvements should not add accounting, inventory, or POS complexity.
+
+## Helper Access Version 1
+
+Goal:
+
+Helpers can start working at an event in less than one minute.
+
+Organizer can:
+
+- book events
+- configure products
+- manage helpers
+- access statistics
+- extend bookings
+
+Helpers can:
+
+- open the assigned event
+- sell Bons
+- print Bons
+
+Helpers cannot:
+
+- manage subscriptions
+- change organizer information
+- access other events
+- manage billing
+
+Invitation methods:
+
+- QR code
+- invitation link
+- event access code
+
+The helper enters only a name. No email and no password are required in Version 1.
+
+Future versions may optionally support email login, Supabase Auth accounts, reusable helper accounts, permission profiles, and activity history per helper. These are not part of the MVP.
 
 ## Milestone 5.1: Organizer Account Foundation
 

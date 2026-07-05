@@ -75,6 +75,8 @@ The future access chain is:
 - Events
 - Event-scoped helpers
 
+Helpers do not own events. Helpers are assigned to one event by invitation. A future permanent helper account may link to multiple event-helper assignments, but the default event workflow must not require a permanent helper account.
+
 ## Supabase
 
 Supabase is the central online data store for eventBon.
@@ -166,6 +168,18 @@ Helpers and volunteers:
 - can use the sales terminal for that event
 - cannot change booking, payment, or license data
 - may have restricted permissions
+
+Version 1 helper access should use the simplest possible invitation model:
+
+- QR code
+- invitation link
+- event access code
+
+The helper opens the invitation, enters only a name, and is immediately assigned to the event. No email and no password are required in Version 1.
+
+Helpers can open the assigned event, sell Bons, and print Bons. Helpers cannot manage subscriptions, change organizer information, access other events, or manage billing.
+
+Future versions may optionally add email login, Supabase Auth accounts, reusable helper accounts, permission profiles, and activity history per helper. These are not part of the MVP.
 
 ## Future Offline License Period
 

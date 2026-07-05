@@ -153,3 +153,66 @@ The organizer is the customer who books and pays for eventBon usage. Helpers are
 - The event repository can query by organizer.
 - The MVP can keep using a mock organizer until Supabase Auth is added.
 - Future access should flow from Supabase Auth user to Organizer, then Events, then event-scoped Helpers.
+
+## ADR-010 Helper Access Model
+
+### Decision
+
+Helpers should have the simplest possible access.
+
+They are not the commercial customer. They are not permanent platform users by default. Helpers belong only to one specific event.
+
+The product concept is:
+
+- Organizer
+- Books an event
+- Invites helpers
+- Helpers work only for this event
+
+Version 1 helper access uses invitations. Possible invitation methods are:
+
+- QR code
+- invitation link
+- event access code
+
+The helper opens the invitation and only enters a name. No email and no password are required in Version 1. The helper is immediately assigned to the event.
+
+### Reason
+
+During events many helpers are volunteers, temporary workers, family members, or club members. Registration must take less than one minute.
+
+### Implications
+
+Organizers can:
+
+- book events
+- configure products
+- manage helpers
+- access statistics
+- extend bookings
+
+Helpers can:
+
+- open the assigned event
+- sell Bons
+- print Bons
+
+Helpers cannot:
+
+- manage subscriptions
+- change organizer information
+- access other events
+- manage billing
+
+The architecture remains:
+
+- Organizer
+- Events
+- Helpers
+- Sales
+
+Helpers never own events. Helpers are always assigned to one event.
+
+Later, a helper may optionally create a permanent account if the same helper works at several events, the same club uses eventBon repeatedly, or helper activity needs to be tracked over time. This is optional. The default helper flow remains QR code or invitation link, enter name, and start working.
+
+Future versions may optionally support email login, Supabase Auth accounts, reusable helper accounts, permission profiles, and activity history per helper. These are not part of the MVP.

@@ -44,6 +44,10 @@ Past events remain visible in "Meine Veranstaltungen" for review according to th
 
 Helpers and volunteers are invited per event. They can access only the booked event they were invited to and are not global users in the product concept. Helpers are not the same as the organizer and do not own events.
 
+Version 1 helper access should be as simple as possible. The organizer books an event, invites helpers, and helpers work only for that one event. A helper invitation may use a QR code, invitation link, or event access code. The helper enters only a name, without email or password, and can then open the assigned event, sell Bons, and print Bons.
+
+Helpers cannot manage billing, organizer information, subscriptions, bookings, or other events. A permanent helper account may be added later, but it must remain optional and must never be required for the simple event workflow.
+
 The event lifecycle includes preparation, active sales and printing, post-event statistics and export access, archive or retention, and optional paid extension.
 
 The product deliberately avoids back-office complexity. There is no dashboard in the MVP, no separate article management, no invoices, no receipts, no taxes, and no accounting.

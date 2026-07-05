@@ -19,6 +19,8 @@ Milestone 5.1 introduces Organizer as the explicit commercial owner of booked ev
 
 Helpers belong to individual events only. They are not the organizer and are not global users in the product concept.
 
+The default helper model is assignment-based, not account-first. A helper belongs to one event through an invitation and only needs to enter a name in Version 1.
+
 ## Core Entities
 
 ### Organizer
@@ -91,6 +93,10 @@ Suggested fields:
 - id
 - tenant_id
 - event_id
+- display_name
+- invitation_method
+- invitation_token
+- access_code
 - user_id
 - role
 - permissions
@@ -101,6 +107,8 @@ Suggested fields:
 Helpers can access only the booked event they were invited to. They can use the sales terminal for that event, cannot change booking, payment, or license data, and may have restricted permissions.
 
 Helpers are event-scoped access records, not global users across all organizer events in the product concept.
+
+In Version 1, user_id is optional because no permanent helper account is required. A future permanent helper account may be linked to multiple event-helper assignments, but the event-helper assignment remains the primary access record.
 
 ### Sales Tile
 
@@ -220,6 +228,15 @@ Future ownership and access should flow as:
 - Organizer
 - Events
 - Event-scoped helpers
+
+The helper access chain should flow as:
+
+- Organizer
+- Events
+- Helpers
+- Sales
+
+Helpers never own events.
 
 ## Summary Data
 

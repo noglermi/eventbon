@@ -21,6 +21,14 @@ The organizer is the commercial customer. The product ownership structure is:
 
 Helpers belong to individual events only. They are not the organizer and do not own booked events.
 
+Helper access should be deliberately lightweight. The product concept is:
+
+- Organizer books an event.
+- Organizer invites helpers.
+- Helpers work only for this event.
+
+In Version 1, helper registration should take less than one minute. Helpers can join through a QR code, invitation link, or event access code and only enter their name. No email and no password are required in Version 1.
+
 ## Mission
 
 Sell vouchers.
@@ -80,6 +88,10 @@ The organizer's past events remain visible in Meine Veranstaltungen according to
 Helpers and volunteers can access only the booked event they were invited to. They can use the sales terminal for that event, cannot change booking, payment, or license data, and may have restricted permissions.
 
 Helpers are event-scoped in the product concept. They are not global users across all organizer events.
+
+Helpers can open the assigned event, sell Bons, and print Bons. They cannot manage subscriptions, change organizer information, access other events, or manage billing.
+
+Later, helpers may optionally create permanent accounts if they work at several events, the same club uses eventBon repeatedly, or helper activity needs to be tracked over time. This must remain optional; the default flow remains QR code or invitation link, enter name, and start working.
 
 ## Event Lifecycle
 
