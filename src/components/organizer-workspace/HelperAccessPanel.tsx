@@ -24,6 +24,8 @@ function getOrigin() {
 }
 
 export function HelperAccessPanel({ eventId, eventName, labels, onClose }: HelperAccessPanelProps) {
+  const [label, setLabel] = useState("");
+  const [station, setStation] = useState("");
   const [invitations, setInvitations] = useState<HelperInvitation[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
@@ -31,6 +33,14 @@ export function HelperAccessPanel({ eventId, eventName, labels, onClose }: Helpe
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [errorDetails, setErrorDetails] = useState<string | null>(null);
   const origin = useMemo(() => getOrigin(), []);
+
+  function describeHelperError(context: string, error: unknown) {
+    if (error && typeof error === "object" && ("code" in error || "message" in error || "hint" in error || "details" in error)) {
+      return logSupabaseError(context, error);
+    }
+
+    return context + ": " + (error instanceof Error ? error.message : String(error));
+  }
 
   useEffect(() => {
     let isActive = true;
@@ -53,7 +63,7 @@ export function HelperAccessPanel({ eventId, eventName, labels, onClose }: Helpe
       } catch (error) {
         if (isActive) {
           setErrorMessage(labels.helperAccessError);
-          setErrorDetails(logSupabaseError("load helper invitations", error));
+          setErrorDetails(describeHelperError("load helper invitations", error));
         }
       } finally {
         if (isActive) {
@@ -77,21 +87,21 @@ export function HelperAccessPanel({ eventId, eventName, labels, onClose }: Helpe
       return;
     }
 
-    const formData = new FormData(event.currentTarget);
-    const label = String(formData.get("label") ?? "").trim();
-    const station = String(formData.get("station") ?? "").trim();
+    const trimmedLabel = label.trim();
+    const trimmedStation = station.trim();
     setIsCreating(true);
     setMessage(null);
     setErrorMessage(null);
     setErrorDetails(null);
 
     try {
-      const invitation = await createHelperInvitation({ eventId, label, station });
+      const invitation = await createHelperInvitation({ eventId, label: trimmedLabel, station: trimmedStation });
       setInvitations((current) => [invitation, ...current]);
-      event.currentTarget.reset();
+      setLabel("");
+      setStation("");
     } catch (error) {
       setErrorMessage(labels.helperAccessError);
-      setErrorDetails(logSupabaseError("create helper invitation", error));
+      setErrorDetails(describeHelperError("create helper invitation", error));
     } finally {
       setIsCreating(false);
     }
@@ -140,11 +150,11 @@ export function HelperAccessPanel({ eventId, eventName, labels, onClose }: Helpe
           <form onSubmit={createAccess} className="grid gap-4 rounded-lg bg-slate-50 p-4 ring-1 ring-slate-200 md:grid-cols-[1fr_1fr_auto]">
             <label className="grid gap-2 text-sm font-bold uppercase tracking-widest text-slate-500">
               {labels.helperOptionalLabel}
-              <input name="label" className="min-h-12 rounded-lg border border-slate-200 px-3 text-base font-bold normal-case tracking-normal text-slate-950 outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100" />
+              <input name="label" value={label} onChange={(event) => setLabel(event.target.value)} className="min-h-12 rounded-lg border border-slate-200 px-3 text-base font-bold normal-case tracking-normal text-slate-950 outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100" />
             </label>
             <label className="grid gap-2 text-sm font-bold uppercase tracking-widest text-slate-500">
               {labels.helperStation}
-              <input name="station" placeholder="Getranke, Speisen" className="min-h-12 rounded-lg border border-slate-200 px-3 text-base font-bold normal-case tracking-normal text-slate-950 outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100" />
+              <input name="station" value={station} onChange={(event) => setStation(event.target.value)} placeholder="Getranke, Speisen" className="min-h-12 rounded-lg border border-slate-200 px-3 text-base font-bold normal-case tracking-normal text-slate-950 outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100" />
             </label>
             <button type="submit" disabled={!eventId || isCreating} className="self-end rounded-lg bg-emerald-600 px-5 py-3 text-base font-black text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500">
               {isCreating ? labels.saving : labels.createHelperAccess}
