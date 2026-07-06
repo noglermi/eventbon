@@ -16,6 +16,7 @@ import type { Event as PersistedEvent, Organizer } from "@/types/domain";
 import type { Session } from "@supabase/supabase-js";
 
 type BookedEventStatus = "preparation" | "active" | "stats_available" | "post_event_read_only" | "expired" | "archived" | "draft";
+type AuthMode = "login" | "register" | "reset";
 
 type BookedEvent = {
   id: string;
@@ -160,7 +161,7 @@ export function OrganizerEventWorkspace() {
   const labels = translations[language];
   const [session, setSession] = useState<Session | null>(null);
   const [isAuthLoading, setIsAuthLoading] = useState(!supabaseConfigWarning);
-  const [authMode, setAuthMode] = useState<"login" | "register">("login");
+  const [authMode, setAuthMode] = useState<AuthMode>("login");
   const [authMessage, setAuthMessage] = useState<string | null>(null);
   const [authError, setAuthError] = useState<string | null>(supabaseConfigWarning);
   const [authErrorDetails, setAuthErrorDetails] = useState<string | null>(null);
@@ -330,6 +331,41 @@ export function OrganizerEventWorkspace() {
     }
   }
 
+  async function submitPasswordReset(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!supabase) {
+      setAuthError(supabaseConfigWarning);
+      return;
+    }
+
+    const formData = new FormData(event.currentTarget);
+    const email = String(formData.get("email") ?? "").trim();
+
+    setAuthError(null);
+    setAuthErrorDetails(null);
+    setAuthMessage(null);
+    setIsAuthSubmitting(true);
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.origin,
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      setAuthMessage(labels.resetPasswordSuccess);
+      setAuthMode("login");
+    } catch (error) {
+      const diagnostic = logSupabaseError("organizer password reset", error);
+      setAuthError(labels.resetPasswordError);
+      setAuthErrorDetails(diagnostic);
+    } finally {
+      setIsAuthSubmitting(false);
+    }
+  }
+
   async function logout() {
     if (!supabase) {
       return;
@@ -417,8 +453,8 @@ export function OrganizerEventWorkspace() {
             <p className="text-2xl font-black tracking-normal text-emerald-600">eventBon</p>
             <LanguageSwitch language={language} labels={labels} onLanguageChange={setOrganizerLanguage} />
           </div>
-          <h1 className="mt-4 text-4xl font-black tracking-tight">{labels.authTitle}</h1>
-          <p className="mt-2 text-lg font-semibold text-slate-600">{labels.authRequiredIntro}</p>
+          <h1 className="mt-4 text-4xl font-black tracking-tight">{authMode === "reset" ? labels.resetPassword : labels.authTitle}</h1>
+          <p className="mt-2 text-lg font-semibold text-slate-600">{authMode === "reset" ? labels.resetPasswordIntro : labels.authRequiredIntro}</p>
 
           {authError ? (
             <div className="mt-5 rounded-lg bg-amber-50 px-4 py-3 text-sm font-bold text-amber-900 ring-1 ring-amber-200">
@@ -435,7 +471,7 @@ export function OrganizerEventWorkspace() {
             <p className="mt-5 rounded-lg bg-emerald-50 px-4 py-3 text-sm font-bold text-emerald-900 ring-1 ring-emerald-200">{authMessage}</p>
           ) : null}
 
-          <form onSubmit={submitAuth} className="mt-6 grid gap-5">
+          <form onSubmit={authMode === "reset" ? submitPasswordReset : submitAuth} className="mt-6 grid gap-5">
             {authMode === "register" ? (
               <label className="grid gap-2 text-sm font-bold uppercase tracking-widest text-slate-500">
                 {labels.name}
@@ -448,15 +484,32 @@ export function OrganizerEventWorkspace() {
               <input name="email" type="email" required defaultValue={authMode === "register" ? mockOrganizer.email : undefined} className="min-h-14 rounded-lg border border-slate-200 px-4 text-xl font-bold normal-case tracking-normal text-slate-950 outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100" />
             </label>
 
-            <label className="grid gap-2 text-sm font-bold uppercase tracking-widest text-slate-500">
-              {labels.password}
-              <input name="password" type="password" required minLength={6} className="min-h-14 rounded-lg border border-slate-200 px-4 text-xl font-bold normal-case tracking-normal text-slate-950 outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100" />
-            </label>
+            {authMode === "reset" ? null : (
+              <label className="grid gap-2 text-sm font-bold uppercase tracking-widest text-slate-500">
+                {labels.password}
+                <input name="password" type="password" required minLength={6} className="min-h-14 rounded-lg border border-slate-200 px-4 text-xl font-bold normal-case tracking-normal text-slate-950 outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100" />
+              </label>
+            )}
 
             <button type="submit" disabled={Boolean(supabaseConfigWarning) || isAuthSubmitting} className="min-h-14 rounded-lg bg-emerald-600 px-6 text-lg font-black text-white shadow-sm shadow-emerald-700/20 transition active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200">
-              {isAuthSubmitting ? labels.saving : authMode === "register" ? labels.register : labels.login}
+              {isAuthSubmitting ? labels.saving : authMode === "register" ? labels.register : authMode === "reset" ? labels.resetPasswordSubmit : labels.login}
             </button>
           </form>
+
+          {authMode === "login" ? (
+            <button
+              type="button"
+              onClick={() => {
+                setAuthMode("reset");
+                setAuthError(supabaseConfigWarning);
+                setAuthErrorDetails(null);
+                setAuthMessage(null);
+              }}
+              className="mt-3 min-h-11 w-full rounded-lg bg-white px-5 text-base font-black text-emerald-700 transition active:scale-[0.98] focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200"
+            >
+              {labels.forgotPassword}
+            </button>
+          ) : null}
 
           <button
             type="button"
@@ -468,7 +521,7 @@ export function OrganizerEventWorkspace() {
             }}
             className="mt-5 min-h-12 w-full rounded-lg bg-slate-100 px-5 text-base font-black text-slate-700 transition active:scale-[0.98] focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200"
           >
-            {authMode === "login" ? labels.switchToRegistration : labels.alreadyRegistered}
+            {authMode === "login" ? labels.switchToRegistration : authMode === "reset" ? labels.backToLogin : labels.alreadyRegistered}
           </button>
         </section>
       </main>
