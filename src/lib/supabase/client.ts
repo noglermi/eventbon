@@ -13,4 +13,8 @@ export const supabaseConfigWarning = missingSupabaseEnvVars.length > 0
 
 export const supabase = supabaseConfigWarning
   ? null
-  : createClient(supabaseUrl as string, supabasePublishableKey as string);
+  : createClient(supabaseUrl as string, supabasePublishableKey as string, {
+      auth: {
+        detectSessionInUrl: false,
+      },
+    });

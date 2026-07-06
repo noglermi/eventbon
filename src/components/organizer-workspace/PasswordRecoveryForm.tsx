@@ -7,54 +7,15 @@ import { defaultLanguage, translations } from "@/components/sales-terminal/i18n"
 import type { Language } from "@/components/sales-terminal/types";
 import { supabase, supabaseConfigWarning } from "@/lib/supabase/client";
 import { logSupabaseError } from "@/lib/supabase/diagnostics";
-
-type RecoveryParameters = {
-  accessToken: string | null;
-  code: string | null;
-  refreshToken: string | null;
-  tokenHash: string | null;
-  type: string | null;
-};
-
-function readRecoveryParameters(): RecoveryParameters {
-  if (typeof window === "undefined") {
-    return {
-      accessToken: null,
-      code: null,
-      refreshToken: null,
-      tokenHash: null,
-      type: null,
-    };
-  }
-
-  const searchParams = new URLSearchParams(window.location.search);
-  const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
-
-  return {
-    accessToken: searchParams.get("access_token") ?? hashParams.get("access_token"),
-    code: searchParams.get("code") ?? hashParams.get("code"),
-    refreshToken: searchParams.get("refresh_token") ?? hashParams.get("refresh_token"),
-    tokenHash: searchParams.get("token_hash") ?? hashParams.get("token_hash"),
-    type: searchParams.get("type") ?? hashParams.get("type"),
-  };
-}
-
-export function hasPasswordRecoveryParameters() {
-  if (typeof window === "undefined") {
-    return false;
-  }
-
-  const { accessToken, code, refreshToken, tokenHash, type } = readRecoveryParameters();
-
-  return type === "recovery" || Boolean(accessToken) || Boolean(refreshToken) || Boolean(tokenHash) || (type === "recovery" && Boolean(code));
-}
+import { hasPasswordRecoveryParameters, readPasswordRecoveryUrlParameters } from "@/lib/supabase/recovery-url";
 
 export function PasswordRecoveryForm() {
   const router = useRouter();
   const [language, setLanguage] = useState<Language>(defaultLanguage);
   const [password, setPassword] = useState("");
   const [repeatPassword, setRepeatPassword] = useState("");
-  const [isRecoveryReady, setIsRecoveryReady] = useState(false);
+  const [isRecoveryReady, setIsRecoveryReady] = useState(() => hasPasswordRecoveryParameters());
+  const [showRecoveryDebug] = useState(() => process.env.NODE_ENV === "development" && hasPasswordRecoveryParameters());
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -74,7 +35,7 @@ export function PasswordRecoveryForm() {
       setErrorMessage(null);
       setDeveloperDetails(null);
 
-      const { accessToken, code, refreshToken, tokenHash, type } = readRecoveryParameters();
+      const { accessToken, code, refreshToken, tokenHash, type } = readPasswordRecoveryUrlParameters();
 
       try {
         if (accessToken && refreshToken) {
@@ -114,7 +75,8 @@ export function PasswordRecoveryForm() {
         }
 
         if (!data.session) {
-          setErrorMessage(type === "recovery" ? labels.passwordRecoveryLoading : labels.passwordRecoveryError);
+          setIsRecoveryReady(hasPasswordRecoveryParameters());
+          setErrorMessage(type === "recovery" ? null : labels.passwordRecoveryError);
           return;
         }
 
@@ -175,6 +137,7 @@ export function PasswordRecoveryForm() {
       setPassword("");
       setRepeatPassword("");
       setMessage(labels.passwordUpdated);
+      window.history.replaceState(null, document.title, window.location.pathname + window.location.search);
     } catch (error) {
       setErrorMessage(labels.passwordUpdateError);
       setDeveloperDetails(logSupabaseError("update reset password exception", error));
@@ -204,6 +167,12 @@ export function PasswordRecoveryForm() {
             <h1 className="text-3xl font-black tracking-tight sm:text-4xl">{labels.resetPassword}</h1>
             <p className="text-base font-semibold text-slate-600">{labels.resetPasswordUpdateIntro}</p>
           </div>
+
+          {showRecoveryDebug ? (
+            <div className="mb-5 rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm font-black text-sky-900">
+              Recovery link detected
+            </div>
+          ) : null}
 
           {message ? (
             <div className="mb-5 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-base font-bold text-emerald-900">

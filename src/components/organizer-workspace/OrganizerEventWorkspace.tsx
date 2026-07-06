@@ -9,7 +9,8 @@ import { supabase, supabaseConfigWarning } from "@/lib/supabase/client";
 import { SalesTerminal } from "@/components/sales-terminal/SalesTerminal";
 import { LanguageSwitch } from "@/components/organizer-workspace/LanguageSwitch";
 import { OrganizerSalesDashboard } from "@/components/organizer-workspace/OrganizerSalesDashboard";
-import { hasPasswordRecoveryParameters, PasswordRecoveryForm } from "@/components/organizer-workspace/PasswordRecoveryForm";
+import { PasswordRecoveryForm } from "@/components/organizer-workspace/PasswordRecoveryForm";
+import { hasPasswordRecoveryParameters } from "@/lib/supabase/recovery-url";
 import { defaultLanguage, translations } from "@/components/sales-terminal/i18n";
 import type { Translation } from "@/components/sales-terminal/i18n";
 import type { EventSettings, Language, PrintMode } from "@/components/sales-terminal/types";
@@ -161,8 +162,8 @@ export function OrganizerEventWorkspace() {
   const language = organizerLanguage;
   const labels = translations[language];
   const [session, setSession] = useState<Session | null>(null);
-  const [isAuthLoading, setIsAuthLoading] = useState(!supabaseConfigWarning);
-  const [isPasswordRecovery, setIsPasswordRecovery] = useState(false);
+  const [isPasswordRecovery, setIsPasswordRecovery] = useState(() => hasPasswordRecoveryParameters());
+  const [isAuthLoading, setIsAuthLoading] = useState(() => !supabaseConfigWarning && !hasPasswordRecoveryParameters());
   const [authMode, setAuthMode] = useState<AuthMode>("login");
   const [authMessage, setAuthMessage] = useState<string | null>(null);
   const [authError, setAuthError] = useState<string | null>(supabaseConfigWarning);
@@ -194,11 +195,7 @@ export function OrganizerEventWorkspace() {
       return undefined;
     }
 
-    if (hasPasswordRecoveryParameters()) {
-      queueMicrotask(() => {
-        setIsPasswordRecovery(true);
-        setIsAuthLoading(false);
-      });
+    if (isPasswordRecovery || hasPasswordRecoveryParameters()) {
       return undefined;
     }
 
@@ -241,7 +238,7 @@ export function OrganizerEventWorkspace() {
       isActive = false;
       authListener.subscription.unsubscribe();
     };
-  }, [labels.authGeneralError]);
+  }, [isPasswordRecovery, labels.authGeneralError]);
 
   useEffect(() => {
     let isActive = true;
