@@ -394,15 +394,18 @@ export function SalesTerminal({
       setPersistenceMessage(null);
       setPersistenceDetails(null);
 
+      const persistedReceivedCents = paymentMethod === "card_manual" ? totalCents : receivedCents;
+      const persistedChangeCents = paymentMethod === "card_manual" ? 0 : Math.max(receivedCents - totalCents, 0);
+
       try {
         await saveCompletedSale({
           cartItems,
-          changeCents: Math.max(receivedCents - totalCents, 0),
+          changeCents: persistedChangeCents,
           eventId,
           language,
           paymentMethod,
           productsById,
-          receivedCents,
+          receivedCents: persistedReceivedCents,
           tenantId,
           totalCents,
         });

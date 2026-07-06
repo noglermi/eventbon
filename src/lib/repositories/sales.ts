@@ -420,10 +420,13 @@ export async function listSalesForExport(input: { createdFrom?: string; createdT
 export async function saveCompletedSale(input: SaveCompletedSaleInput) {
   const client = requireSupabase();
   const createdAt = new Date().toISOString();
+  const persistedReceivedCents = input.paymentMethod === "card_manual" ? input.totalCents : input.receivedCents;
+  const persistedChangeCents = input.paymentMethod === "card_manual" ? 0 : input.changeCents;
 
   console.info("Creating completed sale in Supabase", {
     eventId: input.eventId,
     itemCount: input.cartItems.length,
+    paymentMethod: input.paymentMethod,
     tenantId: input.tenantId,
     totalCents: input.totalCents,
   });
@@ -441,8 +444,8 @@ export async function saveCompletedSale(input: SaveCompletedSaleInput) {
       event_id: input.eventId,
       total_cents: input.totalCents,
       payment_method: input.paymentMethod,
-      cash_received_cents: input.receivedCents,
-      change_cents: input.changeCents,
+      cash_received_cents: persistedReceivedCents,
+      change_cents: persistedChangeCents,
       status: "completed",
       created_at: createdAt,
     })
