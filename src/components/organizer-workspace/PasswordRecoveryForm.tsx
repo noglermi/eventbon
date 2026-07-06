@@ -9,13 +9,17 @@ import { supabase, supabaseConfigWarning } from "@/lib/supabase/client";
 import { logSupabaseError } from "@/lib/supabase/diagnostics";
 import { hasPasswordRecoveryParameters, readPasswordRecoveryUrlParameters } from "@/lib/supabase/recovery-url";
 
-export function PasswordRecoveryForm() {
+type PasswordRecoveryFormProps = {
+  onReturnToLogin?: () => void;
+};
+
+export function PasswordRecoveryForm({ onReturnToLogin }: PasswordRecoveryFormProps = {}) {
   const router = useRouter();
   const [language, setLanguage] = useState<Language>(defaultLanguage);
   const [password, setPassword] = useState("");
   const [repeatPassword, setRepeatPassword] = useState("");
   const [isRecoveryReady, setIsRecoveryReady] = useState(() => hasPasswordRecoveryParameters());
-  const [showRecoveryDebug] = useState(() => process.env.NODE_ENV === "development" && hasPasswordRecoveryParameters());
+  const [showRecoveryDebug, setShowRecoveryDebug] = useState(() => process.env.NODE_ENV === "development" && hasPasswordRecoveryParameters());
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -136,8 +140,10 @@ export function PasswordRecoveryForm() {
 
       setPassword("");
       setRepeatPassword("");
+      setIsRecoveryReady(false);
+      setShowRecoveryDebug(false);
       setMessage(labels.passwordUpdated);
-      window.history.replaceState(null, document.title, window.location.pathname + window.location.search);
+      window.history.replaceState(null, document.title, "/");
     } catch (error) {
       setErrorMessage(labels.passwordUpdateError);
       setDeveloperDetails(logSupabaseError("update reset password exception", error));
@@ -151,6 +157,15 @@ export function PasswordRecoveryForm() {
       await supabase.auth.signOut();
     }
 
+    setPassword("");
+    setRepeatPassword("");
+    setIsRecoveryReady(false);
+    setShowRecoveryDebug(false);
+    setMessage(null);
+    setErrorMessage(null);
+    setDeveloperDetails(null);
+    window.history.replaceState(null, document.title, "/");
+    onReturnToLogin?.();
     router.replace("/");
   }
 

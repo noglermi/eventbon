@@ -461,7 +461,23 @@ export function OrganizerEventWorkspace() {
   }
 
   if (isPasswordRecovery) {
-    return <PasswordRecoveryForm />;
+    return (
+      <PasswordRecoveryForm
+        onReturnToLogin={() => {
+          setIsPasswordRecovery(false);
+          setIsAuthLoading(false);
+          setSession(null);
+          setAuthMode("login");
+          setAuthMessage(null);
+          setAuthError(supabaseConfigWarning);
+          setAuthErrorDetails(null);
+          setSelectedEvent(null);
+          setDashboardEvent(null);
+          setEvents([]);
+          setCurrentOrganizer(mockOrganizer);
+        }}
+      />
+    );
   }
 
   if (!session) {
