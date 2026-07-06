@@ -194,6 +194,7 @@ export function SalesTerminal({
   const { blockZoom, language, visibleCategories } = viewSettings;
   const labels = getLabels(language);
   const eventName = eventSettings.name[language];
+  const isHelperTerminal = isHelperMode || Boolean(activeHelperSession);
   const isPrintDisabled = cartItems.length === 0 || isSavingSale;
 
   useEffect(() => {
@@ -503,10 +504,12 @@ export function SalesTerminal({
     <main className="grid h-screen grid-rows-[5rem_minmax(0,1fr)_7rem] overflow-hidden bg-[#f6f7f5] text-slate-950">
       <header className="relative z-50 flex items-center justify-between border-b border-slate-200/70 bg-white/95 px-7 shadow-[0_1px_0_rgba(15,23,42,0.04)] backdrop-blur">
         <div className="flex items-center gap-4">
-          <button type="button" className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100 transition active:scale-95 focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200" aria-label={labels.menu}>
-            <MenuIcon />
-          </button>
-          {onBackToEvents ? (
+          {isHelperTerminal ? null : (
+            <button type="button" className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100 transition active:scale-95 focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200" aria-label={labels.menu}>
+              <MenuIcon />
+            </button>
+          )}
+          {!isHelperTerminal && onBackToEvents ? (
             <button
               type="button"
               onClick={onBackToEvents}
@@ -518,7 +521,7 @@ export function SalesTerminal({
           <div className="leading-tight">
             <p className="text-2xl font-black tracking-normal text-emerald-600">eventBon</p>
             <p className="text-sm font-semibold text-slate-500">{eventName}</p>
-            {isHelperMode && activeHelperSession ? (
+            {isHelperTerminal && activeHelperSession ? (
               <p className="mt-1 text-xs font-black text-slate-600">
                 {labels.helperTerminalLabel}: {activeHelperSession.helperName}
                 {activeHelperSession.station ? " | " + labels.helperStationLabel + ": " + activeHelperSession.station : ""}
@@ -642,12 +645,12 @@ export function SalesTerminal({
                             key={product.id}
                             language={language}
                             product={product}
-                            editLabel={isHelperMode ? undefined : labels.edit}
+                            editLabel={isHelperTerminal ? undefined : labels.edit}
                             onSelect={addProduct}
-                            onEdit={isHelperMode ? undefined : (selectedTile) => setTileEditor({ tile: selectedTile, group: selectedTile.group })}
+                            onEdit={isHelperTerminal ? undefined : (selectedTile) => setTileEditor({ tile: selectedTile, group: selectedTile.group })}
                           />
                         ))}
-                        {isHelperMode ? null : (
+                        {isHelperTerminal ? null : (
                           <button
                             type="button"
                             onClick={() => setTileEditor({ tile: null, group })}
@@ -689,7 +692,7 @@ export function SalesTerminal({
         <div className="min-h-0 overflow-y-auto overflow-x-hidden rounded-[2.25rem]">
           <ScaledBlock zoom={blockZoom.payment} className="flex min-h-0 flex-col gap-5">
             <PaymentPanel labels={labels} language={language} paymentMethod={paymentMethod} totalCents={totalCents} receivedCents={receivedCents} receivedEntry={receivedEntry} receivedInputRef={receivedInputRef} onPaymentMethodChange={setPaymentMethod} onReceivedEntryChange={setReceivedEntry} />
-            {isHelperMode ? null : <PrintModeSetting labels={labels} printMode={eventSettings.printMode} onPrintModeChange={updatePrintMode} />}
+            {isHelperTerminal ? null : <PrintModeSetting labels={labels} printMode={eventSettings.printMode} onPrintModeChange={updatePrintMode} />}
             <RecentSalesPanel labels={labels} language={language} recentSales={recentSales} />
           </ScaledBlock>
         </div>
@@ -719,7 +722,7 @@ export function SalesTerminal({
         />
       ) : null}
 
-      {!isHelperMode && tileEditor ? (
+      {!isHelperTerminal && tileEditor ? (
         <AddTileDialog tile={tileEditor.tile} initialGroup={tileEditor.group} language={language} labels={labels} onClose={() => setTileEditor(null)} onSave={saveTile} />
       ) : null}
     </main>

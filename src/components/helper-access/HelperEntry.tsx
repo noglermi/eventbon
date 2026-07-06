@@ -72,7 +72,7 @@ export function HelperEntry() {
   const [accessCode, setAccessCode] = useState(() => getInitialCode().toUpperCase());
   const [helperName, setHelperName] = useState("");
   const [resolvedInvitation, setResolvedInvitation] = useState<{ event: Event; invitation: HelperInvitation } | null>(null);
-  const [activeHelperEvent, setActiveHelperEvent] = useState<ActiveHelperEvent | null>(() => readStoredHelperEvent());
+  const [activeHelperEvent, setActiveHelperEvent] = useState<ActiveHelperEvent | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [errorDetails, setErrorDetails] = useState<string | null>(null);
@@ -111,6 +111,14 @@ export function HelperEntry() {
     if (initialCode) {
       queueMicrotask(() => {
         resolveCode(initialCode);
+      });
+      return;
+    }
+
+    const storedHelperEvent = readStoredHelperEvent();
+    if (storedHelperEvent) {
+      queueMicrotask(() => {
+        setActiveHelperEvent(storedHelperEvent);
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
