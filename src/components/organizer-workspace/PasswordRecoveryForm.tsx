@@ -170,7 +170,7 @@ export function PasswordRecoveryForm() {
 
           {showRecoveryDebug ? (
             <div className="mb-5 rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm font-black text-sky-900">
-              Recovery link detected
+              {labels.passwordRecoveryDetected}
             </div>
           ) : null}
 
