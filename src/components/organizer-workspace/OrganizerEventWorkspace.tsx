@@ -219,7 +219,15 @@ export function OrganizerEventWorkspace() {
       setIsAuthLoading(false);
     });
 
-    const { data: authListener } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, nextSession) => {
+      if (event === "PASSWORD_RECOVERY") {
+        setIsPasswordRecovery(true);
+        setIsAuthLoading(false);
+        setSelectedEvent(null);
+        setDashboardEvent(null);
+        return;
+      }
+
       setSession(nextSession);
       setSelectedEvent(null);
       setDashboardEvent(null);
