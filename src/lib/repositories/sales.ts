@@ -423,6 +423,12 @@ export async function saveCompletedSale(input: SaveCompletedSaleInput) {
   const persistedReceivedCents = input.paymentMethod === "card_manual" ? input.totalCents : input.receivedCents;
   const persistedChangeCents = input.paymentMethod === "card_manual" ? 0 : input.changeCents;
 
+  console.info("[PRINT] saveCompletedSale called", {
+    eventId: input.eventId,
+    itemCount: input.cartItems.length,
+    paymentMethod: input.paymentMethod,
+    tenantId: input.tenantId,
+  });
   console.info("Creating completed sale in Supabase", {
     eventId: input.eventId,
     itemCount: input.cartItems.length,
@@ -433,26 +439,43 @@ export async function saveCompletedSale(input: SaveCompletedSaleInput) {
 
   for (const item of input.cartItems) {
     if (!input.productsById.has(item.productId)) {
+      console.error("[PRINT] Stopped before sale insert", {
+        productId: item.productId,
+        reason: "Product is missing from the current product list.",
+      });
       throw new Error("Cannot persist sale because product " + item.productId + " is missing from the current product list.");
     }
   }
 
+  const salePayload = {
+    tenant_id: input.tenantId,
+    event_id: input.eventId,
+    total_cents: input.totalCents,
+    payment_method: input.paymentMethod,
+    cash_received_cents: persistedReceivedCents,
+    change_cents: persistedChangeCents,
+    status: "completed",
+    created_at: createdAt,
+  };
+
+  console.info("[PRINT] Saving sale", {
+    cashReceivedCents: salePayload.cash_received_cents,
+    changeCents: salePayload.change_cents,
+    paymentMethod: salePayload.payment_method,
+    totalCents: salePayload.total_cents,
+  });
+
   const { data: sale, error: saleError } = await client
     .from("sales")
-    .insert({
-      tenant_id: input.tenantId,
-      event_id: input.eventId,
-      total_cents: input.totalCents,
-      payment_method: input.paymentMethod,
-      cash_received_cents: persistedReceivedCents,
-      change_cents: persistedChangeCents,
-      status: "completed",
-      created_at: createdAt,
-    })
+    .insert(salePayload)
     .select("id")
     .single();
 
   if (saleError) {
+    console.error("[PRINT] Sale save failed", {
+      error: saleError,
+      paymentMethod: input.paymentMethod,
+    });
     console.error("Completed sale insert failed", {
       error: saleError,
       eventId: input.eventId,
@@ -462,10 +485,16 @@ export async function saveCompletedSale(input: SaveCompletedSaleInput) {
   }
 
   const saleId = (sale as SaleRow).id;
+  console.info("[PRINT] Sale saved", { saleId });
   const saleItems = input.cartItems.map((item): SaleItemPayload => {
     const product = input.productsById.get(item.productId);
 
     if (!product) {
+      console.error("[PRINT] Stopped before sale items insert", {
+        productId: item.productId,
+        reason: "Product is missing from the current product list.",
+        saleId,
+      });
       throw new Error("Cannot persist sale item because product " + item.productId + " is missing from the current product list.");
     }
 
@@ -484,11 +513,20 @@ export async function saveCompletedSale(input: SaveCompletedSaleInput) {
     };
   });
 
+  console.info("[PRINT] Saving sale items", {
+    itemCount: saleItems.length,
+    saleId,
+  });
+
   const { error: saleItemsError } = await client
     .from("sale_items")
     .insert(saleItems);
 
   if (saleItemsError) {
+    console.error("[PRINT] Sale items save failed", {
+      error: saleItemsError,
+      saleId,
+    });
     console.error("Completed sale item insert failed", {
       error: saleItemsError,
       eventId: input.eventId,
@@ -498,6 +536,10 @@ export async function saveCompletedSale(input: SaveCompletedSaleInput) {
     throw saleItemsError;
   }
 
+  console.info("[PRINT] Sale items saved", {
+    itemCount: saleItems.length,
+    saleId,
+  });
   console.info("Completed sale saved in Supabase", {
     eventId: input.eventId,
     itemCount: saleItems.length,
@@ -505,5 +547,6 @@ export async function saveCompletedSale(input: SaveCompletedSaleInput) {
     tenantId: input.tenantId,
   });
 
+  console.info("[PRINT] saveCompletedSale returned", { saleId });
   return saleId;
 }
