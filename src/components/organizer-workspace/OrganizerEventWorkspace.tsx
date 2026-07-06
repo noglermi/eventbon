@@ -9,6 +9,7 @@ import { supabase, supabaseConfigWarning } from "@/lib/supabase/client";
 import { SalesTerminal } from "@/components/sales-terminal/SalesTerminal";
 import { LanguageSwitch } from "@/components/organizer-workspace/LanguageSwitch";
 import { OrganizerSalesDashboard } from "@/components/organizer-workspace/OrganizerSalesDashboard";
+import { hasPasswordRecoveryParameters, PasswordRecoveryForm } from "@/components/organizer-workspace/PasswordRecoveryForm";
 import { defaultLanguage, translations } from "@/components/sales-terminal/i18n";
 import type { Translation } from "@/components/sales-terminal/i18n";
 import type { EventSettings, Language, PrintMode } from "@/components/sales-terminal/types";
@@ -80,18 +81,6 @@ function getFriendlyAuthError(error: unknown, labels: Translation) {
   }
 
   return labels.authGeneralError;
-}
-
-function hasRecoveryParameters() {
-  if (typeof window === "undefined") {
-    return false;
-  }
-
-  const searchParams = new URLSearchParams(window.location.search);
-  const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
-  const type = searchParams.get("type") ?? hashParams.get("type");
-
-  return type === "recovery" || searchParams.has("code") || hashParams.has("access_token") || hashParams.has("refresh_token");
 }
 
 function DatePickerField({
@@ -173,6 +162,7 @@ export function OrganizerEventWorkspace() {
   const labels = translations[language];
   const [session, setSession] = useState<Session | null>(null);
   const [isAuthLoading, setIsAuthLoading] = useState(!supabaseConfigWarning);
+  const [isPasswordRecovery, setIsPasswordRecovery] = useState(false);
   const [authMode, setAuthMode] = useState<AuthMode>("login");
   const [authMessage, setAuthMessage] = useState<string | null>(null);
   const [authError, setAuthError] = useState<string | null>(supabaseConfigWarning);
@@ -204,8 +194,11 @@ export function OrganizerEventWorkspace() {
       return undefined;
     }
 
-    if (hasRecoveryParameters()) {
-      window.location.replace("/reset-password" + window.location.search + window.location.hash);
+    if (hasPasswordRecoveryParameters()) {
+      queueMicrotask(() => {
+        setIsPasswordRecovery(true);
+        setIsAuthLoading(false);
+      });
       return undefined;
     }
 
@@ -460,6 +453,10 @@ export function OrganizerEventWorkspace() {
         <p className="rounded-lg bg-white px-5 py-4 text-lg font-black text-slate-700 ring-1 ring-slate-200">{labels.authLoading}</p>
       </main>
     );
+  }
+
+  if (isPasswordRecovery) {
+    return <PasswordRecoveryForm />;
   }
 
   if (!session) {
