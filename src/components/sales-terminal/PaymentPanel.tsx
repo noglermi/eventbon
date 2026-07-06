@@ -84,11 +84,6 @@ export function PaymentPanel({ labels, language, paymentMethod, receivedCents, r
     updateReceivedEntry("");
   }
 
-  function selectPaymentMethod(method: PaymentMethod) {
-    console.info("[PRINT] Payment method selected", { paymentMethod: method });
-    onPaymentMethodChange(method);
-  }
-
   return (
     <section className="flex min-h-0 flex-1 flex-col rounded-[2.25rem] bg-white/95 shadow-[0_18px_50px_rgba(15,23,42,0.06)] ring-1 ring-slate-200/75">
       <div className="shrink-0 border-b border-slate-100 px-7 py-6">
@@ -104,7 +99,7 @@ export function PaymentPanel({ labels, language, paymentMethod, receivedCents, r
             <button
               key={method}
               type="button"
-              onClick={() => selectPaymentMethod(method)}
+              onClick={() => onPaymentMethodChange(method)}
               className={"min-h-14 rounded-2xl px-5 text-lg font-black transition active:scale-[0.98] focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200 " + (paymentMethod === method ? "bg-emerald-600 text-white shadow-sm shadow-emerald-600/20" : "bg-white text-slate-700 ring-1 ring-slate-200/80")}
               aria-pressed={paymentMethod === method}
             >

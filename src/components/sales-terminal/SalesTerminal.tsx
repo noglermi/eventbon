@@ -46,15 +46,6 @@ function parseAmountToCents(value: string) {
   return euros * 100 + cents;
 }
 
-function tracePrint(message: string, details?: Record<string, unknown>) {
-  if (details) {
-    console.info("[PRINT] " + message, details);
-    return;
-  }
-
-  console.info("[PRINT] " + message);
-}
-
 function MenuIcon() {
   return (
     <svg aria-hidden="true" viewBox="0 0 24 24" className="h-7 w-7" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round">
@@ -336,17 +327,6 @@ export function SalesTerminal({
 
   const receivedCents = useMemo(() => parseAmountToCents(receivedEntry), [receivedEntry]);
 
-  useEffect(() => {
-    tracePrint("Button state", {
-      cartItems: cartItems.length,
-      disabled: isPrintDisabled,
-      isSavingSale,
-      paymentMethod,
-      receivedCents,
-      totalCents,
-    });
-  }, [cartItems.length, isPrintDisabled, isSavingSale, paymentMethod, receivedCents, totalCents]);
-
   function addProduct(product: ProductTileData) {
     setCartItems((current) => {
       const existing = current.find((item) => item.productId === product.id);
@@ -400,32 +380,11 @@ export function SalesTerminal({
   }
 
   async function openPrintPreview() {
-    tracePrint("Button clicked", {
-      cartItems: cartItems.length,
-      eventId,
-      isSavingSale,
-      paymentMethod,
-      receivedCents,
-      supabaseFallback: Boolean(supabaseConfigWarning),
-      tenantId,
-      totalCents,
-    });
-
     if (cartItems.length === 0 || isSavingSale) {
-      tracePrint("Stopped before validation", {
-        cartEmpty: cartItems.length === 0,
-        isSavingSale,
-      });
       return;
     }
 
-    tracePrint("Validation passed");
-    tracePrint("Payment method = " + paymentMethod);
-
     if (eventId && !tenantId && !supabaseConfigWarning) {
-      tracePrint("Stopped before saving sale", {
-        reason: "Selected event has no tenant_id and Supabase persistence is active.",
-      });
       setPersistenceMessage(labels.saleSaveError);
       setPersistenceDetails("save completed sale | message=Selected event has no tenant_id and cannot be persisted.");
       return;
@@ -439,12 +398,6 @@ export function SalesTerminal({
       const persistedReceivedCents = paymentMethod === "card_manual" ? totalCents : receivedCents;
       const persistedChangeCents = paymentMethod === "card_manual" ? 0 : Math.max(receivedCents - totalCents, 0);
 
-      tracePrint("Saving sale", {
-        changeCents: persistedChangeCents,
-        paymentMethod,
-        receivedCents: persistedReceivedCents,
-      });
-
       try {
         await saveCompletedSale({
           cartItems,
@@ -457,10 +410,8 @@ export function SalesTerminal({
           tenantId,
           totalCents,
         });
-        tracePrint("Sale saved");
       } catch (error) {
         const diagnostic = logSupabaseError("save completed sale", error);
-        tracePrint("Stopped while saving sale", { diagnostic });
         setPersistenceMessage(labels.saleSaveError);
         setPersistenceDetails(diagnostic);
         setIsSavingSale(false);
@@ -468,29 +419,18 @@ export function SalesTerminal({
       }
 
       try {
-        tracePrint("Loading recent sales after save");
         const loadedSales = await listRecentSales({ eventId, tenantId, limit: 10 });
         setRecentSales(loadedSales);
-        tracePrint("Recent sales loaded", { count: loadedSales.length });
       } catch (error) {
         const diagnostic = logSupabaseError("reload recent sales after sale save", error);
-        tracePrint("Recent sales reload failed after sale save", { diagnostic });
         setPersistenceMessage(labels.recentSalesLoadError);
         setPersistenceDetails(diagnostic);
       }
 
       setIsSavingSale(false);
-    } else {
-      tracePrint("Supabase save skipped", {
-        eventId,
-        reason: supabaseConfigWarning ? "Supabase fallback is active." : "No persisted event is selected.",
-        tenantId,
-      });
     }
 
-    tracePrint("Opening print preview");
     setPrintPreviewDate(new Date());
-    tracePrint("Print preview state requested");
   }
 
   async function saveTile(tile: ProductTileData) {
