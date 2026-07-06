@@ -1,10 +1,6 @@
 import { supabase } from "@/lib/supabase/client";
 import type { CartItem, Language, PaymentMethod, ProductTileData } from "@/components/sales-terminal/types";
 
-type SaleRow = {
-  id: string;
-};
-
 type RecentSaleRow = {
   id: string;
   tenant_id: string;
@@ -124,15 +120,12 @@ export type SalesExportSale = {
 };
 
 type SaleItemPayload = {
-  tenant_id: string;
-  sale_id: string;
   product_id: string | null;
   name_snapshot: string;
   group_key_snapshot: string;
   price_cents_snapshot: number;
   quantity: number;
   line_total_cents: number;
-  created_at: string;
 };
 
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -437,33 +430,6 @@ export async function saveCompletedSale(input: SaveCompletedSaleInput) {
     }
   }
 
-  const salePayload = {
-    tenant_id: input.tenantId,
-    event_id: input.eventId,
-    total_cents: input.totalCents,
-    payment_method: input.paymentMethod,
-    cash_received_cents: persistedReceivedCents,
-    change_cents: persistedChangeCents,
-    status: "completed",
-    created_at: createdAt,
-  };
-
-  const { data: sale, error: saleError } = await client
-    .from("sales")
-    .insert(salePayload)
-    .select("id")
-    .single();
-
-  if (saleError) {
-    console.error("Completed sale insert failed", {
-      error: saleError,
-      eventId: input.eventId,
-      tenantId: input.tenantId,
-    });
-    throw saleError;
-  }
-
-  const saleId = (sale as SaleRow).id;
   const saleItems = input.cartItems.map((item): SaleItemPayload => {
     const product = input.productsById.get(item.productId);
 
@@ -474,30 +440,37 @@ export async function saveCompletedSale(input: SaveCompletedSaleInput) {
     const priceCentsSnapshot = Math.round(product.price * 100);
 
     return {
-      tenant_id: input.tenantId,
-      sale_id: saleId,
       product_id: uuidPattern.test(product.id) ? product.id : null,
       name_snapshot: product.name[input.language],
       group_key_snapshot: product.group,
       price_cents_snapshot: priceCentsSnapshot,
       quantity: item.quantity,
       line_total_cents: priceCentsSnapshot * item.quantity,
-      created_at: createdAt,
     };
   });
 
-  const { error: saleItemsError } = await client
-    .from("sale_items")
-    .insert(saleItems);
+  const { data: saleId, error: saleError } = await client.rpc("save_completed_sale", {
+    p_cash_received_cents: persistedReceivedCents,
+    p_change_cents: persistedChangeCents,
+    p_created_at: createdAt,
+    p_event_id: input.eventId,
+    p_items: saleItems,
+    p_payment_method: input.paymentMethod,
+    p_tenant_id: input.tenantId,
+    p_total_cents: input.totalCents,
+  });
 
-  if (saleItemsError) {
-    console.error("Completed sale item insert failed", {
-      error: saleItemsError,
+  if (saleError) {
+    console.error("Completed sale transaction failed", {
+      error: saleError,
       eventId: input.eventId,
-      saleId,
       tenantId: input.tenantId,
     });
-    throw saleItemsError;
+    throw saleError;
+  }
+
+  if (!saleId) {
+    throw new Error("Completed sale transaction returned no sale id.");
   }
 
   console.info("Completed sale saved in Supabase", {
@@ -507,5 +480,5 @@ export async function saveCompletedSale(input: SaveCompletedSaleInput) {
     tenantId: input.tenantId,
   });
 
-  return saleId;
+  return saleId as string;
 }

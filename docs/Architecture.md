@@ -126,6 +126,8 @@ Supabase responsibilities:
 
 Supabase should be treated as the source of truth for sales and voucher records.
 
+Completed sales must be stored atomically. The application calls a Supabase RPC that inserts the sale and all sale_items inside one database transaction. If any sale_item insert fails, the transaction fails and no partial sale remains in the database. The print preview opens only after this transaction succeeds.
+
 A future offline-capable version may use a local storage layer or local database during the booked license period. That local layer must remain separate from the online source-of-truth model and must reconcile with the hosted model only when offline mode is explicitly designed.
 
 ## Sales History And Analytics
