@@ -1,14 +1,16 @@
 import type { RefObject } from "react";
 import type { Translation } from "./i18n";
-import type { Language } from "./types";
+import type { Language, PaymentMethod } from "./types";
 
 type PaymentPanelProps = {
   labels: Translation;
   language: Language;
+  paymentMethod: PaymentMethod;
   receivedCents: number;
   receivedEntry: string;
   receivedInputRef?: RefObject<HTMLInputElement | null>;
   totalCents: number;
+  onPaymentMethodChange: (paymentMethod: PaymentMethod) => void;
   onReceivedEntryChange: (value: string) => void;
 };
 
@@ -19,7 +21,7 @@ function formatCents(cents: number) {
   return currency.format(cents / 100);
 }
 
-export function PaymentPanel({ labels, language, receivedCents, receivedEntry, receivedInputRef, totalCents, onReceivedEntryChange }: PaymentPanelProps) {
+export function PaymentPanel({ labels, language, paymentMethod, receivedCents, receivedEntry, receivedInputRef, totalCents, onPaymentMethodChange, onReceivedEntryChange }: PaymentPanelProps) {
   const changeCents = Math.max(receivedCents - totalCents, 0);
   const decimalSeparator = language === "de" ? "," : ".";
   const displayedReceived = receivedEntry.replace(/[,.]/, decimalSeparator);
@@ -89,6 +91,23 @@ export function PaymentPanel({ labels, language, receivedCents, receivedEntry, r
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto p-5">
+        <div className="mb-5 grid grid-cols-2 gap-3">
+          {([
+            ["cash", labels.cash],
+            ["card_manual", labels.card],
+          ] as Array<[PaymentMethod, string]>).map(([method, label]) => (
+            <button
+              key={method}
+              type="button"
+              onClick={() => onPaymentMethodChange(method)}
+              className={"min-h-14 rounded-2xl px-5 text-lg font-black transition active:scale-[0.98] focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200 " + (paymentMethod === method ? "bg-emerald-600 text-white shadow-sm shadow-emerald-600/20" : "bg-white text-slate-700 ring-1 ring-slate-200/80")}
+              aria-pressed={paymentMethod === method}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+
         <div className="rounded-[1.75rem] bg-white p-5 shadow-sm ring-1 ring-slate-200/75">
           <p className="text-sm font-bold uppercase tracking-widest text-slate-500">{labels.received} (EUR)</p>
           <input

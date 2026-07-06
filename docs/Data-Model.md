@@ -165,7 +165,9 @@ Suggested fields:
 Payment methods:
 
 - cash
-- manual_card
+- card_manual
+
+Legacy payment values `card` and `manual_card` should be mapped to `card_manual`.
 
 ### Sale Item
 

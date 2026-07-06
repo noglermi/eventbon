@@ -1,6 +1,6 @@
 export type PrintMode = "single_vouchers" | "combined_voucher";
 
-export type PaymentMethod = "cash" | "manual_card";
+export type PaymentMethod = "cash" | "card_manual";
 
 export type Tenant = {
   id: string;

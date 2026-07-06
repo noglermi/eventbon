@@ -62,7 +62,7 @@ create table sales (
   tenant_id uuid not null,
   event_id uuid not null,
   total_cents integer not null check (total_cents >= 0),
-  payment_method text not null check (payment_method in ('cash', 'manual_card')),
+  payment_method text not null check (payment_method in ('cash', 'card_manual')),
   cash_received_cents integer check (cash_received_cents is null or cash_received_cents >= 0),
   change_cents integer check (change_cents is null or change_cents >= 0),
   status text not null default 'completed',

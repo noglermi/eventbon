@@ -1,5 +1,5 @@
 import { supabase } from "@/lib/supabase/client";
-import type { CartItem, Language, ProductTileData } from "@/components/sales-terminal/types";
+import type { CartItem, Language, PaymentMethod, ProductTileData } from "@/components/sales-terminal/types";
 
 type SaleRow = {
   id: string;
@@ -50,6 +50,7 @@ type SaveCompletedSaleInput = {
   changeCents: number;
   eventId: string;
   language: Language;
+  paymentMethod: PaymentMethod;
   productsById: Map<string, ProductTileData>;
   receivedCents: number;
   tenantId: string;
@@ -71,7 +72,7 @@ export type RecentSale = {
   tenantId: string;
   eventId: string;
   totalCents: number;
-  paymentMethod: "cash" | "manual_card";
+  paymentMethod: PaymentMethod;
   cashReceivedCents: number | null;
   changeCents: number | null;
   createdAt: string;
@@ -114,7 +115,7 @@ export type SalesExportSaleItem = {
 export type SalesExportSale = {
   id: string;
   totalCents: number;
-  paymentMethod: "cash" | "manual_card";
+  paymentMethod: PaymentMethod;
   cashReceivedCents: number | null;
   changeCents: number | null;
   createdAt: string;
@@ -145,6 +146,10 @@ function requireSupabase() {
   return supabase;
 }
 
+function normalizePaymentMethod(value: string | null | undefined): PaymentMethod {
+  return value === "card" || value === "manual_card" || value === "card_manual" ? "card_manual" : "cash";
+}
+
 function mapRecentSale(row: RecentSaleRow, items: RecentSaleItemRow[]): RecentSale {
   const mappedItems = items.map((item) => ({
     id: item.id,
@@ -161,7 +166,7 @@ function mapRecentSale(row: RecentSaleRow, items: RecentSaleItemRow[]): RecentSa
     tenantId: row.tenant_id,
     eventId: row.event_id,
     totalCents: row.total_cents,
-    paymentMethod: row.payment_method === "manual_card" ? "manual_card" : "cash",
+    paymentMethod: normalizePaymentMethod(row.payment_method),
     cashReceivedCents: row.cash_received_cents,
     changeCents: row.change_cents,
     createdAt: row.created_at,
@@ -321,8 +326,8 @@ export async function getSalesAnalytics(input: { createdFrom?: string; createdTo
     voucherCount,
     averageSaleCents: Math.round(totalRevenueCents / sales.length),
     paymentTotals: {
-      cashCents: sales.filter((sale) => sale.payment_method !== "manual_card").reduce((sum, sale) => sum + sale.total_cents, 0),
-      cardCents: sales.filter((sale) => sale.payment_method === "manual_card").reduce((sum, sale) => sum + sale.total_cents, 0),
+      cashCents: sales.filter((sale) => normalizePaymentMethod(sale.payment_method) === "cash").reduce((sum, sale) => sum + sale.total_cents, 0),
+      cardCents: sales.filter((sale) => normalizePaymentMethod(sale.payment_method) === "card_manual").reduce((sum, sale) => sum + sale.total_cents, 0),
     },
     hourlyRevenue,
     topProducts: [...productTotals.values()].sort((first, second) => second.revenueCents - first.revenueCents || second.quantity - first.quantity || first.name.localeCompare(second.name)),
@@ -402,7 +407,7 @@ export async function listSalesForExport(input: { createdFrom?: string; createdT
     return {
       id: sale.id,
       totalCents: sale.total_cents,
-      paymentMethod: sale.payment_method === "manual_card" ? "manual_card" : "cash",
+      paymentMethod: normalizePaymentMethod(sale.payment_method),
       cashReceivedCents: sale.cash_received_cents,
       changeCents: sale.change_cents,
       createdAt: sale.created_at,
@@ -435,7 +440,7 @@ export async function saveCompletedSale(input: SaveCompletedSaleInput) {
       tenant_id: input.tenantId,
       event_id: input.eventId,
       total_cents: input.totalCents,
-      payment_method: "cash",
+      payment_method: input.paymentMethod,
       cash_received_cents: input.receivedCents,
       change_cents: input.changeCents,
       status: "completed",

@@ -1,6 +1,6 @@
 export type Language = "de" | "en";
 export type TileGroupName = "Drinks" | "Food" | "Desserts" | "Other";
-export type PaymentMethod = "cash" | "card";
+export type PaymentMethod = "cash" | "card_manual";
 export type PrintMode = "single_vouchers" | "combined_voucher";
 
 export type LocalizedText = Record<Language, string>;

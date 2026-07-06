@@ -19,7 +19,7 @@ import { PrintModeSetting } from "./PrintModeSetting";
 import { RecentSalesPanel } from "./RecentSalesPanel";
 import { readViewSettings, writeViewSettings } from "./view-settings-storage";
 import { VoucherPrintPreview } from "./VoucherPrintPreview";
-import type { CartItem, EventSettings, Language, ProductTileData, TileGroupName } from "./types";
+import type { CartItem, EventSettings, Language, PaymentMethod, ProductTileData, TileGroupName } from "./types";
 import type { ViewSettings } from "./view-settings-storage";
 import type { Event as PersistedEvent, PrintMode } from "@/types/domain";
 
@@ -178,6 +178,7 @@ export function SalesTerminal({
   const [eventSettings, setEventSettings] = useState<EventSettings>(initialEventSettings);
   const [products, setProducts] = useState<ProductTileData[]>(productTiles);
   const [cartItems, setCartItems] = useState<CartItem[]>(initialCart);
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cash");
   const [receivedEntry, setReceivedEntry] = useState("");
   const [isLoadingProducts, setIsLoadingProducts] = useState(false);
   const [isSavingSale, setIsSavingSale] = useState(false);
@@ -349,6 +350,7 @@ export function SalesTerminal({
 
   function clearSale() {
     setCartItems([]);
+    setPaymentMethod("cash");
     setReceivedEntry("");
     requestAnimationFrame(() => receivedInputRef.current?.focus());
   }
@@ -398,6 +400,7 @@ export function SalesTerminal({
           changeCents: Math.max(receivedCents - totalCents, 0),
           eventId,
           language,
+          paymentMethod,
           productsById,
           receivedCents,
           tenantId,
@@ -661,7 +664,7 @@ export function SalesTerminal({
 
         <div className="min-h-0 overflow-y-auto overflow-x-hidden rounded-[2.25rem]">
           <ScaledBlock zoom={blockZoom.payment} className="flex min-h-0 flex-col gap-5">
-            <PaymentPanel labels={labels} language={language} totalCents={totalCents} receivedCents={receivedCents} receivedEntry={receivedEntry} receivedInputRef={receivedInputRef} onReceivedEntryChange={setReceivedEntry} />
+            <PaymentPanel labels={labels} language={language} paymentMethod={paymentMethod} totalCents={totalCents} receivedCents={receivedCents} receivedEntry={receivedEntry} receivedInputRef={receivedInputRef} onPaymentMethodChange={setPaymentMethod} onReceivedEntryChange={setReceivedEntry} />
             <PrintModeSetting labels={labels} printMode={eventSettings.printMode} onPrintModeChange={updatePrintMode} />
             <RecentSalesPanel labels={labels} language={language} recentSales={recentSales} />
           </ScaledBlock>

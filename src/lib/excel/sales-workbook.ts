@@ -32,7 +32,7 @@ function formatHour(hour: number) {
 }
 
 function paymentLabel(paymentMethod: SalesExportSale["paymentMethod"], language: Language) {
-  if (paymentMethod === "manual_card") {
+  if (paymentMethod === "card_manual") {
     return language === "de" ? "Karte" : "Card";
   }
 

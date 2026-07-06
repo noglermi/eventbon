@@ -31,7 +31,7 @@ function formatTime(value: string, language: Language) {
 }
 
 function getPaymentLabel(sale: RecentSale, labels: Translation) {
-  return sale.paymentMethod === "manual_card" ? labels.card : labels.cash;
+  return sale.paymentMethod === "card_manual" ? labels.card : labels.cash;
 }
 
 export function RecentSalesPanel({ labels, language, recentSales }: RecentSalesPanelProps) {
