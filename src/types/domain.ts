@@ -76,3 +76,13 @@ export type SaleItem = {
   lineTotalCents: number;
   createdAt: string;
 };
+
+export type HelperInvitation = {
+  id: string;
+  eventId: string;
+  code: string;
+  label: string | null;
+  station: string | null;
+  isActive: boolean;
+  createdAt: string;
+};

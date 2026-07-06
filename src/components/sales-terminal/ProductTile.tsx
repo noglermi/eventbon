@@ -3,9 +3,9 @@ import type { Language, ProductTileData } from "./types";
 type ProductTileProps = {
   language: Language;
   product: ProductTileData;
-  editLabel: string;
+  editLabel?: string;
   onSelect: (product: ProductTileData) => void;
-  onEdit: (product: ProductTileData) => void;
+  onEdit?: (product: ProductTileData) => void;
 };
 
 const currency = new Intl.NumberFormat("de-AT", { style: "currency", currency: "EUR" });
@@ -54,15 +54,17 @@ export function ProductTile({ language, product, editLabel, onSelect, onEdit }: 
         <span className="mt-4 block text-xl font-black leading-tight tracking-tight">{productName}</span>
         <span className="mt-1.5 block text-base font-bold tabular-nums opacity-80">{currency.format(product.price)}</span>
       </button>
-      <button
-        type="button"
-        onClick={() => onEdit(product)}
-        className="flex min-h-12 items-center justify-center gap-2 border-t border-black/10 bg-white/80 px-4 text-base font-black text-slate-800 transition active:scale-[0.99] focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200"
-        aria-label={editLabel + " " + productName}
-      >
-        <EditIcon />
-        {editLabel}
-      </button>
+      {onEdit && editLabel ? (
+        <button
+          type="button"
+          onClick={() => onEdit(product)}
+          className="flex min-h-12 items-center justify-center gap-2 border-t border-black/10 bg-white/80 px-4 text-base font-black text-slate-800 transition active:scale-[0.99] focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200"
+          aria-label={editLabel + " " + productName}
+        >
+          <EditIcon />
+          {editLabel}
+        </button>
+      ) : null}
     </article>
   );
 }

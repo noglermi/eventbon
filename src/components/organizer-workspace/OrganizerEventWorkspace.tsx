@@ -8,6 +8,7 @@ import { logSupabaseError } from "@/lib/supabase/diagnostics";
 import { supabase, supabaseConfigWarning } from "@/lib/supabase/client";
 import { SalesTerminal } from "@/components/sales-terminal/SalesTerminal";
 import { LanguageSwitch } from "@/components/organizer-workspace/LanguageSwitch";
+import { HelperAccessPanel } from "@/components/organizer-workspace/HelperAccessPanel";
 import { OrganizerSalesDashboard } from "@/components/organizer-workspace/OrganizerSalesDashboard";
 import { PasswordRecoveryForm } from "@/components/organizer-workspace/PasswordRecoveryForm";
 import { hasPasswordRecoveryParameters } from "@/lib/supabase/recovery-url";
@@ -173,6 +174,7 @@ export function OrganizerEventWorkspace() {
   const [events, setEvents] = useState<BookedEvent[]>([]);
   const [selectedEvent, setSelectedEvent] = useState<BookedEvent | null>(null);
   const [dashboardEvent, setDashboardEvent] = useState<BookedEvent | null>(null);
+  const [helperEvent, setHelperEvent] = useState<BookedEvent | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [newEventDateFrom, setNewEventDateFrom] = useState("");
   const [newEventDateTo, setNewEventDateTo] = useState("");
@@ -222,12 +224,14 @@ export function OrganizerEventWorkspace() {
         setIsAuthLoading(false);
         setSelectedEvent(null);
         setDashboardEvent(null);
+        setHelperEvent(null);
         return;
       }
 
       setSession(nextSession);
       setSelectedEvent(null);
       setDashboardEvent(null);
+      setHelperEvent(null);
       if (!nextSession) {
         setEvents([]);
         setCurrentOrganizer(mockOrganizer);
@@ -473,6 +477,7 @@ export function OrganizerEventWorkspace() {
           setAuthErrorDetails(null);
           setSelectedEvent(null);
           setDashboardEvent(null);
+          setHelperEvent(null);
           setEvents([]);
           setCurrentOrganizer(mockOrganizer);
         }}
@@ -667,7 +672,7 @@ export function OrganizerEventWorkspace() {
                 </div>
               </dl>
 
-              <div className="grid gap-3 sm:grid-cols-2">
+              <div className="grid gap-3 sm:grid-cols-3">
                 <button
                   type="button"
                   onClick={() => setSelectedEvent(bookedEvent)}
@@ -682,11 +687,28 @@ export function OrganizerEventWorkspace() {
                 >
                   {labels.statistics}
                 </button>
+                <button
+                  type="button"
+                  onClick={() => setHelperEvent(bookedEvent)}
+                  className="min-h-14 rounded-lg bg-emerald-50 px-5 text-lg font-black text-emerald-800 ring-1 ring-emerald-200 transition active:scale-[0.98] focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200"
+                >
+                  {labels.helpers}
+                </button>
               </div>
             </article>
           ))}
         </section>
       </div>
+
+      {helperEvent ? (
+        <HelperAccessPanel
+          eventId={helperEvent.isPersisted ? helperEvent.id : null}
+          eventName={helperEvent.settings.name[language]}
+          labels={labels}
+          language={language}
+          onClose={() => setHelperEvent(null)}
+        />
+      ) : null}
 
       {isCreateOpen ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-6 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="new-event-title">
