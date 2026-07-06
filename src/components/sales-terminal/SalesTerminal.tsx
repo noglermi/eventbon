@@ -19,7 +19,7 @@ import { PrintModeSetting } from "./PrintModeSetting";
 import { RecentSalesPanel } from "./RecentSalesPanel";
 import { readViewSettings, writeViewSettings } from "./view-settings-storage";
 import { VoucherPrintPreview } from "./VoucherPrintPreview";
-import type { CartItem, EventSettings, Language, PaymentMethod, ProductTileData, TileGroupName } from "./types";
+import type { ActiveHelperSession, CartItem, EventSettings, Language, PaymentMethod, ProductTileData, TileGroupName } from "./types";
 import type { ViewSettings } from "./view-settings-storage";
 import type { Event as PersistedEvent, PrintMode } from "@/types/domain";
 
@@ -154,6 +154,7 @@ function CalendarIcon() {
 
 type SalesTerminalProps = {
   accessUntil?: string;
+  activeHelperSession?: ActiveHelperSession | null;
   eventId?: string | null;
   initialEventSettings?: EventSettings;
   isHelperMode?: boolean;
@@ -165,6 +166,7 @@ type SalesTerminalProps = {
 
 export function SalesTerminal({
   accessUntil,
+  activeHelperSession = null,
   eventId = null,
   initialEventSettings = mockEventSettings,
   isHelperMode = false,
@@ -405,6 +407,7 @@ export function SalesTerminal({
           cartItems,
           changeCents: persistedChangeCents,
           eventId,
+          helperSession: activeHelperSession,
           language,
           paymentMethod,
           productsById,
@@ -515,6 +518,12 @@ export function SalesTerminal({
           <div className="leading-tight">
             <p className="text-2xl font-black tracking-normal text-emerald-600">eventBon</p>
             <p className="text-sm font-semibold text-slate-500">{eventName}</p>
+            {isHelperMode && activeHelperSession ? (
+              <p className="mt-1 text-xs font-black text-slate-600">
+                {labels.helperTerminalLabel}: {activeHelperSession.helperName}
+                {activeHelperSession.station ? " | " + labels.helperStationLabel + ": " + activeHelperSession.station : ""}
+              </p>
+            ) : null}
           </div>
           <div ref={viewPanelRef} className="relative">
             <button

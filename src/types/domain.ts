@@ -60,6 +60,9 @@ export type Sale = {
   paymentMethod: PaymentMethod;
   cashReceivedCents: number | null;
   changeCents: number | null;
+  helperInvitationId: string | null;
+  helperNameSnapshot: string | null;
+  helperStationSnapshot: string | null;
   status: string;
   createdAt: string;
 };

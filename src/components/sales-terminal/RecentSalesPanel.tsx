@@ -106,6 +106,13 @@ export function RecentSalesPanel({ labels, language, recentSales }: RecentSalesP
                   <p className="text-xs font-black uppercase tracking-widest text-slate-500">{labels.change}</p>
                   <p className="mt-1 text-2xl font-black text-slate-950">{formatCents(selectedSale.changeCents)}</p>
                 </div>
+                {selectedSale.helperNameSnapshot ? (
+                  <div className="rounded-2xl bg-emerald-50 p-4 ring-1 ring-emerald-100 sm:col-span-2">
+                    <p className="text-xs font-black uppercase tracking-widest text-emerald-800">{labels.helperTerminalLabel}</p>
+                    <p className="mt-1 text-2xl font-black text-emerald-950">{selectedSale.helperNameSnapshot}</p>
+                    {selectedSale.helperStationSnapshot ? <p className="mt-1 text-sm font-bold text-emerald-800">{labels.helperStationLabel}: {selectedSale.helperStationSnapshot}</p> : null}
+                  </div>
+                ) : null}
               </div>
 
               <div className="mt-5 rounded-2xl ring-1 ring-slate-200/75">

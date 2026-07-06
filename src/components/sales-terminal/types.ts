@@ -35,3 +35,9 @@ export type EventSettings = {
   dateTo: string;
   printMode: PrintMode;
 };
+
+export type ActiveHelperSession = {
+  invitationId: string;
+  helperName: string;
+  station: string | null;
+};

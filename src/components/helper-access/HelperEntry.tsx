@@ -6,7 +6,7 @@ import { logSupabaseError } from "@/lib/supabase/diagnostics";
 import { LanguageSwitch } from "@/components/organizer-workspace/LanguageSwitch";
 import { SalesTerminal } from "@/components/sales-terminal/SalesTerminal";
 import { defaultLanguage, translations } from "@/components/sales-terminal/i18n";
-import type { EventSettings, Language } from "@/components/sales-terminal/types";
+import type { ActiveHelperSession, EventSettings, Language } from "@/components/sales-terminal/types";
 import type { Event, HelperInvitation } from "@/types/domain";
 
 type ActiveHelperEvent = {
@@ -14,6 +14,8 @@ type ActiveHelperEvent = {
   invitation: HelperInvitation;
   helperName: string;
 };
+
+const helperSessionStorageKey = "eventbon.activeHelperSession";
 
 function toDateInput(value: string) {
   return value.slice(0, 10);
@@ -36,12 +38,41 @@ function getInitialCode() {
   return new URLSearchParams(window.location.search).get("code") ?? "";
 }
 
+function readStoredHelperEvent(): ActiveHelperEvent | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  try {
+    const rawValue = window.localStorage.getItem(helperSessionStorageKey);
+    return rawValue ? JSON.parse(rawValue) as ActiveHelperEvent : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeStoredHelperEvent(value: ActiveHelperEvent) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  window.localStorage.setItem(helperSessionStorageKey, JSON.stringify(value));
+}
+
+function toActiveHelperSession(value: ActiveHelperEvent): ActiveHelperSession {
+  return {
+    invitationId: value.invitation.id,
+    helperName: value.helperName,
+    station: value.invitation.station,
+  };
+}
+
 export function HelperEntry() {
   const [language, setLanguage] = useState<Language>(defaultLanguage);
   const [accessCode, setAccessCode] = useState(() => getInitialCode().toUpperCase());
   const [helperName, setHelperName] = useState("");
   const [resolvedInvitation, setResolvedInvitation] = useState<{ event: Event; invitation: HelperInvitation } | null>(null);
-  const [activeHelperEvent, setActiveHelperEvent] = useState<ActiveHelperEvent | null>(null);
+  const [activeHelperEvent, setActiveHelperEvent] = useState<ActiveHelperEvent | null>(() => readStoredHelperEvent());
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [errorDetails, setErrorDetails] = useState<string | null>(null);
@@ -96,10 +127,13 @@ export function HelperEntry() {
       return;
     }
 
-    setActiveHelperEvent({
+    const nextActiveHelperEvent = {
       ...resolvedInvitation,
       helperName: helperName.trim(),
-    });
+    };
+
+    writeStoredHelperEvent(nextActiveHelperEvent);
+    setActiveHelperEvent(nextActiveHelperEvent);
   }
 
   if (activeHelperEvent) {
@@ -110,6 +144,7 @@ export function HelperEntry() {
         accessUntil={activeHelperEvent.event.accessUntil}
         status={activeHelperEvent.event.status}
         initialEventSettings={toEventSettings(activeHelperEvent.event)}
+        activeHelperSession={toActiveHelperSession(activeHelperEvent)}
         isHelperMode
       />
     );

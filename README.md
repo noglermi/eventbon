@@ -46,6 +46,8 @@ Helpers and volunteers are invited per event. They can access only the booked ev
 
 Version 1 helper access should be as simple as possible. The organizer books an event, invites helpers, and helpers work only for that one event. A helper invitation may use a QR code, invitation link, or event access code. The helper enters only a name, without email or password, and can then open the assigned event, sell Bons, and print Bons.
 
+Helper invitation links must point to the public application URL. For production or beta, `NEXT_PUBLIC_APP_URL` must be set to the public Vercel production URL, not to a protected preview URL that requires Vercel login.
+
 Helpers cannot manage billing, organizer information, subscriptions, bookings, or other events. A permanent helper account may be added later, but it must remain optional and must never be required for the simple event workflow.
 
 The navigation model separates organizer work from helper work. Organizers log in, open "Meine Veranstaltungen", then move between the selected event dashboard or statistics, the event sales terminal, and event settings or products. Helpers do not use this organizer navigation. A helper enters through an invitation link, QR code, or event access code, enters a name, and directly opens the assigned event sales terminal. Helpers have no event selection, no organizer dashboard, and no access to other events.

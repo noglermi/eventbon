@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import QRCode from "qrcode";
 import { createHelperInvitation, listHelperInvitations } from "@/lib/repositories/helpers";
+import { getPublicAppUrl } from "@/lib/app-url";
 import { logSupabaseError } from "@/lib/supabase/diagnostics";
 import type { Translation } from "@/components/sales-terminal/i18n";
 import type { Language } from "@/components/sales-terminal/types";
@@ -16,14 +17,6 @@ type HelperAccessPanelProps = {
   onClose: () => void;
 };
 
-function getOrigin() {
-  if (typeof window === "undefined") {
-    return "";
-  }
-
-  return window.location.origin;
-}
-
 export function HelperAccessPanel({ eventId, eventName, labels, onClose }: HelperAccessPanelProps) {
   const [label, setLabel] = useState("");
   const [station, setStation] = useState("");
@@ -36,7 +29,7 @@ export function HelperAccessPanel({ eventId, eventName, labels, onClose }: Helpe
   const [copiedTarget, setCopiedTarget] = useState<string | null>(null);
   const [qrInvitation, setQrInvitation] = useState<HelperInvitation | null>(null);
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string | null>(null);
-  const origin = useMemo(() => getOrigin(), []);
+  const publicAppUrl = useMemo(() => getPublicAppUrl(), []);
 
   function describeHelperError(context: string, error: unknown) {
     if (error && typeof error === "object" && ("code" in error || "message" in error || "hint" in error || "details" in error)) {
@@ -107,7 +100,7 @@ export function HelperAccessPanel({ eventId, eventName, labels, onClose }: Helpe
       }
 
       setQrCodeDataUrl(null);
-      const link = origin + "/helper?code=" + encodeURIComponent(qrInvitation.code);
+      const link = publicAppUrl + "/helper?code=" + encodeURIComponent(qrInvitation.code);
       const dataUrl = await QRCode.toDataURL(link, {
         errorCorrectionLevel: "M",
         margin: 2,
@@ -124,7 +117,7 @@ export function HelperAccessPanel({ eventId, eventName, labels, onClose }: Helpe
     return () => {
       isActive = false;
     };
-  }, [origin, qrInvitation]);
+  }, [publicAppUrl, qrInvitation]);
 
   async function createAccess(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -160,10 +153,10 @@ export function HelperAccessPanel({ eventId, eventName, labels, onClose }: Helpe
   }
 
   function helperLink(invitation: HelperInvitation) {
-    return origin + "/helper?code=" + encodeURIComponent(invitation.code);
+    return publicAppUrl + "/helper?code=" + encodeURIComponent(invitation.code);
   }
 
-  const helperPageUrl = origin + "/helper";
+  const helperPageUrl = publicAppUrl + "/helper";
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-6 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="helper-access-title">

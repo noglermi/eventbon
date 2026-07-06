@@ -189,13 +189,15 @@ export async function buildSalesWorkbook(input: SalesWorkbookInput) {
   styleCurrencyColumn(productSummary, 3);
 
   const sales = workbook.addWorksheet("Sales");
-  addTable(sales, "Sales", ["Time", "Payment type", "Total", "Received", "Change", "Number of products"], input.sales.map((sale) => [
+  addTable(sales, "Sales", ["Time", "Payment type", "Total", "Received", "Change", "Number of products", "Helper", "Station"], input.sales.map((sale) => [
     toDate(sale.createdAt),
     paymentLabel(sale.paymentMethod, input.language),
     centsToEuro(sale.totalCents),
     sale.cashReceivedCents === null ? null : centsToEuro(sale.cashReceivedCents),
     sale.changeCents === null ? null : centsToEuro(sale.changeCents),
     sale.itemCount,
+    sale.helperNameSnapshot,
+    sale.helperStationSnapshot,
   ]));
   sales.getColumn(1).eachCell((cell, rowNumber) => {
     if (rowNumber >= 2) {

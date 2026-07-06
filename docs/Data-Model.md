@@ -155,12 +155,17 @@ Suggested fields:
 - id
 - tenant_id
 - event_id
+- helper_invitation_id
+- helper_name_snapshot
+- helper_station_snapshot
 - total_amount
 - payment_method
 - payment_status
 - cash_received_amount
 - change_amount
 - created_at
+
+Helper fields are nullable. Organizer-created sales leave them empty. Helper-created sales store the invitation id and the helper name/station snapshots entered or active at sale time so later helper or invitation changes do not rewrite historic sales.
 
 Payment methods:
 

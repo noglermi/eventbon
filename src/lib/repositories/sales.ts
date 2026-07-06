@@ -1,5 +1,5 @@
 import { supabase } from "@/lib/supabase/client";
-import type { CartItem, Language, PaymentMethod, ProductTileData } from "@/components/sales-terminal/types";
+import type { ActiveHelperSession, CartItem, Language, PaymentMethod, ProductTileData } from "@/components/sales-terminal/types";
 
 type RecentSaleRow = {
   id: string;
@@ -9,6 +9,9 @@ type RecentSaleRow = {
   payment_method: string;
   cash_received_cents: number | null;
   change_cents: number | null;
+  helper_invitation_id: string | null;
+  helper_name_snapshot: string | null;
+  helper_station_snapshot: string | null;
   created_at: string;
 };
 
@@ -45,6 +48,7 @@ type SaveCompletedSaleInput = {
   cartItems: CartItem[];
   changeCents: number;
   eventId: string;
+  helperSession?: ActiveHelperSession | null;
   language: Language;
   paymentMethod: PaymentMethod;
   productsById: Map<string, ProductTileData>;
@@ -71,6 +75,9 @@ export type RecentSale = {
   paymentMethod: PaymentMethod;
   cashReceivedCents: number | null;
   changeCents: number | null;
+  helperInvitationId: string | null;
+  helperNameSnapshot: string | null;
+  helperStationSnapshot: string | null;
   createdAt: string;
   itemCount: number;
   items: RecentSaleItem[];
@@ -114,6 +121,8 @@ export type SalesExportSale = {
   paymentMethod: PaymentMethod;
   cashReceivedCents: number | null;
   changeCents: number | null;
+  helperNameSnapshot: string | null;
+  helperStationSnapshot: string | null;
   createdAt: string;
   itemCount: number;
   items: SalesExportSaleItem[];
@@ -162,6 +171,9 @@ function mapRecentSale(row: RecentSaleRow, items: RecentSaleItemRow[]): RecentSa
     paymentMethod: normalizePaymentMethod(row.payment_method),
     cashReceivedCents: row.cash_received_cents,
     changeCents: row.change_cents,
+    helperInvitationId: row.helper_invitation_id,
+    helperNameSnapshot: row.helper_name_snapshot,
+    helperStationSnapshot: row.helper_station_snapshot,
     createdAt: row.created_at,
     itemCount: mappedItems.reduce((sum, item) => sum + item.quantity, 0),
     items: mappedItems,
@@ -174,7 +186,7 @@ export async function listRecentSales(input: { eventId: string; tenantId: string
 
   const { data: saleRows, error: salesError } = await client
     .from("sales")
-    .select("id, tenant_id, event_id, total_cents, payment_method, cash_received_cents, change_cents, created_at")
+    .select("id, tenant_id, event_id, total_cents, payment_method, cash_received_cents, change_cents, helper_invitation_id, helper_name_snapshot, helper_station_snapshot, created_at")
     .eq("tenant_id", input.tenantId)
     .eq("event_id", input.eventId)
     .order("created_at", { ascending: false })
@@ -332,7 +344,7 @@ export async function listSalesForExport(input: { createdFrom?: string; createdT
 
   let salesQuery = client
     .from("sales")
-    .select("id, total_cents, payment_method, cash_received_cents, change_cents, created_at")
+    .select("id, total_cents, payment_method, cash_received_cents, change_cents, helper_name_snapshot, helper_station_snapshot, created_at")
     .eq("tenant_id", input.tenantId)
     .eq("event_id", input.eventId)
     .eq("status", "completed")
@@ -357,7 +369,7 @@ export async function listSalesForExport(input: { createdFrom?: string; createdT
     throw salesError;
   }
 
-  const sales = (saleRows ?? []) as Array<Pick<RecentSaleRow, "id" | "total_cents" | "payment_method" | "cash_received_cents" | "change_cents" | "created_at">>;
+  const sales = (saleRows ?? []) as Array<Pick<RecentSaleRow, "id" | "total_cents" | "payment_method" | "cash_received_cents" | "change_cents" | "helper_name_snapshot" | "helper_station_snapshot" | "created_at">>;
   const saleIds = sales.map((sale) => sale.id);
 
   if (saleIds.length === 0) {
@@ -403,6 +415,8 @@ export async function listSalesForExport(input: { createdFrom?: string; createdT
       paymentMethod: normalizePaymentMethod(sale.payment_method),
       cashReceivedCents: sale.cash_received_cents,
       changeCents: sale.change_cents,
+      helperNameSnapshot: sale.helper_name_snapshot,
+      helperStationSnapshot: sale.helper_station_snapshot,
       createdAt: sale.created_at,
       itemCount: items.reduce((sum, item) => sum + item.quantity, 0),
       items,
@@ -415,10 +429,14 @@ export async function saveCompletedSale(input: SaveCompletedSaleInput) {
   const createdAt = new Date().toISOString();
   const persistedReceivedCents = input.paymentMethod === "card_manual" ? input.totalCents : input.receivedCents;
   const persistedChangeCents = input.paymentMethod === "card_manual" ? 0 : input.changeCents;
+  const helperInvitationId = input.helperSession?.invitationId ?? null;
+  const helperNameSnapshot = input.helperSession?.helperName ?? null;
+  const helperStationSnapshot = input.helperSession?.station ?? null;
 
   console.info("Creating completed sale in Supabase", {
     eventId: input.eventId,
     itemCount: input.cartItems.length,
+    helperInvitationId,
     paymentMethod: input.paymentMethod,
     tenantId: input.tenantId,
     totalCents: input.totalCents,
@@ -454,6 +472,9 @@ export async function saveCompletedSale(input: SaveCompletedSaleInput) {
     p_change_cents: persistedChangeCents,
     p_created_at: createdAt,
     p_event_id: input.eventId,
+    p_helper_invitation_id: helperInvitationId,
+    p_helper_name_snapshot: helperNameSnapshot,
+    p_helper_station_snapshot: helperStationSnapshot,
     p_items: saleItems,
     p_payment_method: input.paymentMethod,
     p_tenant_id: input.tenantId,
