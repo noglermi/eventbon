@@ -1,22 +1,118 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
-import Link from "next/link";
+import { useEffect, useState, type FormEvent } from "react";
+import { useRouter } from "next/navigation";
 import { LanguageSwitch } from "@/components/organizer-workspace/LanguageSwitch";
 import { defaultLanguage, translations } from "@/components/sales-terminal/i18n";
 import type { Language } from "@/components/sales-terminal/types";
 import { supabase, supabaseConfigWarning } from "@/lib/supabase/client";
 import { logSupabaseError } from "@/lib/supabase/diagnostics";
 
+function getRecoveryParameters() {
+  if (typeof window === "undefined") {
+    return {
+      accessToken: null,
+      code: null,
+      refreshToken: null,
+      type: null,
+    };
+  }
+
+  const searchParams = new URLSearchParams(window.location.search);
+  const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+
+  return {
+    accessToken: searchParams.get("access_token") ?? hashParams.get("access_token"),
+    code: searchParams.get("code") ?? hashParams.get("code"),
+    refreshToken: searchParams.get("refresh_token") ?? hashParams.get("refresh_token"),
+    type: searchParams.get("type") ?? hashParams.get("type"),
+  };
+}
+
 export default function ResetPasswordPage() {
+  const router = useRouter();
   const [language, setLanguage] = useState<Language>(defaultLanguage);
   const [password, setPassword] = useState("");
   const [repeatPassword, setRepeatPassword] = useState("");
+  const [isRecoveryReady, setIsRecoveryReady] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [developerDetails, setDeveloperDetails] = useState<string | null>(null);
   const labels = translations[language];
+
+  useEffect(() => {
+    let isActive = true;
+
+    async function prepareRecoverySession() {
+      if (!supabase) {
+        setErrorMessage(labels.passwordRecoveryError);
+        setDeveloperDetails(supabaseConfigWarning ?? "Supabase client is not configured.");
+        return;
+      }
+
+      setErrorMessage(null);
+      setDeveloperDetails(null);
+
+      const { accessToken, code, refreshToken, type } = getRecoveryParameters();
+
+      try {
+        if (accessToken && refreshToken) {
+          const { error } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          });
+
+          if (error) {
+            throw error;
+          }
+        } else if (code) {
+          const { error } = await supabase.auth.exchangeCodeForSession(code);
+
+          if (error) {
+            throw error;
+          }
+        }
+
+        const { data, error } = await supabase.auth.getSession();
+
+        if (error) {
+          throw error;
+        }
+
+        if (!isActive) {
+          return;
+        }
+
+        if (!data.session && type !== "recovery") {
+          setErrorMessage(labels.passwordRecoveryError);
+          return;
+        }
+
+        setIsRecoveryReady(Boolean(data.session));
+      } catch (error) {
+        if (!isActive) {
+          return;
+        }
+
+        setErrorMessage(labels.passwordRecoveryError);
+        setDeveloperDetails(logSupabaseError("prepare password recovery session", error));
+      }
+    }
+
+    prepareRecoverySession();
+
+    const { data: authListener } = supabase?.auth.onAuthStateChange((event, session) => {
+      if (event === "PASSWORD_RECOVERY" || session) {
+        setIsRecoveryReady(true);
+      }
+    }) ?? { data: null };
+
+    return () => {
+      isActive = false;
+      authListener?.subscription.unsubscribe();
+    };
+  }, [labels.passwordRecoveryError]);
 
   async function submitPassword(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -48,13 +144,21 @@ export default function ResetPasswordPage() {
 
       setPassword("");
       setRepeatPassword("");
-      setMessage(labels.passwordUpdatedLogin);
+      setMessage(labels.passwordUpdated);
     } catch (error) {
       setErrorMessage(labels.passwordUpdateError);
       setDeveloperDetails(logSupabaseError("update reset password exception", error));
     } finally {
       setIsSubmitting(false);
     }
+  }
+
+  async function returnToLogin() {
+    if (supabase) {
+      await supabase.auth.signOut();
+    }
+
+    router.replace("/");
   }
 
   return (
@@ -91,45 +195,69 @@ export default function ResetPasswordPage() {
             </div>
           ) : null}
 
-          <form className="space-y-5" onSubmit={submitPassword}>
-            <label className="block">
-              <span className="mb-2 block text-sm font-black uppercase tracking-wide text-slate-600">{labels.newPassword}</span>
-              <input
-                className="min-h-14 w-full rounded-xl border border-slate-300 bg-white px-4 text-lg font-bold outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
-                type="password"
-                value={password}
-                minLength={6}
-                autoComplete="new-password"
-                onChange={(event) => setPassword(event.target.value)}
-                required
-              />
-            </label>
+          {!message && !errorMessage && !isRecoveryReady ? (
+            <div className="mb-5 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-base font-bold text-slate-700">
+              {labels.passwordRecoveryLoading}
+            </div>
+          ) : null}
 
-            <label className="block">
-              <span className="mb-2 block text-sm font-black uppercase tracking-wide text-slate-600">{labels.repeatPassword}</span>
-              <input
-                className="min-h-14 w-full rounded-xl border border-slate-300 bg-white px-4 text-lg font-bold outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
-                type="password"
-                value={repeatPassword}
-                minLength={6}
-                autoComplete="new-password"
-                onChange={(event) => setRepeatPassword(event.target.value)}
-                required
-              />
-            </label>
+          {!message && isRecoveryReady ? (
+            <form className="space-y-5" onSubmit={submitPassword}>
+              <label className="block">
+                <span className="mb-2 block text-sm font-black uppercase tracking-wide text-slate-600">{labels.newPassword}</span>
+                <input
+                  className="min-h-14 w-full rounded-xl border border-slate-300 bg-white px-4 text-lg font-bold outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
+                  type="password"
+                  value={password}
+                  minLength={6}
+                  autoComplete="new-password"
+                  onChange={(event) => setPassword(event.target.value)}
+                  required
+                />
+              </label>
 
+              <label className="block">
+                <span className="mb-2 block text-sm font-black uppercase tracking-wide text-slate-600">{labels.repeatPassword}</span>
+                <input
+                  className="min-h-14 w-full rounded-xl border border-slate-300 bg-white px-4 text-lg font-bold outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
+                  type="password"
+                  value={repeatPassword}
+                  minLength={6}
+                  autoComplete="new-password"
+                  onChange={(event) => setRepeatPassword(event.target.value)}
+                  required
+                />
+              </label>
+
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="min-h-14 w-full rounded-xl bg-emerald-600 px-5 text-lg font-black text-white shadow-lg transition hover:bg-emerald-700 focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-600"
+              >
+                {isSubmitting ? labels.saving : labels.savePassword}
+              </button>
+            </form>
+          ) : null}
+
+          {message ? (
             <button
-              type="submit"
-              disabled={isSubmitting}
-              className="min-h-14 w-full rounded-xl bg-emerald-600 px-5 text-lg font-black text-white shadow-lg transition hover:bg-emerald-700 focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-600"
+              type="button"
+              onClick={returnToLogin}
+              className="min-h-14 w-full rounded-xl bg-emerald-600 px-5 text-lg font-black text-white shadow-lg transition hover:bg-emerald-700 focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200"
             >
-              {isSubmitting ? labels.saving : labels.savePassword}
+              {labels.toLogin}
             </button>
-          </form>
+          ) : null}
 
-          <Link className="mt-6 inline-flex min-h-12 items-center rounded-xl px-1 text-base font-black text-emerald-700 underline-offset-4 hover:underline" href="/">
-            {labels.backToLogin}
-          </Link>
+          {!message ? (
+            <button
+              type="button"
+              onClick={() => router.replace("/")}
+              className="mt-6 inline-flex min-h-12 items-center rounded-xl px-1 text-base font-black text-emerald-700 underline-offset-4 hover:underline"
+            >
+              {labels.backToLogin}
+            </button>
+          ) : null}
         </div>
       </section>
     </main>

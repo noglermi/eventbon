@@ -82,6 +82,18 @@ function getFriendlyAuthError(error: unknown, labels: Translation) {
   return labels.authGeneralError;
 }
 
+function hasRecoveryParameters() {
+  if (typeof window === "undefined") {
+    return false;
+  }
+
+  const searchParams = new URLSearchParams(window.location.search);
+  const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+  const type = searchParams.get("type") ?? hashParams.get("type");
+
+  return type === "recovery" || searchParams.has("code") || hashParams.has("access_token") || hashParams.has("refresh_token");
+}
+
 function DatePickerField({
   describedBy,
   invalid,
@@ -189,6 +201,11 @@ export function OrganizerEventWorkspace() {
 
   useEffect(() => {
     if (!supabase) {
+      return undefined;
+    }
+
+    if (hasRecoveryParameters()) {
+      window.location.replace("/reset-password" + window.location.search + window.location.hash);
       return undefined;
     }
 
