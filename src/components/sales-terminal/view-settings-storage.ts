@@ -31,8 +31,21 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
+function cloneViewSettings(settings: ViewSettings): ViewSettings {
+  return {
+    blockZoom: {
+      ...settings.blockZoom,
+    },
+    language: settings.language,
+    visibleCategories: {
+      ...settings.visibleCategories,
+    },
+  };
+}
+
 function normalizeZoom(value: unknown, fallback: number) {
-  return typeof value === "number" && validZoomValues.includes(value) ? value : fallback;
+  const numericValue = typeof value === "number" ? value : typeof value === "string" ? Number(value) : Number.NaN;
+  return validZoomValues.includes(numericValue) ? numericValue : fallback;
 }
 
 function normalizeLanguage(value: unknown) {
@@ -58,16 +71,16 @@ function normalizeBlockZoom(value: unknown) {
   };
 }
 
-export function readViewSettings() {
+export function loadViewSettings() {
   if (typeof window === "undefined") {
-    return defaultViewSettings;
+    return cloneViewSettings(defaultViewSettings);
   }
 
   try {
     const rawValue = window.localStorage.getItem(viewSettingsStorageKey);
 
     if (!rawValue) {
-      return defaultViewSettings;
+      return cloneViewSettings(defaultViewSettings);
     }
 
     const parsed = JSON.parse(rawValue) as unknown;
@@ -79,11 +92,11 @@ export function readViewSettings() {
       visibleCategories: normalizeVisibleCategories(stored.visibleCategories),
     };
   } catch {
-    return defaultViewSettings;
+    return cloneViewSettings(defaultViewSettings);
   }
 }
 
-export function writeViewSettings(settings: ViewSettings) {
+export function saveViewSettings(settings: ViewSettings) {
   if (typeof window === "undefined") {
     return;
   }

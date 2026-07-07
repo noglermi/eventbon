@@ -16,7 +16,7 @@ import { PaymentPanel } from "./PaymentPanel";
 import { ProductTile } from "./ProductTile";
 import { RecentSalesPanel } from "./RecentSalesPanel";
 import { readTerminalId } from "./terminal-id-storage";
-import { readViewSettings, writeViewSettings } from "./view-settings-storage";
+import { loadViewSettings, saveViewSettings } from "./view-settings-storage";
 import { VoucherPrintPreview } from "./VoucherPrintPreview";
 import type { ActiveHelperSession, CartItem, EventSettings, Language, PaymentMethod, ProductTileData, TileGroupName } from "./types";
 import type { ViewSettings } from "./view-settings-storage";
@@ -173,7 +173,8 @@ export function SalesTerminal({
 }: SalesTerminalProps) {
   const receivedInputRef = useRef<HTMLInputElement>(null);
   const viewPanelRef = useRef<HTMLDivElement | null>(null);
-  const [viewSettings, setViewSettings] = useState<ViewSettings>(() => readViewSettings());
+  const hasLoadedViewSettings = useRef(typeof window !== "undefined");
+  const [viewSettings, setViewSettings] = useState<ViewSettings>(() => loadViewSettings());
   const [terminalId] = useState(() => readTerminalId());
   const [isViewPanelOpen, setIsViewPanelOpen] = useState(false);
   const [eventSettings] = useState<EventSettings>(initialEventSettings);
@@ -203,7 +204,11 @@ export function SalesTerminal({
   }, []);
 
   useEffect(() => {
-    writeViewSettings(viewSettings);
+    if (!hasLoadedViewSettings.current) {
+      return;
+    }
+
+    saveViewSettings(viewSettings);
   }, [viewSettings]);
 
   useEffect(() => {
