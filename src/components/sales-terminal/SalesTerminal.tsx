@@ -417,6 +417,12 @@ export function SalesTerminal({
       return;
     }
 
+    if (!terminalId) {
+      setPersistenceMessage(labels.saleSaveError);
+      setPersistenceDetails("save completed sale | message=No terminal_id could be generated for this device.");
+      return;
+    }
+
     if (eventId && !tenantId && !supabaseConfigWarning) {
       setPersistenceMessage(labels.saleSaveError);
       setPersistenceDetails("save completed sale | message=Selected event has no tenant_id and cannot be persisted.");
@@ -452,18 +458,9 @@ export function SalesTerminal({
         setPersistenceDetails(diagnostic);
         setIsSavingSale(false);
         return;
+      } finally {
+        setIsSavingSale(false);
       }
-
-      try {
-        const loadedSales = await listRecentSales({ eventId, tenantId, terminalId, limit: 10 });
-        setRecentSales(loadedSales);
-      } catch (error) {
-        const diagnostic = logSupabaseError("reload recent sales after sale save", error);
-        setPersistenceMessage(labels.recentSalesLoadError);
-        setPersistenceDetails(diagnostic);
-      }
-
-      setIsSavingSale(false);
     }
 
     if (!eventId || !tenantId || supabaseConfigWarning) {
@@ -503,6 +500,20 @@ export function SalesTerminal({
       const diagnostic = logSupabaseError("record initial sale print", error);
       setPersistenceMessage(labels.printTrackingError);
       setPersistenceDetails(diagnostic);
+      resetSaleInputs();
+    }
+  }
+
+  async function closeInitialPrintPreview() {
+    try {
+      await reloadRecentSales();
+      setPersistenceMessage(null);
+      setPersistenceDetails(null);
+    } catch (error) {
+      const diagnostic = logSupabaseError("reload recent sales after print preview close", error);
+      setPersistenceMessage(labels.recentSalesLoadError);
+      setPersistenceDetails(diagnostic);
+    } finally {
       resetSaleInputs();
     }
   }
@@ -758,6 +769,17 @@ export function SalesTerminal({
         <div className="min-h-0 overflow-y-auto overflow-x-hidden rounded-[2.25rem]">
           <ScaledBlock zoom={blockZoom.payment} className="flex min-h-0 flex-col gap-5">
             <PaymentPanel labels={labels} language={language} paymentMethod={paymentMethod} totalCents={totalCents} receivedCents={receivedCents} receivedEntry={receivedEntry} receivedInputRef={receivedInputRef} onPaymentMethodChange={setPaymentMethod} onReceivedEntryChange={setReceivedEntry} />
+            {persistenceMessage ? (
+              <div className="rounded-2xl bg-amber-50 px-4 py-3 text-sm font-bold text-amber-900 ring-1 ring-amber-200">
+                <p>{persistenceMessage}</p>
+                {persistenceDetails ? (
+                  <details className="mt-3 text-xs font-semibold text-amber-950">
+                    <summary className="cursor-pointer font-black">{labels.technicalDetails}</summary>
+                    <pre className="mt-2 whitespace-pre-wrap break-words rounded-xl bg-white/70 p-3 font-mono text-[11px] leading-relaxed">{persistenceDetails}</pre>
+                  </details>
+                ) : null}
+              </div>
+            ) : null}
             <RecentSalesPanel labels={labels} language={language} recentSales={recentSales} onReprintSale={openReprintPreview} />
           </ScaledBlock>
         </div>
@@ -783,7 +805,7 @@ export function SalesTerminal({
           productsById={productsById}
           printMode={eventSettings.printMode}
           printedAt={printPreviewDate}
-          onCancel={resetActiveSale}
+          onCancel={closeInitialPrintPreview}
           onPrinted={handleInitialPrintRecorded}
         />
       ) : null}
