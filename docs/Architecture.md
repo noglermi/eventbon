@@ -294,6 +294,30 @@ Printing should be generated from recorded sales data so the printed result can 
 
 Bon printing is an event-period capability. Outside the active event period or an explicitly enabled usage window, printing should be inactive even if product setup and read-only statistics access are still available.
 
+## Release Candidate Architecture Priorities
+
+The Release Candidate roadmap is ordered by beta risk.
+
+P0 architecture priorities:
+
+- Complete internationalization for organizer UI, helper UI, sales terminal, dashboard, and exports.
+- Receipt printer integration.
+- Printer setup wizard.
+
+P1 architecture priorities:
+
+- Menu generation from event products.
+- Allergen management connected to menu/product data.
+- Printable menu PDF.
+
+P2 architecture priorities:
+
+- Stripe pay-per-event.
+- Booking activation.
+- Event extension.
+
+The current P0 implementation starts with internationalization only. Receipt printer integration and the printer setup wizard are documented as P0, but are not implemented in this step. Stripe remains separate from Bon sales and stays in P2 for the Release Candidate plan.
+
 ## Icon And Image Assets
 
 Product icons and images must have clear commercial usage rights.

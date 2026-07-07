@@ -361,3 +361,38 @@ Organizer language is part of the organizer account experience. Terminal languag
 - Sales terminal language changes must remain device-local.
 - Device language is not event data and must not be stored in Supabase.
 - No database migration is required until organizer profile persistence is implemented.
+
+## ADR-015 Release Candidate Roadmap
+
+### Decision
+
+The official Release Candidate roadmap is prioritized as:
+
+P0:
+
+- Complete internationalization.
+- Receipt printer integration.
+- Printer setup wizard.
+
+P1:
+
+- Menu generation.
+- Allergen management.
+- Printable menu PDF.
+
+P2:
+
+- Stripe pay-per-event.
+- Booking activation.
+- Event extension.
+
+### Reason
+
+Beta readiness depends first on a consistent event-floor experience. Organizers, helpers, cashiers, dashboards, and exports must speak one selected language without mixed UI text. Physical voucher printing is the next operational risk. Menu, allergen, and printable menu support are useful event-adjacent features, but they should follow the core selling flow. Stripe pay-per-event and booking activation are commercial automation and should not block operational validation.
+
+### Implications
+
+- The first P0 implementation step is a full internationalization audit and cleanup.
+- Receipt printer integration and the printer setup wizard are P0 priorities, but are not implemented until after the i18n pass.
+- Stripe remains separate from Bon sales and stays in P2 for the Release Candidate phase.
+- P1 menu and allergen work must not turn eventBon into inventory, accounting, or restaurant management software.

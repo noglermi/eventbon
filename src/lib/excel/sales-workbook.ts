@@ -19,6 +19,80 @@ const headerFill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF0F17
 const headerFont = { bold: true, color: { argb: "FFFFFFFF" } };
 const titleFont = { bold: true, color: { argb: "FF047857" }, size: 18 };
 
+function workbookLabels(language: Language) {
+  if (language === "de") {
+    return {
+      overviewSheet: "\u00dcbersicht",
+      productSummarySheet: "Produkt\u00fcbersicht",
+      salesSheet: "Verk\u00e4ufe",
+      saleDetailsSheet: "Verkaufsdetails",
+      revenueByHourSheet: "Umsatz pro Stunde",
+      exportTitle: "eventBon Export",
+      eventName: "Veranstaltung",
+      eventDate: "Veranstaltungsdatum",
+      exportDateTime: "Exportdatum / Uhrzeit",
+      totalRevenue: "Gesamtumsatz",
+      numberOfSales: "Anzahl Verk\u00e4ufe",
+      numberOfVouchers: "Anzahl Bons",
+      averageSaleValue: "Durchschnitt pro Verkauf",
+      cashRevenue: "Barumsatz",
+      cardRevenue: "Kartenumsatz",
+      product: "Produkt",
+      quantitySold: "Verkaufte Menge",
+      revenue: "Umsatz",
+      total: "Summe",
+      time: "Zeit",
+      paymentType: "Zahlungsart",
+      received: "Erhalten",
+      change: "R\u00fcckgeld",
+      numberOfProducts: "Anzahl Produkte",
+      helper: "Helfer",
+      station: "Station",
+      saleTime: "Verkaufszeit",
+      quantity: "Menge",
+      unitPrice: "Einzelpreis",
+      lineTotal: "Zeilensumme",
+      hour: "Stunde",
+      sales: "Verk\u00e4ufe",
+    };
+  }
+
+  return {
+    overviewSheet: "Overview",
+    productSummarySheet: "Product Summary",
+    salesSheet: "Sales",
+    saleDetailsSheet: "Sale Details",
+    revenueByHourSheet: "Revenue by Hour",
+    exportTitle: "eventBon Export",
+    eventName: "Event name",
+    eventDate: "Event date",
+    exportDateTime: "Export date/time",
+    totalRevenue: "Total revenue",
+    numberOfSales: "Number of sales",
+    numberOfVouchers: "Number of vouchers",
+    averageSaleValue: "Average sale value",
+    cashRevenue: "Cash revenue",
+    cardRevenue: "Card revenue",
+    product: "Product",
+    quantitySold: "Quantity sold",
+    revenue: "Revenue",
+    total: "Total",
+    time: "Time",
+    paymentType: "Payment type",
+    received: "Received",
+    change: "Change",
+    numberOfProducts: "Number of products",
+    helper: "Helper",
+    station: "Station",
+    saleTime: "Sale time",
+    quantity: "Quantity",
+    unitPrice: "Unit price",
+    lineTotal: "Line total",
+    hour: "Hour",
+    sales: "Sales",
+  };
+}
+
 function centsToEuro(cents: number) {
   return cents / 100;
 }
@@ -129,15 +203,16 @@ export function getSalesWorkbookFilename(eventName: string, exportDate: Date) {
 }
 
 export async function buildSalesWorkbook(input: SalesWorkbookInput) {
+  const labels = workbookLabels(input.language);
   const workbook = new ExcelJS.Workbook();
   workbook.creator = "eventBon";
   workbook.created = input.exportDate;
   workbook.modified = input.exportDate;
   workbook.calcProperties.fullCalcOnLoad = true;
 
-  const overview = workbook.addWorksheet("Overview", { views: [{ state: "frozen", ySplit: 1 }] });
+  const overview = workbook.addWorksheet(labels.overviewSheet, { views: [{ state: "frozen", ySplit: 1 }] });
   overview.mergeCells("A1:B1");
-  overview.getCell("A1").value = "eventBon Export";
+  overview.getCell("A1").value = labels.exportTitle;
   overview.getCell("A1").font = titleFont;
   overview.getCell("A1").alignment = { vertical: "middle" };
   overview.getRow(1).height = 28;
@@ -146,15 +221,15 @@ export async function buildSalesWorkbook(input: SalesWorkbookInput) {
   overview.getColumn(1).font = { bold: true };
   overview.addRows([
     [],
-    ["Event name", input.eventName],
-    ["Event date", formatDateRange(input.eventSettings, input.language)],
-    ["Export date/time", input.exportDate],
-    ["Total revenue", centsToEuro(input.summary.totalRevenueCents)],
-    ["Number of sales", input.summary.saleCount],
-    ["Number of vouchers", input.summary.voucherCount],
-    ["Average sale value", centsToEuro(input.summary.averageSaleCents)],
-    ["Cash revenue", centsToEuro(input.summary.paymentTotals.cashCents)],
-    ["Card revenue", centsToEuro(input.summary.paymentTotals.cardCents)],
+    [labels.eventName, input.eventName],
+    [labels.eventDate, formatDateRange(input.eventSettings, input.language)],
+    [labels.exportDateTime, input.exportDate],
+    [labels.totalRevenue, centsToEuro(input.summary.totalRevenueCents)],
+    [labels.numberOfSales, input.summary.saleCount],
+    [labels.numberOfVouchers, input.summary.voucherCount],
+    [labels.averageSaleValue, centsToEuro(input.summary.averageSaleCents)],
+    [labels.cashRevenue, centsToEuro(input.summary.paymentTotals.cashCents)],
+    [labels.cardRevenue, centsToEuro(input.summary.paymentTotals.cardCents)],
   ]);
   overview.getCell("B4").numFmt = dateTimeFormat;
   ["B5", "B8", "B9", "B10"].forEach((address) => {
@@ -169,15 +244,15 @@ export async function buildSalesWorkbook(input: SalesWorkbookInput) {
     }
   });
 
-  const productSummary = workbook.addWorksheet("Product Summary");
+  const productSummary = workbook.addWorksheet(labels.productSummarySheet);
   const productRows = input.summary.topProducts.map((product) => [
     product.name,
     product.quantity,
     centsToEuro(product.revenueCents),
   ]);
-  addTable(productSummary, "ProductSummary", ["Product", "Quantity sold", "Revenue"], productRows);
+  addTable(productSummary, "ProductSummary", [labels.product, labels.quantitySold, labels.revenue], productRows);
   const productTotalRow = productSummary.addRow([
-    "Total",
+    labels.total,
     input.summary.topProducts.reduce((sum, product) => sum + product.quantity, 0),
     centsToEuro(input.summary.topProducts.reduce((sum, product) => sum + product.revenueCents, 0)),
   ]);
@@ -188,8 +263,8 @@ export async function buildSalesWorkbook(input: SalesWorkbookInput) {
   styleIntegerColumn(productSummary, 2);
   styleCurrencyColumn(productSummary, 3);
 
-  const sales = workbook.addWorksheet("Sales");
-  addTable(sales, "Sales", ["Time", "Payment type", "Total", "Received", "Change", "Number of products", "Helper", "Station"], input.sales.map((sale) => [
+  const sales = workbook.addWorksheet(labels.salesSheet);
+  addTable(sales, "Sales", [labels.time, labels.paymentType, labels.total, labels.received, labels.change, labels.numberOfProducts, labels.helper, labels.station], input.sales.map((sale) => [
     toDate(sale.createdAt),
     paymentLabel(sale.paymentMethod, input.language),
     centsToEuro(sale.totalCents),
@@ -207,8 +282,8 @@ export async function buildSalesWorkbook(input: SalesWorkbookInput) {
   [3, 4, 5].forEach((columnNumber) => styleCurrencyColumn(sales, columnNumber));
   styleIntegerColumn(sales, 6);
 
-  const saleDetails = workbook.addWorksheet("Sale Details");
-  addTable(saleDetails, "SaleDetails", ["Sale Time", "Product", "Quantity", "Unit Price", "Line Total"], input.sales.flatMap((sale) => (
+  const saleDetails = workbook.addWorksheet(labels.saleDetailsSheet);
+  addTable(saleDetails, "SaleDetails", [labels.saleTime, labels.product, labels.quantity, labels.unitPrice, labels.lineTotal], input.sales.flatMap((sale) => (
     sale.items.map((item) => [
       toDate(sale.createdAt),
       item.nameSnapshot,
@@ -234,8 +309,8 @@ export async function buildSalesWorkbook(input: SalesWorkbookInput) {
     }
   }
 
-  const revenueByHour = workbook.addWorksheet("Revenue by Hour");
-  addTable(revenueByHour, "RevenueByHour", ["Hour", "Sales", "Revenue"], hourlySales.map((entry) => [
+  const revenueByHour = workbook.addWorksheet(labels.revenueByHourSheet);
+  addTable(revenueByHour, "RevenueByHour", [labels.hour, labels.sales, labels.revenue], hourlySales.map((entry) => [
     formatHour(entry.hour),
     entry.saleCount,
     centsToEuro(entry.revenueCents),

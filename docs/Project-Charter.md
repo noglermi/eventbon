@@ -151,3 +151,27 @@ Every proposed feature should be checked against the mission:
 - Does it help generate a simple sales summary?
 
 If the answer is no, the feature is outside the product scope.
+
+## Release Candidate Priorities
+
+The Release Candidate phase focuses on beta readiness for real event use.
+
+P0:
+
+- Complete internationalization across organizer, helper, sales terminal, dashboard, and export surfaces.
+- Receipt printer integration.
+- Printer setup wizard.
+
+P1:
+
+- Menu generation.
+- Allergen management.
+- Printable menu PDF.
+
+P2:
+
+- Stripe pay-per-event.
+- Booking activation.
+- Event extension.
+
+The first P0 implementation step is the internationalization audit and cleanup. Printer implementation starts only after the language surface is consistent. Stripe and booking activation remain P2 because event-floor reliability comes before commercial automation.

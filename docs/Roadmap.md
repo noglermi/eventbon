@@ -35,6 +35,34 @@ Booking lifecycle:
 - optional paid extension
 - data archived under the organizer account for a defined retention period
 
+## Release Candidate Roadmap
+
+The Release Candidate phase prioritizes beta readiness over new commercial scope.
+
+P0:
+
+- Complete internationalization across organizer UI, helper UI, sales terminal, dashboard, and exports.
+- Receipt printer integration.
+- Printer setup wizard.
+
+P1:
+
+- Menu generation.
+- Allergen management.
+- Printable menu PDF.
+
+P2:
+
+- Stripe pay-per-event.
+- Booking activation.
+- Event extension.
+
+Implementation order:
+
+- Start P0 with the internationalization audit and cleanup.
+- Do not start receipt printer integration or the printer setup wizard until the i18n pass is complete.
+- Keep Stripe, booking activation, and event extension behind P2 until the operational beta workflow is stable.
+
 ## Phase 1: MVP
 
 Scope:
