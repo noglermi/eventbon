@@ -183,9 +183,13 @@ Suggested fields:
 - payment_status
 - cash_received_amount
 - change_amount
+- print_count
+- printed_at
 - created_at
 
 Helper fields are nullable. Organizer-created sales leave them empty. Helper-created sales store the invitation id and the helper name/station snapshots entered or active at sale time so later helper or invitation changes do not rewrite historic sales.
+
+print_count counts the initial print and every later reprint of the completed sale. printed_at stores the latest print or reprint timestamp. Reprints update only these print tracking fields and must not create new sale or sale item records.
 
 Payment methods:
 

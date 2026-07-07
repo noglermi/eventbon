@@ -131,6 +131,19 @@ Supabase should be treated as the source of truth for sales and voucher records.
 
 Completed sales must be stored atomically. The application calls a Supabase RPC that inserts the sale and all sale_items inside one database transaction. If any sale_item insert fails, the transaction fails and no partial sale remains in the database. The print preview opens only after this transaction succeeds.
 
+Sales are finalized exactly once. The active sales workflow is:
+
+- Sale
+- BONS DRUCKEN
+- atomic save
+- print preview
+- print
+- sale completed
+
+After the initial print action, the current sale cannot be printed again from the active checkout. The only active checkout action is Neuer Verkauf.
+
+Reprints are operational actions on an already completed sale. They are only available from Letzte Verkäufe by opening a sale detail and choosing Bon erneut drucken. A reprint never creates a new sale, never creates sale_items, and never changes analytics totals. It only increments sales.print_count and updates sales.printed_at for the existing sale. If a voucher is printed as a reprint, the voucher displays Nachdruck.
+
 A future offline-capable version may use a local storage layer or local database during the booked license period. That local layer must remain separate from the online source-of-truth model and must reconcile with the hosted model only when offline mode is explicitly designed.
 
 ## Sales History And Analytics
@@ -196,6 +209,8 @@ Menu options:
 - allergens
 
 Output is a PDF designed for direct printing.
+
+The Menu Designer creates the printable/PDF menu directly from current event data. PDF generation does not use Excel, Word, or duplicated product data. The browser print/PDF output uses the current menu title, subtitle, layout, visible categories, product names, product images or icons, descriptions when present, allergen codes, and prices.
 
 ## Vercel
 

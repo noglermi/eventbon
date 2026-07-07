@@ -67,6 +67,8 @@ create table sales (
   payment_method text not null check (payment_method in ('cash', 'card_manual')),
   cash_received_cents integer check (cash_received_cents is null or cash_received_cents >= 0),
   change_cents integer check (change_cents is null or change_cents >= 0),
+  print_count integer not null default 0 check (print_count >= 0),
+  printed_at timestamptz,
   status text not null default 'completed',
   created_at timestamptz not null default now(),
   foreign key (tenant_id, event_id) references events(tenant_id, id) on delete restrict,

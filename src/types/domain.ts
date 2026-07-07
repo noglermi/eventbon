@@ -65,6 +65,8 @@ export type Sale = {
   helperInvitationId: string | null;
   helperNameSnapshot: string | null;
   helperStationSnapshot: string | null;
+  printCount: number;
+  printedAt: string | null;
   status: string;
   createdAt: string;
 };

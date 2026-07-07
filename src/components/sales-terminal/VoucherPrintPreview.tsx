@@ -13,10 +13,13 @@ type VoucherPrintPreviewProps = {
   language: Language;
   labels: Translation;
   cartItems: CartItem[];
+  lines?: VoucherLine[];
   productsById: Map<string, ProductTileData>;
   printMode: PrintMode;
   printedAt: Date;
+  reprintLabel?: string | null;
   onCancel: () => void;
+  onPrinted?: () => void;
 };
 
 function buildLines(cartItems: CartItem[], productsById: Map<string, ProductTileData>, language: Language) {
@@ -30,12 +33,13 @@ function buildLines(cartItems: CartItem[], productsById: Map<string, ProductTile
   });
 }
 
-function Voucher({ eventName, labels, lines, printedAtText }: { eventName: string; labels: Translation; lines: VoucherLine[]; printedAtText: string }) {
+function Voucher({ eventName, labels, lines, printedAtText, reprintLabel }: { eventName: string; labels: Translation; lines: VoucherLine[]; printedAtText: string; reprintLabel?: string | null }) {
   return (
     <article className="voucher-ticket break-inside-avoid bg-white px-4 py-3 font-mono text-slate-950 shadow-sm ring-1 ring-slate-300">
       <div className="text-center">
         <p className="text-base font-black tracking-wide">eventBon</p>
         <p className="mt-1 text-sm font-bold">{eventName}</p>
+        {reprintLabel ? <p className="mt-2 inline-block rounded-full border border-slate-900 px-2 py-1 text-xs font-black uppercase tracking-widest">{reprintLabel}</p> : null}
       </div>
       <div className="my-2 border-t border-dashed border-slate-500" />
       <div className="space-y-1 text-base font-black leading-tight">
@@ -56,8 +60,8 @@ function Voucher({ eventName, labels, lines, printedAtText }: { eventName: strin
   );
 }
 
-export function VoucherPrintPreview({ eventName, language, labels, cartItems, productsById, printMode, printedAt, onCancel }: VoucherPrintPreviewProps) {
-  const lines = buildLines(cartItems, productsById, language);
+export function VoucherPrintPreview({ eventName, language, labels, cartItems, lines: providedLines, productsById, printMode, printedAt, reprintLabel = null, onCancel, onPrinted }: VoucherPrintPreviewProps) {
+  const lines = providedLines ?? buildLines(cartItems, productsById, language);
   const printedAtText = formatDateTime(printedAt, language);
   const vouchers = printMode === "single_vouchers"
     ? lines.flatMap((line) => Array.from({ length: line.quantity }, (_, index) => ({ id: line.id + "-" + index, lines: [{ ...line, quantity: 1 }] })))
@@ -65,10 +69,11 @@ export function VoucherPrintPreview({ eventName, language, labels, cartItems, pr
 
   function printVouchers() {
     window.print();
+    onPrinted?.();
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-8 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="print-preview-title">
+    <div className="fixed inset-0 z-[400] flex items-center justify-center bg-slate-950/60 p-8 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="print-preview-title">
       <div className="flex h-[90vh] w-full max-w-3xl flex-col overflow-hidden rounded-[2rem] bg-white shadow-2xl">
         <div className="print-preview-chrome shrink-0 border-b border-slate-200 px-7 py-5">
           <p className="text-sm font-bold uppercase tracking-widest text-emerald-600">{labels.voucherPrinting}</p>
@@ -79,7 +84,7 @@ export function VoucherPrintPreview({ eventName, language, labels, cartItems, pr
         <div className="print-preview-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain bg-slate-100 p-6">
           <div className="print-area mx-auto grid max-w-[80mm] gap-4">
             {vouchers.map((voucher) => (
-              <Voucher key={voucher.id} eventName={eventName} labels={labels} lines={voucher.lines} printedAtText={printedAtText} />
+              <Voucher key={voucher.id} eventName={eventName} labels={labels} lines={voucher.lines} printedAtText={printedAtText} reprintLabel={reprintLabel} />
             ))}
           </div>
         </div>

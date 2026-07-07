@@ -3,9 +3,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import { listProducts, saveProduct } from "@/lib/repositories/products";
-import { listRecentSales, saveCompletedSale } from "@/lib/repositories/sales";
+import { listRecentSales, recordSalePrint, saveCompletedSale } from "@/lib/repositories/sales";
 import type { RecentSale } from "@/lib/repositories/sales";
-import { updateEventBasics } from "@/lib/repositories/events";
 import { formatDateRange } from "@/lib/date-format";
 import { logSupabaseError } from "@/lib/supabase/diagnostics";
 import { supabaseConfigWarning } from "@/lib/supabase/client";
@@ -15,13 +14,12 @@ import { defaultLanguage, groupLabels, translations } from "./i18n";
 import { initialCart, mockEventSettings, productTiles, tileGroups } from "./mock-data";
 import { PaymentPanel } from "./PaymentPanel";
 import { ProductTile } from "./ProductTile";
-import { PrintModeSetting } from "./PrintModeSetting";
 import { RecentSalesPanel } from "./RecentSalesPanel";
 import { readViewSettings, writeViewSettings } from "./view-settings-storage";
 import { VoucherPrintPreview } from "./VoucherPrintPreview";
 import type { ActiveHelperSession, CartItem, EventSettings, Language, PaymentMethod, ProductTileData, TileGroupName } from "./types";
 import type { ViewSettings } from "./view-settings-storage";
-import type { Event as PersistedEvent, PrintMode } from "@/types/domain";
+import type { Event as PersistedEvent } from "@/types/domain";
 
 type ProductFilter = "all" | TileGroupName;
 type ZoomArea = keyof ViewSettings["blockZoom"];
@@ -165,21 +163,18 @@ type SalesTerminalProps = {
 };
 
 export function SalesTerminal({
-  accessUntil,
   activeHelperSession = null,
   eventId = null,
   initialEventSettings = mockEventSettings,
   isHelperMode = false,
   onBackToEvents,
-  onEventUpdated,
-  status = "preparation",
   tenantId = null,
 }: SalesTerminalProps) {
   const receivedInputRef = useRef<HTMLInputElement>(null);
   const viewPanelRef = useRef<HTMLDivElement | null>(null);
   const [viewSettings, setViewSettings] = useState<ViewSettings>(() => readViewSettings());
   const [isViewPanelOpen, setIsViewPanelOpen] = useState(false);
-  const [eventSettings, setEventSettings] = useState<EventSettings>(initialEventSettings);
+  const [eventSettings] = useState<EventSettings>(initialEventSettings);
   const [products, setProducts] = useState<ProductTileData[]>(productTiles);
   const [cartItems, setCartItems] = useState<CartItem[]>(initialCart);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cash");
@@ -191,11 +186,14 @@ export function SalesTerminal({
   const [persistenceDetails, setPersistenceDetails] = useState<string | null>(null);
   const [tileEditor, setTileEditor] = useState<{ tile: ProductTileData | null; group: TileGroupName } | null>(null);
   const [printPreviewDate, setPrintPreviewDate] = useState<Date | null>(null);
+  const [completedSale, setCompletedSale] = useState<{ saleId: string | null; printRecorded: boolean } | null>(null);
+  const [reprintSale, setReprintSale] = useState<RecentSale | null>(null);
+  const [reprintPreviewDate, setReprintPreviewDate] = useState<Date | null>(null);
   const { blockZoom, language, visibleCategories } = viewSettings;
   const labels = getLabels(language);
   const eventName = eventSettings.name[language];
   const isHelperTerminal = isHelperMode || Boolean(activeHelperSession);
-  const isPrintDisabled = cartItems.length === 0 || isSavingSale;
+  const isPrintDisabled = cartItems.length === 0 || isSavingSale || completedSale !== null;
 
   useEffect(() => {
     receivedInputRef.current?.focus();
@@ -358,6 +356,10 @@ export function SalesTerminal({
     setCartItems([]);
     setPaymentMethod("cash");
     setReceivedEntry("");
+    setCompletedSale(null);
+    setPrintPreviewDate(null);
+    setReprintSale(null);
+    setReprintPreviewDate(null);
     requestAnimationFrame(() => receivedInputRef.current?.focus());
   }
 
@@ -404,7 +406,7 @@ export function SalesTerminal({
       const persistedChangeCents = paymentMethod === "card_manual" ? 0 : Math.max(receivedCents - totalCents, 0);
 
       try {
-        await saveCompletedSale({
+        const saleId = await saveCompletedSale({
           cartItems,
           changeCents: persistedChangeCents,
           eventId,
@@ -416,6 +418,7 @@ export function SalesTerminal({
           tenantId,
           totalCents,
         });
+        setCompletedSale({ saleId, printRecorded: false });
       } catch (error) {
         const diagnostic = logSupabaseError("save completed sale", error);
         setPersistenceMessage(labels.saleSaveError);
@@ -436,7 +439,74 @@ export function SalesTerminal({
       setIsSavingSale(false);
     }
 
+    if (!eventId || !tenantId || supabaseConfigWarning) {
+      setCompletedSale({ saleId: null, printRecorded: false });
+    }
+
     setPrintPreviewDate(new Date());
+  }
+
+  async function reloadRecentSales() {
+    if (!eventId || !tenantId || supabaseConfigWarning) {
+      return;
+    }
+
+    const loadedSales = await listRecentSales({ eventId, tenantId, limit: 10 });
+    setRecentSales(loadedSales);
+  }
+
+  async function handleInitialPrintRecorded() {
+    if (!completedSale || completedSale.printRecorded) {
+      setPrintPreviewDate(null);
+      return;
+    }
+
+    if (!completedSale.saleId || !tenantId || supabaseConfigWarning) {
+      setCompletedSale({ saleId: completedSale.saleId, printRecorded: true });
+      setPrintPreviewDate(null);
+      return;
+    }
+
+    try {
+      await recordSalePrint({ saleId: completedSale.saleId, tenantId });
+      await reloadRecentSales();
+      setCompletedSale({ saleId: completedSale.saleId, printRecorded: true });
+      setPersistenceMessage(null);
+      setPersistenceDetails(null);
+    } catch (error) {
+      const diagnostic = logSupabaseError("record initial sale print", error);
+      setPersistenceMessage(labels.printTrackingError);
+      setPersistenceDetails(diagnostic);
+    } finally {
+      setPrintPreviewDate(null);
+    }
+  }
+
+  async function handleReprintRecorded() {
+    if (!reprintSale || !tenantId || supabaseConfigWarning) {
+      setReprintSale(null);
+      setReprintPreviewDate(null);
+      return;
+    }
+
+    try {
+      await recordSalePrint({ saleId: reprintSale.id, tenantId });
+      await reloadRecentSales();
+      setPersistenceMessage(null);
+      setPersistenceDetails(null);
+    } catch (error) {
+      const diagnostic = logSupabaseError("record sale reprint", error);
+      setPersistenceMessage(labels.printTrackingError);
+      setPersistenceDetails(diagnostic);
+    } finally {
+      setReprintSale(null);
+      setReprintPreviewDate(null);
+    }
+  }
+
+  function openReprintPreview(sale: RecentSale) {
+    setReprintSale(sale);
+    setReprintPreviewDate(new Date());
   }
 
   async function saveTile(tile: ProductTileData) {
@@ -469,35 +539,6 @@ export function SalesTerminal({
     });
     setTileEditor(null);
     return { ok: true };
-  }
-
-  async function updatePrintMode(printMode: PrintMode) {
-    const nextSettings = { ...eventSettings, printMode };
-    setEventSettings(nextSettings);
-
-    if (!eventId || !tenantId || !accessUntil || supabaseConfigWarning) {
-      return;
-    }
-
-    try {
-      const updatedEvent = await updateEventBasics({
-        id: eventId,
-        tenantId,
-        name: nextSettings.name.de,
-        startsAt: nextSettings.dateFrom,
-        endsAt: nextSettings.dateTo,
-        accessUntil,
-        printMode,
-        status,
-      });
-      onEventUpdated?.(updatedEvent);
-      setPersistenceMessage(null);
-      setPersistenceDetails(null);
-    } catch (error) {
-      const diagnostic = logSupabaseError("update event basics", error);
-      setPersistenceMessage(labels.saveError + " " + labels.supabaseDiagnosticPrefix + ": " + diagnostic);
-      setPersistenceDetails(null);
-    }
   }
 
   return (
@@ -692,8 +733,7 @@ export function SalesTerminal({
         <div className="min-h-0 overflow-y-auto overflow-x-hidden rounded-[2.25rem]">
           <ScaledBlock zoom={blockZoom.payment} className="flex min-h-0 flex-col gap-5">
             <PaymentPanel labels={labels} language={language} paymentMethod={paymentMethod} totalCents={totalCents} receivedCents={receivedCents} receivedEntry={receivedEntry} receivedInputRef={receivedInputRef} onPaymentMethodChange={setPaymentMethod} onReceivedEntryChange={setReceivedEntry} />
-            {isHelperTerminal ? null : <PrintModeSetting labels={labels} printMode={eventSettings.printMode} onPrintModeChange={updatePrintMode} />}
-            <RecentSalesPanel labels={labels} language={language} recentSales={recentSales} />
+            <RecentSalesPanel labels={labels} language={language} recentSales={recentSales} onReprintSale={openReprintPreview} />
           </ScaledBlock>
         </div>
       </div>
@@ -705,7 +745,7 @@ export function SalesTerminal({
         </button>
         <button type="button" onClick={openPrintPreview} disabled={isPrintDisabled} className="flex min-h-20 items-center justify-center gap-4 rounded-[1.75rem] bg-emerald-600 px-8 text-2xl font-black tracking-normal text-white shadow-[0_18px_35px_rgba(5,150,105,0.28)] transition focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200 active:scale-[0.99] disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 disabled:shadow-none">
           <PrinterIcon />
-          {isSavingSale ? labels.saving : labels.printVouchers}
+          {isSavingSale ? labels.saving : completedSale ? labels.saleCompleted : labels.printVouchers}
         </button>
       </footer>
 
@@ -719,6 +759,26 @@ export function SalesTerminal({
           printMode={eventSettings.printMode}
           printedAt={printPreviewDate}
           onCancel={() => setPrintPreviewDate(null)}
+          onPrinted={handleInitialPrintRecorded}
+        />
+      ) : null}
+
+      {reprintSale && reprintPreviewDate ? (
+        <VoucherPrintPreview
+          eventName={eventName}
+          language={language}
+          labels={labels}
+          cartItems={[]}
+          lines={reprintSale.items.map((item) => ({ id: item.id, name: item.nameSnapshot, quantity: item.quantity }))}
+          productsById={productsById}
+          printMode={eventSettings.printMode}
+          printedAt={reprintPreviewDate}
+          reprintLabel={labels.reprint}
+          onCancel={() => {
+            setReprintSale(null);
+            setReprintPreviewDate(null);
+          }}
+          onPrinted={handleReprintRecorded}
         />
       ) : null}
 

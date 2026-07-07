@@ -12,6 +12,8 @@ type RecentSaleRow = {
   helper_invitation_id: string | null;
   helper_name_snapshot: string | null;
   helper_station_snapshot: string | null;
+  print_count: number | null;
+  printed_at: string | null;
   created_at: string;
 };
 
@@ -78,6 +80,8 @@ export type RecentSale = {
   helperInvitationId: string | null;
   helperNameSnapshot: string | null;
   helperStationSnapshot: string | null;
+  printCount: number;
+  printedAt: string | null;
   createdAt: string;
   itemCount: number;
   items: RecentSaleItem[];
@@ -174,6 +178,8 @@ function mapRecentSale(row: RecentSaleRow, items: RecentSaleItemRow[]): RecentSa
     helperInvitationId: row.helper_invitation_id,
     helperNameSnapshot: row.helper_name_snapshot,
     helperStationSnapshot: row.helper_station_snapshot,
+    printCount: row.print_count ?? 0,
+    printedAt: row.printed_at,
     createdAt: row.created_at,
     itemCount: mappedItems.reduce((sum, item) => sum + item.quantity, 0),
     items: mappedItems,
@@ -186,7 +192,7 @@ export async function listRecentSales(input: { eventId: string; tenantId: string
 
   const { data: saleRows, error: salesError } = await client
     .from("sales")
-    .select("id, tenant_id, event_id, total_cents, payment_method, cash_received_cents, change_cents, helper_invitation_id, helper_name_snapshot, helper_station_snapshot, created_at")
+    .select("id, tenant_id, event_id, total_cents, payment_method, cash_received_cents, change_cents, helper_invitation_id, helper_name_snapshot, helper_station_snapshot, print_count, printed_at, created_at")
     .eq("tenant_id", input.tenantId)
     .eq("event_id", input.eventId)
     .order("created_at", { ascending: false })
@@ -502,4 +508,29 @@ export async function saveCompletedSale(input: SaveCompletedSaleInput) {
   });
 
   return saleId as string;
+}
+
+export async function recordSalePrint(input: { saleId: string; tenantId: string }) {
+  const client = requireSupabase();
+
+  const { data, error } = await client.rpc("increment_sale_print_count", {
+    p_sale_id: input.saleId,
+    p_tenant_id: input.tenantId,
+  });
+
+  if (error) {
+    console.error("Sale print tracking failed", {
+      error,
+      saleId: input.saleId,
+      tenantId: input.tenantId,
+    });
+    throw error;
+  }
+
+  const result = Array.isArray(data) ? data[0] : data;
+
+  return {
+    printCount: Number(result?.print_count ?? 0),
+    printedAt: result?.printed_at ? String(result.printed_at) : null,
+  };
 }

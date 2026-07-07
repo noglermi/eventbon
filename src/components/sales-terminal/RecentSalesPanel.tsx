@@ -8,6 +8,7 @@ type RecentSalesPanelProps = {
   labels: Translation;
   language: Language;
   recentSales: RecentSale[];
+  onReprintSale?: (sale: RecentSale) => void;
 };
 
 const currency = new Intl.NumberFormat("de-AT", { style: "currency", currency: "EUR" });
@@ -34,7 +35,7 @@ function getPaymentLabel(sale: RecentSale, labels: Translation) {
   return sale.paymentMethod === "card_manual" ? labels.card : labels.cash;
 }
 
-export function RecentSalesPanel({ labels, language, recentSales }: RecentSalesPanelProps) {
+export function RecentSalesPanel({ labels, language, recentSales, onReprintSale }: RecentSalesPanelProps) {
   const [selectedSale, setSelectedSale] = useState<RecentSale | null>(null);
 
   return (
@@ -137,7 +138,36 @@ export function RecentSalesPanel({ labels, language, recentSales }: RecentSalesP
                   <dt>{labels.createdAt}</dt>
                   <dd className="text-right text-slate-950">{formatDateTime(selectedSale.createdAt, language)}</dd>
                 </div>
+                {selectedSale.printedAt ? (
+                  <div className="flex justify-between gap-4">
+                    <dt>{labels.printedAt}</dt>
+                    <dd className="text-right text-slate-950">{formatDateTime(selectedSale.printedAt, language)}</dd>
+                  </div>
+                ) : null}
+                <div className="flex justify-between gap-4">
+                  <dt>{labels.printCount}</dt>
+                  <dd className="text-right text-slate-950">{selectedSale.printCount}</dd>
+                </div>
               </dl>
+            </div>
+
+            <div className="z-10 shrink-0 flex justify-end gap-3 border-t border-slate-100 bg-white/95 px-6 py-5 shadow-[0_-10px_30px_rgba(15,23,42,0.08)] backdrop-blur">
+              <button
+                type="button"
+                onClick={() => setSelectedSale(null)}
+                className="min-h-12 rounded-2xl bg-slate-100 px-5 text-lg font-black text-slate-700 transition active:scale-[0.98] focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200"
+              >
+                {labels.cancel}
+              </button>
+              {onReprintSale ? (
+                <button
+                  type="button"
+                  onClick={() => onReprintSale(selectedSale)}
+                  className="min-h-12 rounded-2xl bg-emerald-600 px-6 text-lg font-black text-white shadow-lg shadow-emerald-600/20 transition active:scale-[0.98] focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200"
+                >
+                  {labels.reprintVoucher}
+                </button>
+              ) : null}
             </div>
           </div>
         </div>

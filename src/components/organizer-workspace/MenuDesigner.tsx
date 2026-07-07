@@ -44,6 +44,227 @@ function productGroups(products: ProductTileData[]) {
   }, {} as Record<TileGroupName, ProductTileData[]>);
 }
 
+function escapeHtml(value: string) {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+function buildPrintableMenuHtml(input: {
+  groupedProducts: Record<TileGroupName, ProductTileData[]>;
+  language: Language;
+  layout: MenuLayout;
+  menuTitle: string;
+  showImages: boolean;
+  showPrices: boolean;
+  subtitle: string;
+  visibleGroups: TileGroupName[];
+}) {
+  const isLandscape = input.layout === "a4_landscape";
+  const pageSize = isLandscape ? "A4 landscape" : "A4 portrait";
+  const maxWidth = isLandscape ? "1040px" : "760px";
+
+  const categoryHtml = input.visibleGroups.map((group) => {
+    const productsHtml = input.groupedProducts[group].map((product) => {
+      const imageCrop = product.imageCrop ?? defaultImageCrop;
+      const allergenText = formatAllergenCodes(product.allergens);
+      const productWithDescription = product as ProductTileData & { description?: Partial<Record<Language, string>> };
+      const description = productWithDescription.description?.[input.language] ?? "";
+      const mediaHtml = input.showImages
+        ? product.image
+          ? `<span class="menu-media"><img src="${escapeHtml(product.image)}" alt="" style="object-position:${imageCrop.x}% ${imageCrop.y}%; transform:scale(${imageCrop.zoom}); transform-origin:${imageCrop.x}% ${imageCrop.y}%;" /></span>`
+          : `<span class="menu-media menu-icon">${escapeHtml(product.icon ?? "")}</span>`
+        : "";
+
+      return `
+        <div class="menu-product">
+          ${mediaHtml}
+          <div class="menu-product-copy">
+            <div class="menu-product-main">
+              <span class="menu-product-name">${escapeHtml(product.name[input.language])}</span>
+              ${input.showPrices ? `<span class="menu-product-price">${currency.format(product.price)}</span>` : ""}
+            </div>
+            ${description ? `<p class="menu-product-description">${escapeHtml(description)}</p>` : ""}
+            ${allergenText ? `<p class="menu-allergens">${escapeHtml(allergenText)}</p>` : ""}
+          </div>
+        </div>
+      `;
+    }).join("");
+
+    return `
+      <section class="menu-category">
+        <h2>${escapeHtml(groupLabels[group][input.language])}</h2>
+        <div class="menu-products">${productsHtml}</div>
+      </section>
+    `;
+  }).join("");
+
+  return `<!doctype html>
+<html lang="${input.language}">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>${escapeHtml(input.menuTitle || "eventBon Menu")}</title>
+  <style>
+    @page { size: ${pageSize}; margin: 16mm; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: #f6f7f5;
+      color: #0f172a;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+    .page {
+      width: min(100%, ${maxWidth});
+      margin: 0 auto;
+      min-height: 100vh;
+      background: white;
+      padding: 40px;
+    }
+    .menu-header {
+      border-bottom: 2px solid #dfe5e1;
+      padding-bottom: 28px;
+      text-align: center;
+    }
+    .logo {
+      color: #059669;
+      font-size: 15px;
+      font-weight: 900;
+      letter-spacing: .22em;
+      text-transform: uppercase;
+    }
+    h1 {
+      margin: 16px 0 0;
+      font-size: 44px;
+      line-height: 1.05;
+      letter-spacing: 0;
+    }
+    .subtitle {
+      margin: 10px 0 0;
+      color: #64748b;
+      font-size: 18px;
+      font-weight: 700;
+    }
+    .menu-content {
+      display: grid;
+      gap: 30px;
+      margin-top: 32px;
+    }
+    .menu-category {
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+    .menu-category h2 {
+      margin: 0 0 14px;
+      border-bottom: 1px solid #dfe5e1;
+      padding-bottom: 8px;
+      font-size: 25px;
+      line-height: 1.15;
+    }
+    .menu-products {
+      display: grid;
+      gap: 10px;
+    }
+    .menu-product {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      gap: 14px;
+      align-items: center;
+      padding: 12px;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      background: #f8fafc;
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+    .menu-product-copy {
+      min-width: 0;
+    }
+    .menu-product-main {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 18px;
+      align-items: baseline;
+    }
+    .menu-product-name {
+      font-size: 18px;
+      font-weight: 900;
+      line-height: 1.2;
+    }
+    .menu-product-price {
+      font-size: 18px;
+      font-weight: 900;
+      white-space: nowrap;
+      font-variant-numeric: tabular-nums;
+    }
+    .menu-product-description {
+      margin: 5px 0 0;
+      color: #475569;
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 1.35;
+    }
+    .menu-allergens {
+      margin: 5px 0 0;
+      color: #64748b;
+      font-size: 13px;
+      font-weight: 900;
+      letter-spacing: .04em;
+    }
+    .menu-media {
+      display: flex;
+      width: 58px;
+      height: 58px;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      background: white;
+      font-size: 30px;
+      font-weight: 900;
+    }
+    .menu-media img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    @media print {
+      body { background: white; }
+      .page {
+        width: 100%;
+        min-height: 0;
+        margin: 0;
+        padding: 0;
+        box-shadow: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="menu-header">
+      <div class="logo">eventBon</div>
+      <h1>${escapeHtml(input.menuTitle)}</h1>
+      ${input.subtitle ? `<p class="subtitle">${escapeHtml(input.subtitle)}</p>` : ""}
+    </header>
+    <div class="menu-content">
+      ${categoryHtml}
+    </div>
+  </main>
+  <script>
+    window.addEventListener("load", () => {
+      window.focus();
+      window.print();
+    });
+  </script>
+</body>
+</html>`;
+}
+
 export function MenuDesigner({ eventId, eventSettings, language, onBackToEvents, onLanguageChange }: MenuDesignerProps) {
   const labels = translations[language];
   const [menuTitle, setMenuTitle] = useState(eventSettings.name[language]);
@@ -64,6 +285,29 @@ export function MenuDesigner({ eventId, eventSettings, language, onBackToEvents,
   const groupedProducts = useMemo(() => productGroups(products), [products]);
   const visibleGroups = tileGroups.filter((group) => visibleCategories[group] && groupedProducts[group].length > 0);
   const previewIsLandscape = layout === "a4_landscape";
+
+  function openPrintableMenu() {
+    const printWindow = window.open("", "_blank", "width=920,height=900");
+
+    if (!printWindow) {
+      setLoadError(labels.saveError);
+      setLoadErrorDetails("The browser blocked the menu print window.");
+      return;
+    }
+
+    printWindow.document.open();
+    printWindow.document.write(buildPrintableMenuHtml({
+      groupedProducts,
+      language,
+      layout,
+      menuTitle: menuTitle || eventSettings.name[language],
+      showImages,
+      showPrices,
+      subtitle,
+      visibleGroups,
+    }));
+    printWindow.document.close();
+  }
 
   useEffect(() => {
     let isActive = true;
@@ -213,6 +457,22 @@ export function MenuDesigner({ eventId, eventSettings, language, onBackToEvents,
               <span className="rounded-lg bg-slate-50 px-3 py-2 text-sm font-black text-slate-600 ring-1 ring-slate-200">
                 {previewIsLandscape ? labels.menuA4Landscape : labels.menuA4Portrait}
               </span>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={openPrintableMenu}
+                  className="min-h-12 rounded-lg bg-emerald-600 px-5 text-base font-black text-white shadow-sm shadow-emerald-600/20 transition active:scale-[0.98] focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200"
+                >
+                  {labels.generatePdf}
+                </button>
+                <button
+                  type="button"
+                  onClick={openPrintableMenu}
+                  className="min-h-12 rounded-lg bg-slate-100 px-5 text-base font-black text-slate-700 ring-1 ring-slate-200 transition active:scale-[0.98] focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200"
+                >
+                  {labels.printMenu}
+                </button>
+              </div>
             </div>
 
             <div className="mt-5 overflow-x-auto rounded-lg bg-slate-100 p-4">
