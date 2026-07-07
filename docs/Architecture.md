@@ -131,6 +131,16 @@ Supabase should be treated as the source of truth for sales and voucher records.
 
 Completed sales must be stored atomically. The application calls a Supabase RPC that inserts the sale and all sale_items inside one database transaction. If any sale_item insert fails, the transaction fails and no partial sale remains in the database. The print preview opens only after this transaction succeeds.
 
+Database and frontend code must treat Supabase tables and PostgreSQL RPC functions as explicit contracts. Whenever a database table, SQL migration, RPC function, repository method, or frontend payload changes, the SQL signature and frontend call signature must be verified together.
+
+Database Contract Checklist:
+
+- Frontend payload keys must exactly match SQL function parameters for every RPC-related change.
+- If an RPC parameter is added, removed, renamed, or reordered, the SQL migration and repository call must be updated in the same change.
+- If a frontend-used table column is added, inserts, reads, dashboards, exports, and RPC functions must be checked for support.
+- The corresponding Supabase migration must be executed before testing the frontend behavior.
+- RPC signature mismatches must surface as errors; no silent fallback is allowed.
+
 Sales are finalized exactly once. The active sales workflow is:
 
 - Sale

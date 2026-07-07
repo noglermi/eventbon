@@ -64,6 +64,13 @@ Implementation order:
 - Treat the menu as a native organizer module, not as an export.
 - Keep Stripe, booking activation, and event extension behind P2 until the operational beta workflow is stable.
 
+Release Candidate quality gate:
+
+- Database/API contract synchronization is mandatory for every table, migration, RPC, repository, and frontend payload change.
+- RPC changes must verify `frontend payload keys == SQL function parameters`.
+- Frontend validation for database-backed changes must happen only after the matching Supabase migration has been executed.
+- RPC signature mismatches must show a real error and must not fall back silently.
+
 ## Menu Designer Roadmap
 
 The menu is a first-class organizer feature.
