@@ -140,7 +140,9 @@ Sales are finalized exactly once. The active sales workflow is:
 - print
 - sale completed
 
-After the initial print action, the current sale cannot be printed again from the active checkout. The only active checkout action is Neuer Verkauf.
+After the initial print action, the checkout automatically returns to an empty ready state for the next customer. The previous cart, received amount, change, payment input, and current sale state are cleared. The active checkout cannot print that completed sale again.
+
+The footer action Verkauf abbrechen is only for unfinished sales. It is active only while the cart contains products before completion and asks for confirmation before clearing the current cart and payment input.
 
 Reprints are operational actions on an already completed sale. They are only available from Letzte Verkäufe by opening a sale detail and choosing Bon erneut drucken. A reprint never creates a new sale, never creates sale_items, and never changes analytics totals. It only increments sales.print_count and updates sales.printed_at for the existing sale. If a voucher is printed as a reprint, the voucher displays Nachdruck.
 

@@ -162,7 +162,10 @@ export function RecentSalesPanel({ labels, language, recentSales, onReprintSale 
               {onReprintSale ? (
                 <button
                   type="button"
-                  onClick={() => onReprintSale(selectedSale)}
+                  onClick={() => {
+                    onReprintSale(selectedSale);
+                    setSelectedSale(null);
+                  }}
                   className="min-h-12 rounded-2xl bg-emerald-600 px-6 text-lg font-black text-white shadow-lg shadow-emerald-600/20 transition active:scale-[0.98] focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200"
                 >
                   {labels.reprintVoucher}

@@ -194,6 +194,7 @@ export function SalesTerminal({
   const eventName = eventSettings.name[language];
   const isHelperTerminal = isHelperMode || Boolean(activeHelperSession);
   const isPrintDisabled = cartItems.length === 0 || isSavingSale || completedSale !== null;
+  const isCancelSaleDisabled = cartItems.length === 0 || isSavingSale || completedSale !== null;
 
   useEffect(() => {
     receivedInputRef.current?.focus();
@@ -352,7 +353,30 @@ export function SalesTerminal({
     setCartItems((current) => current.filter((item) => item.productId !== productId));
   }
 
-  function clearSale() {
+  function resetSaleInputs() {
+    setCartItems([]);
+    setPaymentMethod("cash");
+    setReceivedEntry("");
+    setCompletedSale(null);
+    setPrintPreviewDate(null);
+    requestAnimationFrame(() => receivedInputRef.current?.focus());
+  }
+
+  function resetActiveSale() {
+    resetSaleInputs();
+    setPersistenceMessage(null);
+    setPersistenceDetails(null);
+  }
+
+  function cancelSale() {
+    if (isCancelSaleDisabled) {
+      return;
+    }
+
+    if (!window.confirm(labels.cancelSaleConfirmation)) {
+      return;
+    }
+
     setCartItems([]);
     setPaymentMethod("cash");
     setReceivedEntry("");
@@ -387,7 +411,7 @@ export function SalesTerminal({
   }
 
   async function openPrintPreview() {
-    if (cartItems.length === 0 || isSavingSale) {
+    if (cartItems.length === 0 || isSavingSale || completedSale) {
       return;
     }
 
@@ -457,28 +481,26 @@ export function SalesTerminal({
 
   async function handleInitialPrintRecorded() {
     if (!completedSale || completedSale.printRecorded) {
-      setPrintPreviewDate(null);
+      resetActiveSale();
       return;
     }
 
     if (!completedSale.saleId || !tenantId || supabaseConfigWarning) {
-      setCompletedSale({ saleId: completedSale.saleId, printRecorded: true });
-      setPrintPreviewDate(null);
+      resetActiveSale();
       return;
     }
 
     try {
       await recordSalePrint({ saleId: completedSale.saleId, tenantId });
       await reloadRecentSales();
-      setCompletedSale({ saleId: completedSale.saleId, printRecorded: true });
+      resetActiveSale();
       setPersistenceMessage(null);
       setPersistenceDetails(null);
     } catch (error) {
       const diagnostic = logSupabaseError("record initial sale print", error);
       setPersistenceMessage(labels.printTrackingError);
       setPersistenceDetails(diagnostic);
-    } finally {
-      setPrintPreviewDate(null);
+      resetSaleInputs();
     }
   }
 
@@ -739,9 +761,9 @@ export function SalesTerminal({
       </div>
 
       <footer className="grid grid-cols-[minmax(260px,0.78fr)_minmax(0,1.62fr)] gap-5 border-t border-slate-200/70 bg-white/95 px-7 py-4 shadow-[0_-18px_45px_rgba(15,23,42,0.10)] backdrop-blur">
-        <button type="button" onClick={clearSale} className="flex min-h-20 items-center justify-center gap-3 rounded-[1.75rem] bg-rose-50/90 px-6 text-xl font-black text-rose-700 ring-1 ring-rose-100 transition active:scale-[0.99] focus:outline-none focus-visible:ring-4 focus-visible:ring-rose-200">
+        <button type="button" onClick={cancelSale} disabled={isCancelSaleDisabled} className="flex min-h-20 items-center justify-center gap-3 rounded-[1.75rem] bg-rose-50/90 px-6 text-xl font-black text-rose-700 ring-1 ring-rose-100 transition active:scale-[0.99] focus:outline-none focus-visible:ring-4 focus-visible:ring-rose-200 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400 disabled:ring-slate-200">
           <TrashIcon />
-          {labels.clearSale}
+          {labels.cancelSale}
         </button>
         <button type="button" onClick={openPrintPreview} disabled={isPrintDisabled} className="flex min-h-20 items-center justify-center gap-4 rounded-[1.75rem] bg-emerald-600 px-8 text-2xl font-black tracking-normal text-white shadow-[0_18px_35px_rgba(5,150,105,0.28)] transition focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200 active:scale-[0.99] disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 disabled:shadow-none">
           <PrinterIcon />
@@ -758,7 +780,7 @@ export function SalesTerminal({
           productsById={productsById}
           printMode={eventSettings.printMode}
           printedAt={printPreviewDate}
-          onCancel={() => setPrintPreviewDate(null)}
+          onCancel={resetActiveSale}
           onPrinted={handleInitialPrintRecorded}
         />
       ) : null}
@@ -773,7 +795,7 @@ export function SalesTerminal({
           productsById={productsById}
           printMode={eventSettings.printMode}
           printedAt={reprintPreviewDate}
-          reprintLabel={labels.reprint}
+          reprintLabel={reprintSale.printCount + 1 > 1 ? labels.reprint : null}
           onCancel={() => {
             setReprintSale(null);
             setReprintPreviewDate(null);
