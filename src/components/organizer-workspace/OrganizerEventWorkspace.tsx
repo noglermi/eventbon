@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import { createEvent, listEvents } from "@/lib/repositories/events";
 import { getOrganizerForAuthenticatedUser, mockOrganizer } from "@/lib/repositories/organizers";
 import { formatDate, formatDateRange } from "@/lib/date-format";
+import { getEventLifecycle, type EventLifecycle } from "@/lib/event-lifecycle";
 import { getSupabaseErrorCategory, logSupabaseError } from "@/lib/supabase/diagnostics";
 import { supabase, supabaseConfigIssue, supabaseConfigWarning } from "@/lib/supabase/client";
 import { SalesTerminal } from "@/components/sales-terminal/SalesTerminal";
@@ -34,6 +35,18 @@ type BookedEvent = {
 
 function toDateInput(value: string) {
   return value.slice(0, 10);
+}
+
+function getLifecycleBadgeClass(lifecycle: EventLifecycle) {
+  if (lifecycle === "active") {
+    return "bg-emerald-50 text-emerald-800 ring-emerald-100";
+  }
+
+  if (lifecycle === "completed") {
+    return "bg-slate-100 text-slate-700 ring-slate-200";
+  }
+
+  return "bg-amber-50 text-amber-900 ring-amber-100";
 }
 
 function mapPersistedEvent(event: PersistedEvent): BookedEvent {
@@ -195,15 +208,30 @@ export function OrganizerEventWorkspace() {
   const [eventError, setEventError] = useState<string | null>(null);
   const isNewEventDateInvalid = Boolean(newEventDateFrom && newEventDateTo && newEventDateTo < newEventDateFrom);
 
-  const statusLabels: Record<BookedEventStatus, string> = {
-    draft: labels.statusPreparation,
-    preparation: labels.statusPreparation,
-    active: labels.statusActive,
-    stats_available: labels.statusStatsAvailable,
-    post_event_read_only: labels.statusStatsAvailable,
-    expired: labels.statusExpired,
-    archived: labels.statusExpired,
+  const lifecycleLabels: Record<EventLifecycle, string> = {
+    upcoming: labels.statusUpcoming,
+    active: labels.statusActiveToday,
+    completed: labels.statusCompleted,
   };
+
+  const eventsWithLifecycle = events.map((event) => ({
+    event,
+    lifecycle: getEventLifecycle(event.settings),
+  }));
+  const openEvents = eventsWithLifecycle.filter((entry) => entry.lifecycle !== "completed");
+  const completedEvents = eventsWithLifecycle.filter((entry) => entry.lifecycle === "completed");
+
+  function getSalesUnavailableMessage(lifecycle: EventLifecycle) {
+    if (lifecycle === "completed") {
+      return labels.salesPeriodCompleted;
+    }
+
+    if (lifecycle === "upcoming") {
+      return labels.salesPeriodNotStarted;
+    }
+
+    return null;
+  }
 
   useEffect(() => {
     if (!supabase) {
@@ -587,6 +615,7 @@ export function OrganizerEventWorkspace() {
   }
 
   if (selectedEvent) {
+    const lifecycle = getEventLifecycle(selectedEvent.settings);
     return (
       <SalesTerminal
         eventId={selectedEvent.isPersisted ? selectedEvent.id : null}
@@ -594,6 +623,8 @@ export function OrganizerEventWorkspace() {
         accessUntil={selectedEvent.accessUntil}
         status={selectedEvent.status}
         initialEventSettings={selectedEvent.settings}
+        salesAllowed={lifecycle === "active"}
+        salesUnavailableMessage={getSalesUnavailableMessage(lifecycle)}
         onBackToEvents={() => setSelectedEvent(null)}
         onEventUpdated={(updatedEvent) => {
           const bookedEvent = mapPersistedEvent(updatedEvent);
@@ -678,63 +709,75 @@ export function OrganizerEventWorkspace() {
           <p className="rounded-lg bg-white px-4 py-6 text-lg font-black text-slate-600 ring-1 ring-slate-200">{labels.noEventsYet}</p>
         ) : null}
 
-        <section className="grid gap-4 md:grid-cols-2" aria-label={labels.myEvents}>
-          {events.map((bookedEvent) => (
-            <article key={bookedEvent.id} className="grid gap-5 rounded-lg bg-white p-5 shadow-sm ring-1 ring-slate-200">
-              <div>
-                <div className="flex items-start justify-between gap-3">
-                  <h2 className="text-2xl font-black tracking-tight">{bookedEvent.settings.name[language]}</h2>
-                  <span className="rounded-lg bg-emerald-50 px-3 py-2 text-sm font-black text-emerald-800 ring-1 ring-emerald-100">
-                    {statusLabels[bookedEvent.status]}
-                  </span>
-                </div>
-                <p className="mt-2 text-base font-bold text-slate-600">{formatDateRange(bookedEvent.settings, language)}</p>
-              </div>
+        {([
+          [labels.openEvents, openEvents],
+          [labels.completedEvents, completedEvents],
+        ] as Array<[string, typeof eventsWithLifecycle]>).map(([sectionTitle, sectionEvents]) => sectionEvents.length > 0 ? (
+          <section key={sectionTitle} className="grid gap-4" aria-label={sectionTitle}>
+            <h2 className="text-2xl font-black tracking-tight text-slate-900">{sectionTitle}</h2>
+            <div className="grid gap-4 md:grid-cols-2">
+              {sectionEvents.map(({ event: bookedEvent, lifecycle }) => (
+                <article key={bookedEvent.id} className="grid gap-4 rounded-lg bg-white p-5 shadow-sm ring-1 ring-slate-200">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <h3 className="text-2xl font-black tracking-tight">{bookedEvent.settings.name[language]}</h3>
+                      <p className="mt-2 text-base font-bold text-slate-600">{formatDateRange(bookedEvent.settings, language)}</p>
+                    </div>
+                    <span className={"shrink-0 rounded-full px-3 py-1.5 text-xs font-black uppercase tracking-widest ring-1 " + getLifecycleBadgeClass(lifecycle)}>
+                      {lifecycleLabels[lifecycle]}
+                    </span>
+                  </div>
 
-              <dl className="grid grid-cols-2 gap-3 text-sm">
-                <div className="rounded-lg bg-slate-50 p-3">
-                  <dt className="font-bold uppercase tracking-widest text-slate-500">{labels.eventStatus}</dt>
-                  <dd className="mt-1 text-lg font-black text-slate-900">{statusLabels[bookedEvent.status]}</dd>
-                </div>
-                <div className="rounded-lg bg-slate-50 p-3">
-                  <dt className="font-bold uppercase tracking-widest text-slate-500">{labels.accessUntil}</dt>
-                  <dd className="mt-1 text-lg font-black text-slate-900">{formatDate(bookedEvent.accessUntil, language)}</dd>
-                </div>
-              </dl>
+                  <div className="rounded-lg bg-slate-50 px-4 py-3 text-sm font-bold text-slate-600 ring-1 ring-slate-100">
+                    <span className="font-black uppercase tracking-widest text-slate-500">{labels.salesActiveUntil}: </span>
+                    <span className="text-slate-950">{formatDate(bookedEvent.settings.dateTo || bookedEvent.settings.dateFrom, language)}</span>
+                  </div>
 
-              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                <button
-                  type="button"
-                  onClick={() => setSelectedEvent(bookedEvent)}
-                  className="min-h-14 rounded-lg bg-slate-950 px-5 text-lg font-black text-white transition active:scale-[0.98] focus:outline-none focus-visible:ring-4 focus-visible:ring-slate-300"
-                >
-                  {labels.openEvent}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setDashboardEvent(bookedEvent)}
-                  className="min-h-14 rounded-lg bg-white px-5 text-lg font-black text-slate-800 ring-1 ring-slate-300 transition active:scale-[0.98] focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200"
-                >
-                  {labels.statistics}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setHelperEvent(bookedEvent)}
-                  className="min-h-14 rounded-lg bg-emerald-50 px-5 text-lg font-black text-emerald-800 ring-1 ring-emerald-200 transition active:scale-[0.98] focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200"
-                >
-                  {labels.helpers}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setMenuEvent(bookedEvent)}
-                  className="min-h-14 rounded-lg bg-amber-50 px-5 text-lg font-black text-amber-900 ring-1 ring-amber-200 transition active:scale-[0.98] focus:outline-none focus-visible:ring-4 focus-visible:ring-amber-200"
-                >
-                  {labels.menuTitle}
-                </button>
-              </div>
-            </article>
-          ))}
-        </section>
+                  <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedEvent(bookedEvent)}
+                      className="min-h-14 rounded-lg bg-slate-950 px-5 text-base font-black text-white transition active:scale-[0.98] focus:outline-none focus-visible:ring-4 focus-visible:ring-slate-300"
+                    >
+                      {labels.openEvent}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setDashboardEvent(bookedEvent)}
+                      className="min-h-14 rounded-lg bg-white px-5 text-base font-black text-slate-800 ring-1 ring-slate-300 transition active:scale-[0.98] focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200"
+                    >
+                      {labels.statistics}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setHelperEvent(bookedEvent)}
+                      className="min-h-14 rounded-lg bg-emerald-50 px-5 text-base font-black text-emerald-800 ring-1 ring-emerald-200 transition active:scale-[0.98] focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200"
+                    >
+                      {labels.helpers}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setMenuEvent(bookedEvent)}
+                      className="min-h-14 rounded-lg bg-amber-50 px-5 text-base font-black text-amber-900 ring-1 ring-amber-200 transition active:scale-[0.98] focus:outline-none focus-visible:ring-4 focus-visible:ring-amber-200"
+                    >
+                      {labels.menuTitle}
+                    </button>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-3 rounded-lg bg-slate-50 px-4 py-3 ring-1 ring-slate-100">
+                    <button
+                      type="button"
+                      disabled
+                      className="min-h-10 rounded-lg bg-slate-200 px-4 text-sm font-black text-slate-500"
+                    >
+                      {labels.extendDays}
+                    </button>
+                    <p className="text-xs font-bold text-slate-500">{labels.extensionFutureOnly}</p>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </section>
+        ) : null)}
       </div>
 
       {helperEvent ? (

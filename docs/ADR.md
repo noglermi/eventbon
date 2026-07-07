@@ -442,3 +442,35 @@ Beta readiness depends first on a consistent event-floor experience. Organizers,
 - Receipt printer integration and the printer setup wizard are P0 priorities, but are not implemented until after the i18n pass.
 - Stripe remains separate from Bon sales and stays in P2 for the Release Candidate phase.
 - P1 Menu Designer and allergen work must not turn eventBon into inventory, accounting, or restaurant management software.
+
+## ADR-017 Data Access vs Active Sales Access
+
+### Decision
+
+eventBon separates organizer data access from active sales and Bon printing access.
+
+The organizer always keeps access to event data, products, dashboard and statistics, Excel export, helper history, and the Menu Designer according to the configured retention rules.
+
+Active sales and Bon printing are allowed only during paid active event days.
+
+Meine Veranstaltungen uses the lifecycle states:
+
+- Upcoming
+- Active today
+- Completed
+
+The organizer event list separates open events from completed events. Completed events remain visible but are no longer sellable.
+
+Paid extensions may only add today or future days. Extensions into the past are not allowed.
+
+### Reason
+
+Organizers need long-term access to event information and results, but eventBon is paid per event usage period. Keeping data access and active selling separate protects the commercial model while preserving useful organizer history.
+
+### Implications
+
+- Past events stay visible in Meine Veranstaltungen.
+- Dashboard, Excel export, helper history, and menu access remain organizer-facing review tools.
+- The Sales Terminal blocks new sales and Bon printing outside paid active event days.
+- Upcoming events can be prepared before the event, but sales are inactive until the paid event window.
+- Stripe later handles paid event activation and extensions, but Stripe is still separate from Bon sales.

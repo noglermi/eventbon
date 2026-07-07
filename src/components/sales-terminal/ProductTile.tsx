@@ -1,6 +1,7 @@
 import type { Language, ProductTileData } from "./types";
 
 type ProductTileProps = {
+  disabled?: boolean;
   language: Language;
   product: ProductTileData;
   editLabel?: string;
@@ -20,7 +21,7 @@ function EditIcon() {
   );
 }
 
-export function ProductTile({ language, product, editLabel, onSelect, onEdit }: ProductTileProps) {
+export function ProductTile({ disabled = false, language, product, editLabel, onSelect, onEdit }: ProductTileProps) {
   const productName = product.name[language];
   const imageCrop = product.imageCrop ?? defaultImageCrop;
 
@@ -31,8 +32,9 @@ export function ProductTile({ language, product, editLabel, onSelect, onEdit }: 
     >
       <button
         type="button"
+        disabled={disabled}
         onClick={() => onSelect(product)}
-        className="flex min-h-40 flex-col items-center justify-center p-4 transition active:scale-[0.98] focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200"
+        className="flex min-h-40 flex-col items-center justify-center p-4 transition active:scale-[0.98] focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200 disabled:cursor-not-allowed disabled:opacity-65 disabled:active:scale-100"
       >
         <span className={"flex items-center justify-center overflow-hidden rounded-[1.5rem] bg-white/85 ring-1 ring-black/5 " + (product.image ? "h-28 w-full" : "h-20 w-20 text-5xl")}>
           {product.image ? (

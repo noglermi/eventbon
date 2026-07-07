@@ -71,6 +71,15 @@ Release Candidate quality gate:
 - Frontend validation for database-backed changes must happen only after the matching Supabase migration has been executed.
 - RPC signature mismatches must show a real error and must not fall back silently.
 
+Organizer event lifecycle UX:
+
+- Meine Veranstaltungen separates open events from completed events.
+- Event cards use calm lifecycle badges instead of large technical status blocks.
+- Organizer data access remains available for all events according to retention rules.
+- Active sales and Bon printing are available only on paid active event days.
+- Completed events remain visible and reviewable, but not sellable.
+- Paid extensions may only add today or future days.
+
 ## Menu Designer Roadmap
 
 The menu is a first-class organizer feature.

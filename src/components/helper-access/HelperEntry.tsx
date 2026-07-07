@@ -3,6 +3,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { getHelperInvitationByCode } from "@/lib/repositories/helpers";
 import { logSupabaseError } from "@/lib/supabase/diagnostics";
+import { getEventLifecycle } from "@/lib/event-lifecycle";
 import { LanguageSwitch } from "@/components/organizer-workspace/LanguageSwitch";
 import { SalesTerminal } from "@/components/sales-terminal/SalesTerminal";
 import { defaultLanguage, translations } from "@/components/sales-terminal/i18n";
@@ -145,6 +146,7 @@ export function HelperEntry() {
   }
 
   if (activeHelperEvent) {
+    const lifecycle = getEventLifecycle(toEventSettings(activeHelperEvent.event));
     return (
       <SalesTerminal
         eventId={activeHelperEvent.event.id}
@@ -153,6 +155,8 @@ export function HelperEntry() {
         status={activeHelperEvent.event.status}
         initialEventSettings={toEventSettings(activeHelperEvent.event)}
         activeHelperSession={toActiveHelperSession(activeHelperEvent)}
+        salesAllowed={lifecycle === "active"}
+        salesUnavailableMessage={lifecycle === "completed" ? labels.salesPeriodCompleted : lifecycle === "upcoming" ? labels.salesPeriodNotStarted : null}
         isHelperMode
       />
     );

@@ -159,6 +159,8 @@ type SalesTerminalProps = {
   isHelperMode?: boolean;
   onBackToEvents?: () => void;
   onEventUpdated?: (event: PersistedEvent) => void;
+  salesAllowed?: boolean;
+  salesUnavailableMessage?: string | null;
   status?: string;
   tenantId?: string | null;
 };
@@ -169,6 +171,8 @@ export function SalesTerminal({
   initialEventSettings = mockEventSettings,
   isHelperMode = false,
   onBackToEvents,
+  salesAllowed = true,
+  salesUnavailableMessage = null,
   tenantId = null,
 }: SalesTerminalProps) {
   const receivedInputRef = useRef<HTMLInputElement>(null);
@@ -196,7 +200,7 @@ export function SalesTerminal({
   const labels = getLabels(language);
   const eventName = eventSettings.name[language];
   const isHelperTerminal = isHelperMode || Boolean(activeHelperSession);
-  const isPrintDisabled = cartItems.length === 0 || isSavingSale || completedSale !== null;
+  const isPrintDisabled = !salesAllowed || cartItems.length === 0 || isSavingSale || completedSale !== null;
   const isCancelSaleDisabled = cartItems.length === 0 || isSavingSale || completedSale !== null;
 
   useEffect(() => {
@@ -339,6 +343,10 @@ export function SalesTerminal({
   const receivedCents = useMemo(() => parseAmountToCents(receivedEntry), [receivedEntry]);
 
   function addProduct(product: ProductTileData) {
+    if (!salesAllowed) {
+      return;
+    }
+
     setCartItems((current) => {
       const existing = current.find((item) => item.productId === product.id);
       if (existing) {
@@ -418,6 +426,12 @@ export function SalesTerminal({
   }
 
   async function openPrintPreview() {
+    if (!salesAllowed) {
+      setPersistenceMessage(salesUnavailableMessage);
+      setPersistenceDetails(null);
+      return;
+    }
+
     if (cartItems.length === 0 || isSavingSale || completedSale) {
       return;
     }
@@ -718,12 +732,13 @@ export function SalesTerminal({
                       {labels.noVisibleCategories}
                     </div>
                   ) : null}
-                  {visibleGroups.map((group) => (
+                {visibleGroups.map((group) => (
                     <section key={group} className="space-y-3" aria-label={groupLabels[group][language]}>
                       <h2 className="text-xl font-black tracking-tight text-slate-800">{groupLabels[group][language]}</h2>
                       <div className="grid grid-cols-2 gap-5 xl:grid-cols-3 2xl:grid-cols-4">
                         {productsByGroup[group].map((product) => (
                           <ProductTile
+                            disabled={!salesAllowed}
                             key={product.id}
                             language={language}
                             product={product}
@@ -782,6 +797,11 @@ export function SalesTerminal({
                     <summary className="cursor-pointer font-black">{labels.technicalDetails}</summary>
                     <pre className="mt-2 whitespace-pre-wrap break-words rounded-xl bg-white/70 p-3 font-mono text-[11px] leading-relaxed">{persistenceDetails}</pre>
                   </details>
+                ) : null}
+                {!salesAllowed && salesUnavailableMessage ? (
+                  <div className="mt-4 rounded-2xl bg-amber-50 px-4 py-3 text-sm font-black text-amber-900 ring-1 ring-amber-200">
+                    {salesUnavailableMessage}
+                  </div>
                 ) : null}
               </div>
             ) : null}

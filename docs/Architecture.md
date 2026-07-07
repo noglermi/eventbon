@@ -277,6 +277,20 @@ The booked usage period controls access to eventBon as a product rental. It does
 
 Bon printing should only be allowed during the active event period or another explicitly activated usage window. Before the event, the organizer may configure products and settings, but active Bon printing is disabled unless explicitly enabled. After the event, the sales terminal becomes inactive while statistics and export remain available during the post-event access period. A paid extension can prolong access.
 
+Organizer data access and active sales access are separate.
+
+The organizer always keeps access to event data, products, dashboard and statistics, Excel export, helper history, and the Menu Designer according to retention rules. This keeps past events useful for review and reuse without turning eventBon into a permanent POS workspace.
+
+Active sales and Bon printing are restricted to paid active event days. The organizer event list uses lifecycle states:
+
+- Upcoming
+- Active today
+- Completed
+
+Meine Veranstaltungen is split into open events and completed events. Completed events remain visible, but their Sales Terminal cannot create new sales or print new Bons. Upcoming events can be configured before the paid event days, but selling is not active yet.
+
+Paid extensions may add only today or future dates. An extension must never add access for days in the past.
+
 ## Roles And Access
 
 ### Organizer
