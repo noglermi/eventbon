@@ -119,10 +119,10 @@ export function PaymentPanel({ labels, language, paymentMethod, receivedCents, r
               inputMode="decimal"
               value={displayedReceived}
               onChange={(event) => handleKeyboardEntry(event.target.value)}
-              className="absolute inset-0 z-10 h-full w-full rounded-2xl bg-transparent px-5 py-0 text-[7.5rem] font-black leading-none tabular-nums text-transparent caret-slate-950 outline-none"
+              className="absolute inset-0 z-10 h-full w-full rounded-2xl bg-transparent px-5 py-0 text-[6rem] font-black leading-none tabular-nums text-transparent caret-slate-950 outline-none"
               aria-label={labels.received}
             />
-            <div className="pointer-events-none absolute inset-0 flex items-center px-5 text-[7.5rem] font-black leading-none tabular-nums text-slate-950">
+            <div className="pointer-events-none absolute inset-0 flex items-center px-5 text-[6rem] font-black leading-none tabular-nums text-slate-950">
               {displayedReceived}
             </div>
           </div>
