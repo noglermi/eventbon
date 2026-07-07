@@ -112,15 +112,20 @@ export function PaymentPanel({ labels, language, paymentMethod, receivedCents, r
 
         <div className="rounded-[1.75rem] bg-white p-5 shadow-sm ring-1 ring-slate-300/90">
           <p className="text-sm font-black uppercase tracking-widest text-slate-700">{labels.received} (EUR)</p>
-          <input
-            ref={receivedInputRef}
-            type="text"
-            inputMode="decimal"
-            value={displayedReceived}
-            onChange={(event) => handleKeyboardEntry(event.target.value)}
-            className="mt-3 h-20 w-full rounded-2xl bg-white px-4 py-0 text-[5rem] font-black leading-none tabular-nums text-slate-950 shadow-inner outline-none ring-2 ring-slate-300 transition placeholder:text-slate-400 focus:ring-4 focus:ring-emerald-200"
-            aria-label={labels.received}
-          />
+          <div className="relative mt-3 h-20 w-full rounded-2xl bg-white shadow-inner ring-2 ring-slate-300 transition focus-within:ring-4 focus-within:ring-emerald-200">
+            <input
+              ref={receivedInputRef}
+              type="text"
+              inputMode="decimal"
+              value={displayedReceived}
+              onChange={(event) => handleKeyboardEntry(event.target.value)}
+              className="absolute inset-0 z-10 h-full w-full rounded-2xl bg-transparent px-5 py-0 text-[7.5rem] font-black leading-none tabular-nums text-transparent caret-slate-950 outline-none"
+              aria-label={labels.received}
+            />
+            <div className="pointer-events-none absolute inset-0 flex items-center px-5 text-[7.5rem] font-black leading-none tabular-nums text-slate-950">
+              {displayedReceived}
+            </div>
+          </div>
         </div>
 
         <div className="mt-5 grid grid-cols-3 gap-3">
