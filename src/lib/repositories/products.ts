@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabase/client";
+import { normalizeAllergenCodes } from "@/lib/allergens";
 import type { ProductTileData, TileGroupName } from "@/components/sales-terminal/types";
 
 type ProductGroupKey = "drinks" | "food" | "desserts" | "other";
@@ -16,6 +17,7 @@ type ProductRow = {
   image_crop_zoom: number | string;
   image_crop_x: number | string;
   image_crop_y: number | string;
+  allergen_codes?: string[] | null;
   position: number;
   is_active: boolean;
 };
@@ -171,6 +173,7 @@ function mapProduct(row: ProductRow): ProductTileData {
       x: asNumber(row.image_crop_x),
       y: asNumber(row.image_crop_y),
     },
+    allergens: normalizeAllergenCodes(row.allergen_codes),
     color: row.color,
     textColor: textColorByColor[row.color] ?? "#0f172a",
   };
@@ -192,6 +195,7 @@ async function toPayload(input: ProductSaveInput) {
     image_crop_zoom: crop.zoom,
     image_crop_x: crop.x,
     image_crop_y: crop.y,
+    allergen_codes: normalizeAllergenCodes(input.product.allergens),
     position: input.position,
     is_active: true,
     updated_at: new Date().toISOString(),

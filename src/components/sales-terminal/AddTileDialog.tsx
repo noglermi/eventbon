@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import type { ChangeEvent, DragEvent, FormEvent } from "react";
+import { allergenCodes, allergenLabels, normalizeAllergenCodes } from "@/lib/allergens";
 import type { Translation } from "./i18n";
 import { groupLabels } from "./i18n";
 import {
@@ -12,7 +13,7 @@ import {
   productIconCategories,
 } from "./product-icon-catalog";
 import type { ProductIconCategoryId } from "./product-icon-catalog";
-import type { ImageCrop, Language, ProductTileData, TileGroupName } from "./types";
+import type { AllergenCode, ImageCrop, Language, ProductTileData, TileGroupName } from "./types";
 
 type AddTileDialogProps = {
   tile: ProductTileData | null;
@@ -197,6 +198,7 @@ export function AddTileDialog({ tile, initialGroup, language, labels, onClose, o
   const [imagePreview, setImagePreview] = useState(tile?.image ?? "");
   const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
   const [imageCrop, setImageCrop] = useState<ImageCrop>(tile?.imageCrop ?? defaultImageCrop);
+  const [selectedAllergens, setSelectedAllergens] = useState<AllergenCode[]>(() => normalizeAllergenCodes(tile?.allergens));
   const [isIconPickerOpen, setIsIconPickerOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<ProductSaveResult | null>(null);
@@ -259,6 +261,14 @@ export function AddTileDialog({ tile, initialGroup, language, labels, onClose, o
     }
   }
 
+  function toggleAllergen(code: AllergenCode) {
+    setSelectedAllergens((current) => (
+      current.includes(code)
+        ? current.filter((item) => item !== code)
+        : allergenCodes.filter((item) => item === code || current.includes(item))
+    ));
+  }
+
   async function saveTile(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
@@ -283,6 +293,7 @@ export function AddTileDialog({ tile, initialGroup, language, labels, onClose, o
         image: imagePreview || undefined,
         imageFile: selectedImageFile ?? undefined,
         imageCrop,
+        allergens: selectedAllergens,
         color: selectedColor,
         textColor: textColorByColor[selectedColor] ?? tile?.textColor ?? "#0f172a",
       });
@@ -360,6 +371,23 @@ export function AddTileDialog({ tile, initialGroup, language, labels, onClose, o
                     <span className="text-lg font-black text-emerald-700">{labels.edit}</span>
                   </button>
                 </div>
+
+                <fieldset className="grid gap-3 rounded-3xl bg-slate-50 p-4 ring-1 ring-slate-200/75">
+                  <legend className="text-sm font-bold uppercase tracking-widest text-slate-500">{labels.allergenSelection}</legend>
+                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                    {allergenCodes.map((code) => (
+                      <button
+                        key={code}
+                        type="button"
+                        onClick={() => toggleAllergen(code)}
+                        className={"min-h-14 rounded-2xl px-3 text-left text-sm font-black transition active:scale-[0.98] focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200 " + (selectedAllergens.includes(code) ? "bg-emerald-600 text-white" : "bg-white text-slate-700 ring-1 ring-slate-200/75")}
+                      >
+                        <span className="block text-base">{code}</span>
+                        <span className="block truncate text-xs font-bold opacity-80">{allergenLabels[code][language]}</span>
+                      </button>
+                    ))}
+                  </div>
+                </fieldset>
               </div>
 
               <div className="grid content-start gap-5">

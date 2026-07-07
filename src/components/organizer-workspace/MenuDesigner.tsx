@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { formatDateRange } from "@/lib/date-format";
+import { formatAllergenCodes } from "@/lib/allergens";
 import { listProducts } from "@/lib/repositories/products";
 import { logSupabaseError } from "@/lib/supabase/diagnostics";
 import { supabaseConfigWarning } from "@/lib/supabase/client";
@@ -232,6 +233,7 @@ export function MenuDesigner({ eventId, eventSettings, language, onBackToEvents,
                       <div className="mt-4 grid gap-3">
                         {groupedProducts[group].map((product) => {
                           const imageCrop = product.imageCrop ?? defaultImageCrop;
+                          const allergenText = formatAllergenCodes(product.allergens);
 
                           return (
                             <div key={product.id} className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-4 rounded-lg bg-slate-50 p-3 ring-1 ring-slate-100">
@@ -256,6 +258,9 @@ export function MenuDesigner({ eventId, eventSettings, language, onBackToEvents,
                               ) : null}
                               <div className="min-w-0">
                                 <p className="truncate text-lg font-black">{product.name[language]}</p>
+                                {allergenText ? (
+                                  <p className="mt-1 text-sm font-black tracking-wide text-slate-500">{allergenText}</p>
+                                ) : null}
                               </div>
                               {showPrices ? <p className="text-lg font-black tabular-nums">{currency.format(product.price)}</p> : null}
                             </div>

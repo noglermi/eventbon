@@ -381,6 +381,7 @@ Organizers need a menu as part of event preparation, not as a technical export a
 - Speisekarte is organizer-only.
 - Helpers do not see or manage the Menu Designer.
 - Changing a product automatically updates the Sales Terminal, Dashboard, Excel Export, and Menu.
+- Allergens belong to products as structured EU allergen codes. The Menu Designer displays them but does not edit them.
 - Menu Designer work must not introduce Word editing, Excel imports, inventory management, restaurant operations, or accounting scope.
 - Printable menu PDF belongs to the Menu Designer workflow.
 

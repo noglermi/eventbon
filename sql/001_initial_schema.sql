@@ -49,6 +49,8 @@ create table products (
   image_crop_zoom numeric(5, 2) not null default 1 check (image_crop_zoom >= 1),
   image_crop_x numeric(5, 2) not null default 50 check (image_crop_x >= 0 and image_crop_x <= 100),
   image_crop_y numeric(5, 2) not null default 50 check (image_crop_y >= 0 and image_crop_y <= 100),
+  allergen_codes text[] not null default '{}'
+    check (allergen_codes <@ array['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'L', 'M', 'N', 'O', 'P', 'R']::text[]),
   position integer not null default 0,
   is_active boolean not null default true,
   created_at timestamptz not null default now(),

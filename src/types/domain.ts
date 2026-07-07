@@ -1,6 +1,7 @@
 export type PrintMode = "single_vouchers" | "combined_voucher";
 
 export type PaymentMethod = "cash" | "card_manual";
+export type AllergenCode = "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | "L" | "M" | "N" | "O" | "P" | "R";
 
 export type Tenant = {
   id: string;
@@ -46,6 +47,7 @@ export type Product = {
   imageCropZoom: number;
   imageCropX: number;
   imageCropY: number;
+  allergenCodes: AllergenCode[];
   position: number;
   isActive: boolean;
   createdAt: string;

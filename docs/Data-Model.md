@@ -128,6 +128,7 @@ Suggested fields:
 - image_crop_zoom
 - image_crop_x
 - image_crop_y
+- allergen_codes
 - position
 - is_active
 - created_at
@@ -145,6 +146,25 @@ Allowed persisted group_key values:
 - other
 
 The UI may translate these keys into localized group labels such as Getränke, Speisen, Desserts, and Sonstiges.
+
+Allergens belong to the product. The Menu Designer only displays product allergen codes and does not edit them.
+
+Allowed allergen_codes values follow the official EU allergen code model used by eventBon:
+
+- A Gluten
+- B Crustaceans
+- C Egg
+- D Fish
+- E Peanuts
+- F Soy
+- G Milk
+- H Nuts
+- L Celery
+- M Mustard
+- N Sesame
+- O Sulphites
+- P Lupin
+- R Molluscs
 
 ### Sale
 

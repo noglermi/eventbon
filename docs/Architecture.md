@@ -180,6 +180,8 @@ Products remain the single source of truth. Changing a product automatically upd
 - Excel Export
 - Menu
 
+Allergens belong to products as structured EU allergen codes. The Menu Designer displays these codes, for example `(A,C,G)`, but does not provide manual allergen editing.
+
 The Menu Designer is a live editor. Changes immediately update the preview.
 
 Menu options:
