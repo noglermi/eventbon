@@ -30,6 +30,21 @@ drop function if exists public.save_completed_sale(
 );
 
 drop function if exists public.save_completed_sale(
+  uuid,
+  uuid,
+  integer,
+  text,
+  integer,
+  integer,
+  timestamptz,
+  uuid,
+  text,
+  text,
+  text,
+  jsonb
+);
+
+drop function if exists public.save_completed_sale(
   integer,
   integer,
   timestamptz,
@@ -163,10 +178,7 @@ grant execute on function public.save_completed_sale(
   integer
 ) to anon, authenticated;
 
-comment on column public.sales.terminal_id
-  is 'Persistent local terminal/device identifier used to scope operational recent sales.';
-
 comment on function public.save_completed_sale(integer, integer, timestamptz, uuid, uuid, text, text, jsonb, text, uuid, text, integer)
-  is 'Atomically stores one completed sale, its terminal/device id, optional helper identity snapshots, and all sale_items. Signature matches the frontend RPC call.';
+  is 'Atomically stores one completed sale with terminal/device id, optional helper identity snapshots, and all sale_items. Signature matches the frontend RPC call.';
 
 notify pgrst, 'reload schema';
