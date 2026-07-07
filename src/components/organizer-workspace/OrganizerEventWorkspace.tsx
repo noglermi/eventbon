@@ -9,6 +9,7 @@ import { supabase, supabaseConfigWarning } from "@/lib/supabase/client";
 import { SalesTerminal } from "@/components/sales-terminal/SalesTerminal";
 import { LanguageSwitch } from "@/components/organizer-workspace/LanguageSwitch";
 import { HelperAccessPanel } from "@/components/organizer-workspace/HelperAccessPanel";
+import { MenuDesigner } from "@/components/organizer-workspace/MenuDesigner";
 import { OrganizerSalesDashboard } from "@/components/organizer-workspace/OrganizerSalesDashboard";
 import { PasswordRecoveryForm } from "@/components/organizer-workspace/PasswordRecoveryForm";
 import { hasPasswordRecoveryParameters } from "@/lib/supabase/recovery-url";
@@ -175,6 +176,7 @@ export function OrganizerEventWorkspace() {
   const [selectedEvent, setSelectedEvent] = useState<BookedEvent | null>(null);
   const [dashboardEvent, setDashboardEvent] = useState<BookedEvent | null>(null);
   const [helperEvent, setHelperEvent] = useState<BookedEvent | null>(null);
+  const [menuEvent, setMenuEvent] = useState<BookedEvent | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [newEventDateFrom, setNewEventDateFrom] = useState("");
   const [newEventDateTo, setNewEventDateTo] = useState("");
@@ -225,6 +227,7 @@ export function OrganizerEventWorkspace() {
         setSelectedEvent(null);
         setDashboardEvent(null);
         setHelperEvent(null);
+        setMenuEvent(null);
         return;
       }
 
@@ -232,6 +235,7 @@ export function OrganizerEventWorkspace() {
       setSelectedEvent(null);
       setDashboardEvent(null);
       setHelperEvent(null);
+      setMenuEvent(null);
       if (!nextSession) {
         setEvents([]);
         setCurrentOrganizer(mockOrganizer);
@@ -478,6 +482,7 @@ export function OrganizerEventWorkspace() {
           setSelectedEvent(null);
           setDashboardEvent(null);
           setHelperEvent(null);
+          setMenuEvent(null);
           setEvents([]);
           setCurrentOrganizer(mockOrganizer);
         }}
@@ -599,6 +604,18 @@ export function OrganizerEventWorkspace() {
     );
   }
 
+  if (menuEvent) {
+    return (
+      <MenuDesigner
+        eventId={menuEvent.isPersisted ? menuEvent.id : null}
+        eventSettings={menuEvent.settings}
+        language={language}
+        onLanguageChange={setOrganizerLanguage}
+        onBackToEvents={() => setMenuEvent(null)}
+      />
+    );
+  }
+
   return (
     <main className="min-h-screen bg-[#f6f7f5] px-6 py-7 text-slate-950">
       <div className="mx-auto flex max-w-6xl flex-col gap-7">
@@ -672,7 +689,7 @@ export function OrganizerEventWorkspace() {
                 </div>
               </dl>
 
-              <div className="grid gap-3 sm:grid-cols-3">
+              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
                 <button
                   type="button"
                   onClick={() => setSelectedEvent(bookedEvent)}
@@ -693,6 +710,13 @@ export function OrganizerEventWorkspace() {
                   className="min-h-14 rounded-lg bg-emerald-50 px-5 text-lg font-black text-emerald-800 ring-1 ring-emerald-200 transition active:scale-[0.98] focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200"
                 >
                   {labels.helpers}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMenuEvent(bookedEvent)}
+                  className="min-h-14 rounded-lg bg-amber-50 px-5 text-lg font-black text-amber-900 ring-1 ring-amber-200 transition active:scale-[0.98] focus:outline-none focus-visible:ring-4 focus-visible:ring-amber-200"
+                >
+                  {labels.menuTitle}
                 </button>
               </div>
             </article>
