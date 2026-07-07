@@ -12,6 +12,7 @@ type RecentSaleRow = {
   helper_invitation_id: string | null;
   helper_name_snapshot: string | null;
   helper_station_snapshot: string | null;
+  terminal_id: string | null;
   print_count: number | null;
   printed_at: string | null;
   created_at: string;
@@ -56,6 +57,7 @@ type SaveCompletedSaleInput = {
   productsById: Map<string, ProductTileData>;
   receivedCents: number;
   tenantId: string;
+  terminalId: string;
   totalCents: number;
 };
 
@@ -80,6 +82,7 @@ export type RecentSale = {
   helperInvitationId: string | null;
   helperNameSnapshot: string | null;
   helperStationSnapshot: string | null;
+  terminalId: string | null;
   printCount: number;
   printedAt: string | null;
   createdAt: string;
@@ -178,6 +181,7 @@ function mapRecentSale(row: RecentSaleRow, items: RecentSaleItemRow[]): RecentSa
     helperInvitationId: row.helper_invitation_id,
     helperNameSnapshot: row.helper_name_snapshot,
     helperStationSnapshot: row.helper_station_snapshot,
+    terminalId: row.terminal_id,
     printCount: row.print_count ?? 0,
     printedAt: row.printed_at,
     createdAt: row.created_at,
@@ -186,15 +190,16 @@ function mapRecentSale(row: RecentSaleRow, items: RecentSaleItemRow[]): RecentSa
   };
 }
 
-export async function listRecentSales(input: { eventId: string; tenantId: string; limit?: number }) {
+export async function listRecentSales(input: { eventId: string; tenantId: string; terminalId: string; limit?: number }) {
   const client = requireSupabase();
   const limit = input.limit ?? 10;
 
   const { data: saleRows, error: salesError } = await client
     .from("sales")
-    .select("id, tenant_id, event_id, total_cents, payment_method, cash_received_cents, change_cents, helper_invitation_id, helper_name_snapshot, helper_station_snapshot, print_count, printed_at, created_at")
+    .select("id, tenant_id, event_id, total_cents, payment_method, cash_received_cents, change_cents, helper_invitation_id, helper_name_snapshot, helper_station_snapshot, terminal_id, print_count, printed_at, created_at")
     .eq("tenant_id", input.tenantId)
     .eq("event_id", input.eventId)
+    .eq("terminal_id", input.terminalId)
     .order("created_at", { ascending: false })
     .limit(limit);
 
@@ -202,6 +207,7 @@ export async function listRecentSales(input: { eventId: string; tenantId: string
     console.error("Recent sales load failed", {
       error: salesError,
       eventId: input.eventId,
+      terminalId: input.terminalId,
       tenantId: input.tenantId,
     });
     throw salesError;
@@ -444,6 +450,7 @@ export async function saveCompletedSale(input: SaveCompletedSaleInput) {
     itemCount: input.cartItems.length,
     helperInvitationId,
     paymentMethod: input.paymentMethod,
+    terminalId: input.terminalId,
     tenantId: input.tenantId,
     totalCents: input.totalCents,
   });
@@ -484,6 +491,7 @@ export async function saveCompletedSale(input: SaveCompletedSaleInput) {
     p_items: saleItems,
     p_payment_method: input.paymentMethod,
     p_tenant_id: input.tenantId,
+    p_terminal_id: input.terminalId,
     p_total_cents: input.totalCents,
   });
 

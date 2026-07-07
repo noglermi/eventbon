@@ -15,6 +15,7 @@ import { initialCart, mockEventSettings, productTiles, tileGroups } from "./mock
 import { PaymentPanel } from "./PaymentPanel";
 import { ProductTile } from "./ProductTile";
 import { RecentSalesPanel } from "./RecentSalesPanel";
+import { readTerminalId } from "./terminal-id-storage";
 import { readViewSettings, writeViewSettings } from "./view-settings-storage";
 import { VoucherPrintPreview } from "./VoucherPrintPreview";
 import type { ActiveHelperSession, CartItem, EventSettings, Language, PaymentMethod, ProductTileData, TileGroupName } from "./types";
@@ -173,6 +174,7 @@ export function SalesTerminal({
   const receivedInputRef = useRef<HTMLInputElement>(null);
   const viewPanelRef = useRef<HTMLDivElement | null>(null);
   const [viewSettings, setViewSettings] = useState<ViewSettings>(() => readViewSettings());
+  const [terminalId] = useState(() => readTerminalId());
   const [isViewPanelOpen, setIsViewPanelOpen] = useState(false);
   const [eventSettings] = useState<EventSettings>(initialEventSettings);
   const [products, setProducts] = useState<ProductTileData[]>(productTiles);
@@ -279,13 +281,13 @@ export function SalesTerminal({
     let isActive = true;
 
     async function loadRecentEventSales() {
-      if (!eventId || !tenantId || supabaseConfigWarning) {
+      if (!eventId || !tenantId || !terminalId || supabaseConfigWarning) {
         setRecentSales([]);
         return;
       }
 
       try {
-        const loadedSales = await listRecentSales({ eventId, tenantId, limit: 10 });
+        const loadedSales = await listRecentSales({ eventId, tenantId, terminalId, limit: 10 });
         if (isActive) {
           setRecentSales(loadedSales);
         }
@@ -304,7 +306,7 @@ export function SalesTerminal({
     return () => {
       isActive = false;
     };
-  }, [eventId, labels.recentSalesLoadError, tenantId]);
+  }, [eventId, labels.recentSalesLoadError, tenantId, terminalId]);
 
   const productsById = useMemo(
     () => new Map(products.map((product) => [product.id, product])),
@@ -440,6 +442,7 @@ export function SalesTerminal({
           productsById,
           receivedCents: persistedReceivedCents,
           tenantId,
+          terminalId,
           totalCents,
         });
         setCompletedSale({ saleId, printRecorded: false });
@@ -452,7 +455,7 @@ export function SalesTerminal({
       }
 
       try {
-        const loadedSales = await listRecentSales({ eventId, tenantId, limit: 10 });
+        const loadedSales = await listRecentSales({ eventId, tenantId, terminalId, limit: 10 });
         setRecentSales(loadedSales);
       } catch (error) {
         const diagnostic = logSupabaseError("reload recent sales after sale save", error);
@@ -471,11 +474,11 @@ export function SalesTerminal({
   }
 
   async function reloadRecentSales() {
-    if (!eventId || !tenantId || supabaseConfigWarning) {
+    if (!eventId || !tenantId || !terminalId || supabaseConfigWarning) {
       return;
     }
 
-    const loadedSales = await listRecentSales({ eventId, tenantId, limit: 10 });
+    const loadedSales = await listRecentSales({ eventId, tenantId, terminalId, limit: 10 });
     setRecentSales(loadedSales);
   }
 

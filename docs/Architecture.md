@@ -161,6 +161,8 @@ Operational sales history belongs near the Sales Terminal. It helps the cashier 
 
 Clicking an entry should open a read-only detail view with sold products, quantities, payment, change, and print mode. Sales cannot be edited. There is no delete function and no cancellation workflow in the MVP.
 
+Operational sales history is terminal-specific. Each browser or device running the Sales Terminal receives a persistent local terminal_id. Completed sales store this terminal_id, and Letzte Verkäufe filters by the current event and current terminal_id. This keeps the cashier view focused on the physical sales point, for example Getränke, Küche, Kaffee, or Grill.
+
 Sales analytics is a separate organizer-facing use case. The organizer does not need to browse individual sales; the organizer needs event-level business information. A dedicated analytics page should summarize:
 
 - total revenue
@@ -173,6 +175,8 @@ Sales analytics is a separate organizer-facing use case. The organizer does not 
 - filters for today, entire event, and later custom periods
 
 Architecture principle: operational sales history and business analytics must remain separated. The cashier needs speed. The organizer needs information.
+
+Business views are event-wide. Organizer dashboard, statistics, and export intentionally ignore terminal_id and include all sales for the selected event.
 
 ## Menu Designer
 

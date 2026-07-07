@@ -63,6 +63,7 @@ create table sales (
   id uuid primary key default gen_random_uuid(),
   tenant_id uuid not null,
   event_id uuid not null,
+  terminal_id text,
   total_cents integer not null check (total_cents >= 0),
   payment_method text not null check (payment_method in ('cash', 'card_manual')),
   cash_received_cents integer check (cash_received_cents is null or cash_received_cents >= 0),
@@ -107,5 +108,6 @@ create index events_organizer_id_idx on events(organizer_id);
 create index events_tenant_id_idx on events(tenant_id);
 create index products_event_id_position_idx on products(event_id, position);
 create index sales_event_id_created_at_idx on sales(event_id, created_at);
+create index sales_event_id_terminal_id_created_at_idx on sales(event_id, terminal_id, created_at);
 create index sale_items_sale_id_idx on sale_items(sale_id);
 create index access_extensions_event_id_idx on access_extensions(event_id);
