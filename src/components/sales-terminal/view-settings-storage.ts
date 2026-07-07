@@ -9,7 +9,7 @@ export type ViewSettings = {
 };
 
 const validLanguages: Language[] = ["de", "en"];
-const validZoomValues = [60, 70, 80, 90, 100, 110, 120, 130];
+const validZoomValues = [40, 50, 60, 70, 80, 90, 100, 110, 120, 130];
 const categoryKeys: TileGroupName[] = ["Drinks", "Food", "Desserts", "Other"];
 
 export const defaultViewSettings: ViewSettings = {

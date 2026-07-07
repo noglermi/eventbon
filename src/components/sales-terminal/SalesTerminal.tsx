@@ -26,7 +26,7 @@ type ProductFilter = "all" | TileGroupName;
 type ZoomArea = keyof ViewSettings["blockZoom"];
 
 const productFilters: ProductFilter[] = ["all", ...tileGroups];
-const zoomOptions = [60, 70, 80, 90, 100, 110, 120, 130] as const;
+const zoomOptions = [40, 50, 60, 70, 80, 90, 100, 110, 120, 130] as const;
 
 function parseAmountToCents(value: string) {
   const normalizedValue = value.trim().replace(",", ".");
@@ -578,7 +578,7 @@ export function SalesTerminal({
   }
 
   return (
-    <main className="grid h-screen grid-rows-[5rem_minmax(0,1fr)_7rem] overflow-hidden bg-[#f6f7f5] text-slate-950">
+    <main className="grid h-[100dvh] grid-rows-[5rem_minmax(0,1fr)] overflow-hidden bg-[#f6f7f5] text-slate-950">
       <header className="relative z-50 flex items-center justify-between border-b border-slate-200/70 bg-white/95 px-7 shadow-[0_1px_0_rgba(15,23,42,0.04)] backdrop-blur">
         <div className="flex items-center gap-4">
           {isHelperTerminal ? null : (
@@ -617,7 +617,7 @@ export function SalesTerminal({
               <span className="rounded-xl bg-white/20 px-2 py-1 text-sm tabular-nums">{blockZoom.articles}%</span>
             </button>
             {isViewPanelOpen ? (
-              <div className="absolute left-0 top-14 z-[200] w-[23rem] rounded-2xl bg-white p-4 shadow-2xl ring-1 ring-slate-200">
+              <div className="absolute left-0 top-14 z-[200] w-[23rem] max-w-[calc(100vw-2rem)] rounded-2xl bg-white p-4 shadow-2xl ring-1 ring-slate-200">
                 {([
                   ["articles", labels.articlesZoom],
                   ["cart", labels.cartZoom],
@@ -625,7 +625,7 @@ export function SalesTerminal({
                 ] as Array<[ZoomArea, string]>).map(([area, label]) => (
                   <div key={area} className="grid gap-2 py-2 first:pt-0 last:pb-0">
                     <p className="text-sm font-black uppercase tracking-widest text-slate-500">{label}</p>
-                    <div className="grid grid-cols-4 gap-2">
+                    <div className="grid grid-cols-5 gap-2">
                       {zoomOptions.map((option) => (
                         <button
                           key={area + option}
@@ -671,7 +671,7 @@ export function SalesTerminal({
         </div>
       </header>
 
-      <div className="grid min-h-0 grid-cols-[minmax(0,1.35fr)_minmax(300px,0.95fr)_minmax(280px,0.8fr)] gap-4 p-4 xl:gap-6 xl:p-6">
+      <div className="grid min-h-0 grid-cols-[minmax(0,1.35fr)_minmax(300px,0.95fr)_minmax(280px,0.8fr)] gap-4 p-4 pb-32 xl:gap-6 xl:p-6 xl:pb-36">
         <section className="flex min-h-0 flex-col overflow-hidden rounded-[2.25rem] bg-white/95 shadow-[0_18px_50px_rgba(15,23,42,0.06)] ring-1 ring-slate-200/75">
           <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
             <ScaledBlock zoom={blockZoom.articles}>
@@ -785,7 +785,7 @@ export function SalesTerminal({
         </div>
       </div>
 
-      <footer className="grid grid-cols-[minmax(260px,0.78fr)_minmax(0,1.62fr)] gap-5 border-t border-slate-200/70 bg-white/95 px-7 py-4 shadow-[0_-18px_45px_rgba(15,23,42,0.10)] backdrop-blur">
+      <footer className="fixed inset-x-0 bottom-0 z-[120] grid grid-cols-[minmax(260px,0.78fr)_minmax(0,1.62fr)] gap-5 border-t border-slate-200/70 bg-white/95 px-7 py-4 shadow-[0_-18px_45px_rgba(15,23,42,0.10)] backdrop-blur supports-[padding:max(0px)]:pb-[max(1rem,env(safe-area-inset-bottom))]">
         <button type="button" onClick={cancelSale} disabled={isCancelSaleDisabled} className="flex min-h-20 items-center justify-center gap-3 rounded-[1.75rem] bg-rose-50/90 px-6 text-xl font-black text-rose-700 ring-1 ring-rose-100 transition active:scale-[0.99] focus:outline-none focus-visible:ring-4 focus-visible:ring-rose-200 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400 disabled:ring-slate-200">
           <TrashIcon />
           {labels.cancelSale}
