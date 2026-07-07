@@ -3,8 +3,17 @@ type SupabaseLikeError = {
   details?: string;
   hint?: string;
   message?: string;
+  name?: string;
   status?: number;
 };
+
+export type SupabaseErrorCategory =
+  | "invalid_credentials"
+  | "network"
+  | "permission_denied"
+  | "table_missing"
+  | "unconfirmed_email"
+  | "unknown";
 
 function getErrorFields(error: unknown): SupabaseLikeError {
   if (error && typeof error === "object") {
@@ -19,6 +28,7 @@ export function formatSupabaseError(context: string, error: unknown) {
   const message = fields.message ?? "Unknown Supabase error";
   const parts = [
     context,
+    fields.name ? "name=" + fields.name : null,
     fields.code ? "code=" + fields.code : null,
     fields.status ? "status=" + fields.status : null,
     "message=" + message,
@@ -26,16 +36,14 @@ export function formatSupabaseError(context: string, error: unknown) {
     fields.hint ? "hint=" + fields.hint : null,
   ].filter(Boolean);
   const technicalMessage = parts.join(" | ");
-  const lowerMessage = technicalMessage.toLowerCase();
-
-  let category = "Supabase error";
-  if (fields.code === "42P01" || lowerMessage.includes("does not exist") || lowerMessage.includes("schema cache")) {
-    category = "Supabase table does not exist";
-  } else if (fields.code === "42501" || fields.status === 401 || fields.status === 403 || lowerMessage.includes("permission denied") || lowerMessage.includes("row-level security") || lowerMessage.includes("rls")) {
-    category = "Supabase permission denied / RLS policy issue";
-  } else if (lowerMessage.includes("failed to fetch") || lowerMessage.includes("networkerror") || lowerMessage.includes("network error") || lowerMessage.includes("fetch failed")) {
-    category = "Supabase network error";
-  }
+  const category = {
+    invalid_credentials: "Supabase invalid credentials",
+    network: "Supabase network error",
+    permission_denied: "Supabase permission denied / RLS policy issue",
+    table_missing: "Supabase table does not exist",
+    unconfirmed_email: "Supabase email not confirmed",
+    unknown: "Supabase error",
+  }[getSupabaseErrorCategory(error)];
 
   return category + ": " + technicalMessage;
 }
@@ -44,4 +52,46 @@ export function logSupabaseError(context: string, error: unknown) {
   const diagnostic = formatSupabaseError(context, error);
   console.error(diagnostic, error);
   return diagnostic;
+}
+
+export function getSupabaseErrorCategory(error: unknown): SupabaseErrorCategory {
+  const fields = getErrorFields(error);
+  const technicalMessage = [
+    fields.name,
+    fields.code,
+    fields.status,
+    fields.message,
+    fields.details,
+    fields.hint,
+  ].filter(Boolean).join(" ").toLowerCase();
+
+  if (technicalMessage.includes("email_not_confirmed") || technicalMessage.includes("email not confirmed") || technicalMessage.includes("not confirmed")) {
+    return "unconfirmed_email";
+  }
+
+  if (technicalMessage.includes("invalid_credentials") || technicalMessage.includes("invalid login credentials") || technicalMessage.includes("invalid credentials")) {
+    return "invalid_credentials";
+  }
+
+  if (fields.code === "42P01" || technicalMessage.includes("does not exist") || technicalMessage.includes("schema cache")) {
+    return "table_missing";
+  }
+
+  if (fields.code === "42501" || fields.status === 401 || fields.status === 403 || technicalMessage.includes("permission denied") || technicalMessage.includes("row-level security") || technicalMessage.includes("rls")) {
+    return "permission_denied";
+  }
+
+  if (
+    fields.status === 0 ||
+    technicalMessage.includes("failed to fetch") ||
+    technicalMessage.includes("fetch failed") ||
+    technicalMessage.includes("networkerror") ||
+    technicalMessage.includes("network error") ||
+    technicalMessage.includes("authretryablefetcherror") ||
+    technicalMessage.includes("typeerror")
+  ) {
+    return "network";
+  }
+
+  return "unknown";
 }

@@ -4,8 +4,8 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import { createEvent, listEvents } from "@/lib/repositories/events";
 import { getOrganizerForAuthenticatedUser, mockOrganizer } from "@/lib/repositories/organizers";
 import { formatDate, formatDateRange } from "@/lib/date-format";
-import { logSupabaseError } from "@/lib/supabase/diagnostics";
-import { supabase, supabaseConfigWarning } from "@/lib/supabase/client";
+import { getSupabaseErrorCategory, logSupabaseError } from "@/lib/supabase/diagnostics";
+import { supabase, supabaseConfigIssue, supabaseConfigWarning } from "@/lib/supabase/client";
 import { SalesTerminal } from "@/components/sales-terminal/SalesTerminal";
 import { LanguageSwitch } from "@/components/organizer-workspace/LanguageSwitch";
 import { HelperAccessPanel } from "@/components/organizer-workspace/HelperAccessPanel";
@@ -68,22 +68,33 @@ function getSessionOrganizerName(session: Session | null) {
 }
 
 function getFriendlyAuthError(error: unknown, labels: Translation) {
-  if (!error || typeof error !== "object") {
-    return labels.authGeneralError;
-  }
+  const category = getSupabaseErrorCategory(error);
 
-  const fields = error as { code?: string; message?: string };
-  const normalized = [fields.code, fields.message].filter(Boolean).join(" ").toLowerCase();
-
-  if (normalized.includes("email_not_confirmed") || normalized.includes("email not confirmed") || normalized.includes("not confirmed")) {
+  if (category === "unconfirmed_email") {
     return labels.unconfirmedEmail;
   }
 
-  if (normalized.includes("invalid_credentials") || normalized.includes("invalid login credentials") || normalized.includes("invalid credentials")) {
+  if (category === "invalid_credentials") {
     return labels.invalidLogin;
   }
 
+  if (category === "network") {
+    return labels.authNetworkError;
+  }
+
   return labels.authGeneralError;
+}
+
+function getFriendlySupabaseConfigError(labels: Translation) {
+  if (supabaseConfigIssue === "missing_env") {
+    return labels.authMissingConfig;
+  }
+
+  if (supabaseConfigIssue === "invalid_url") {
+    return labels.authInvalidSupabaseUrl;
+  }
+
+  return supabaseConfigWarning;
 }
 
 function DatePickerField({
@@ -168,8 +179,8 @@ export function OrganizerEventWorkspace() {
   const [isAuthLoading, setIsAuthLoading] = useState(() => !supabaseConfigWarning && !hasPasswordRecoveryParameters());
   const [authMode, setAuthMode] = useState<AuthMode>("login");
   const [authMessage, setAuthMessage] = useState<string | null>(null);
-  const [authError, setAuthError] = useState<string | null>(supabaseConfigWarning);
-  const [authErrorDetails, setAuthErrorDetails] = useState<string | null>(null);
+  const [authError, setAuthError] = useState<string | null>(() => getFriendlySupabaseConfigError(labels));
+  const [authErrorDetails, setAuthErrorDetails] = useState<string | null>(supabaseConfigWarning);
   const [isAuthSubmitting, setIsAuthSubmitting] = useState(false);
   const [currentOrganizer, setCurrentOrganizer] = useState<Organizer>(mockOrganizer);
   const [events, setEvents] = useState<BookedEvent[]>([]);
@@ -212,7 +223,7 @@ export function OrganizerEventWorkspace() {
 
       if (error) {
         const diagnostic = logSupabaseError("load auth session", error);
-        setAuthError(labels.authGeneralError);
+        setAuthError(getFriendlyAuthError(error, labels));
         setAuthErrorDetails(diagnostic);
       }
 
@@ -246,7 +257,7 @@ export function OrganizerEventWorkspace() {
       isActive = false;
       authListener.subscription.unsubscribe();
     };
-  }, [isPasswordRecovery, labels.authGeneralError]);
+  }, [isPasswordRecovery, labels]);
 
   useEffect(() => {
     let isActive = true;
@@ -301,7 +312,8 @@ export function OrganizerEventWorkspace() {
   async function submitAuth(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!supabase) {
-      setAuthError(supabaseConfigWarning);
+      setAuthError(getFriendlySupabaseConfigError(labels));
+      setAuthErrorDetails(supabaseConfigWarning);
       return;
     }
 
@@ -357,7 +369,8 @@ export function OrganizerEventWorkspace() {
   async function submitPasswordReset(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!supabase) {
-      setAuthError(supabaseConfigWarning);
+      setAuthError(getFriendlySupabaseConfigError(labels));
+      setAuthErrorDetails(supabaseConfigWarning);
       return;
     }
 
@@ -477,8 +490,8 @@ export function OrganizerEventWorkspace() {
           setSession(null);
           setAuthMode("login");
           setAuthMessage(null);
-          setAuthError(supabaseConfigWarning);
-          setAuthErrorDetails(null);
+          setAuthError(getFriendlySupabaseConfigError(labels));
+          setAuthErrorDetails(supabaseConfigWarning);
           setSelectedEvent(null);
           setDashboardEvent(null);
           setHelperEvent(null);
@@ -546,8 +559,8 @@ export function OrganizerEventWorkspace() {
               type="button"
               onClick={() => {
                 setAuthMode("reset");
-                setAuthError(supabaseConfigWarning);
-                setAuthErrorDetails(null);
+                setAuthError(getFriendlySupabaseConfigError(labels));
+                setAuthErrorDetails(supabaseConfigWarning);
                 setAuthMessage(null);
               }}
               className="mt-3 min-h-11 w-full rounded-lg bg-white px-5 text-base font-black text-emerald-700 transition active:scale-[0.98] focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200"
@@ -560,8 +573,8 @@ export function OrganizerEventWorkspace() {
             type="button"
             onClick={() => {
               setAuthMode((current) => current === "login" ? "register" : "login");
-              setAuthError(supabaseConfigWarning);
-              setAuthErrorDetails(null);
+              setAuthError(getFriendlySupabaseConfigError(labels));
+              setAuthErrorDetails(supabaseConfigWarning);
               setAuthMessage(null);
             }}
             className="mt-5 min-h-12 w-full rounded-lg bg-slate-100 px-5 text-base font-black text-slate-700 transition active:scale-[0.98] focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200"
