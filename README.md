@@ -50,9 +50,13 @@ Helper invitation links must point to the public application URL. For production
 
 Helpers cannot manage billing, organizer information, subscriptions, bookings, or other events. A permanent helper account may be added later, but it must remain optional and must never be required for the simple event workflow.
 
-The navigation model separates organizer work from helper work. Organizers log in, open "Meine Veranstaltungen", then move between the selected event dashboard or statistics, the event sales terminal, and event settings or products. Helpers do not use this organizer navigation. A helper enters through an invitation link, QR code, or event access code, enters a name, and directly opens the assigned event sales terminal. Helpers have no event selection, no organizer dashboard, and no access to other events.
+The navigation model separates organizer work from helper work. Organizers log in, open "Meine Veranstaltungen", then move between the selected event dashboard or statistics, the event sales terminal, event settings or products, and "Speisekarte". Helpers do not use this organizer navigation. A helper enters through an invitation link, QR code, or event access code, enters a name, and directly opens the assigned event sales terminal. Helpers have no event selection, no organizer dashboard, and no access to other events.
 
 Dashboard and analytics views are organizer-only. During the event, helpers and cashiers stay in the sales terminal and may use compact operational tools such as recent sales.
+
+The menu is a first-class organizer feature, not an export workflow. The organizer can create and manage the event menu directly inside eventBon through the Speisekarte area. The menu is generated automatically from event products and is not imported from Excel or edited in Word. Products remain the single source of truth: changing a product updates the Sales Terminal, Dashboard, Excel Export, and Menu.
+
+The Menu Designer is a live editor with an immediate preview and PDF output designed for direct printing. Menu options include event logo, event title, date, categories, product image or icon, product description, price, and allergens.
 
 The event lifecycle includes preparation, active sales and printing, post-event statistics and export access, archive or retention, and optional paid extension.
 

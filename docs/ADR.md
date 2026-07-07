@@ -339,7 +339,52 @@ eventBon is a commercial product. Product icons and images appear in the sales t
 - Before public rollout, add a note to terms or usage guidance that organizers are responsible for uploaded images.
 - Development and design work must not use copied product photos or unclear internet image sources as shipped defaults.
 
-## ADR-014 Organizer and Device Language Preferences
+## ADR-014 Menu Designer as Organizer Module
+
+### Decision
+
+The menu is a native organizer module generated directly from event data.
+
+The organizer-facing navigation includes Speisekarte for the selected event.
+
+The architecture is:
+
+- Organizer
+- Event
+- Products
+- Menu Designer
+- PDF
+
+Products remain the single source of truth. The menu is generated automatically from event products. It is not imported from Excel and not edited in Word.
+
+The Menu Designer is a live editor. Changes immediately update the preview.
+
+Menu options include:
+
+- event logo
+- event title
+- date
+- categories
+- product image or icon
+- product description
+- price
+- allergens
+
+The output is a PDF designed for direct printing.
+
+### Reason
+
+Organizers need a menu as part of event preparation, not as a technical export afterthought. Treating Speisekarte as a first-class module keeps menu creation inside the same event workflow as products, prices, images, and allergens.
+
+### Implications
+
+- Speisekarte is organizer-only.
+- Helpers do not see or manage the Menu Designer.
+- Changing a product automatically updates the Sales Terminal, Dashboard, Excel Export, and Menu.
+- Menu Designer work must not introduce Word editing, Excel imports, inventory management, restaurant operations, or accounting scope.
+- Printable menu PDF belongs to the Menu Designer workflow.
+
+## ADR-015 Organizer and Device Language Preferences
 
 ### Decision
 
@@ -362,7 +407,7 @@ Organizer language is part of the organizer account experience. Terminal languag
 - Device language is not event data and must not be stored in Supabase.
 - No database migration is required until organizer profile persistence is implemented.
 
-## ADR-015 Release Candidate Roadmap
+## ADR-016 Release Candidate Roadmap
 
 ### Decision
 
@@ -376,7 +421,7 @@ P0:
 
 P1:
 
-- Menu generation.
+- Menu Designer inside Organizer.
 - Allergen management.
 - Printable menu PDF.
 
@@ -388,11 +433,11 @@ P2:
 
 ### Reason
 
-Beta readiness depends first on a consistent event-floor experience. Organizers, helpers, cashiers, dashboards, and exports must speak one selected language without mixed UI text. Physical voucher printing is the next operational risk. Menu, allergen, and printable menu support are useful event-adjacent features, but they should follow the core selling flow. Stripe pay-per-event and booking activation are commercial automation and should not block operational validation.
+Beta readiness depends first on a consistent event-floor experience. Organizers, helpers, cashiers, dashboards, and exports must speak one selected language without mixed UI text. Physical voucher printing is the next operational risk. Menu Designer, allergen, and printable menu PDF support are useful organizer features, but they should follow the core selling flow. Stripe pay-per-event and booking activation are commercial automation and should not block operational validation.
 
 ### Implications
 
 - The first P0 implementation step is a full internationalization audit and cleanup.
 - Receipt printer integration and the printer setup wizard are P0 priorities, but are not implemented until after the i18n pass.
 - Stripe remains separate from Bon sales and stays in P2 for the Release Candidate phase.
-- P1 menu and allergen work must not turn eventBon into inventory, accounting, or restaurant management software.
+- P1 Menu Designer and allergen work must not turn eventBon into inventory, accounting, or restaurant management software.

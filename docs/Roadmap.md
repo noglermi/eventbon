@@ -24,7 +24,7 @@ The organizer is the commercial customer. The product hierarchy is Organizer -> 
 
 Helper access starts simple: QR code, invitation link, or event access code; helper enters a name and works only in the assigned event. No helper email, password, or permanent helper account is required in Version 1.
 
-Organizer navigation is login, Meine Veranstaltungen, event dashboard or statistics, event sales terminal, and event settings or products. Helper navigation is invitation link, QR code, or event access code, enter name, then directly into the assigned event sales terminal. Helpers do not see event selection, organizer dashboard, or other events. Dashboard and analytics remain organizer-only.
+Organizer navigation is login, Meine Veranstaltungen, event dashboard or statistics, event sales terminal, event settings or products, and Speisekarte. Helper navigation is invitation link, QR code, or event access code, enter name, then directly into the assigned event sales terminal. Helpers do not see event selection, organizer dashboard, Speisekarte, or other events. Dashboard, analytics, and the Menu Designer remain organizer-only.
 
 Booking lifecycle:
 
@@ -47,7 +47,7 @@ P0:
 
 P1:
 
-- Menu generation.
+- Menu Designer inside Organizer.
 - Allergen management.
 - Printable menu PDF.
 
@@ -61,7 +61,47 @@ Implementation order:
 
 - Start P0 with the internationalization audit and cleanup.
 - Do not start receipt printer integration or the printer setup wizard until the i18n pass is complete.
+- Treat the menu as a native organizer module, not as an export.
 - Keep Stripe, booking activation, and event extension behind P2 until the operational beta workflow is stable.
+
+## Menu Designer Roadmap
+
+The menu is a first-class organizer feature.
+
+Organizer flow:
+
+- Organizer
+- Event
+- Products
+- Menu Designer
+- PDF
+
+The organizer opens Speisekarte for a selected event and manages the menu directly in eventBon. The menu is generated automatically from the event products. It is not imported from Excel and not edited in Word.
+
+The Menu Designer is a live editor. Changes immediately update the preview.
+
+Products remain the single source of truth. Changing a product automatically updates:
+
+- Sales Terminal
+- Dashboard
+- Excel Export
+- Menu
+
+Menu options:
+
+- event logo
+- event title
+- date
+- categories
+- product image or icon
+- product description
+- price
+- allergens
+
+Output:
+
+- PDF export
+- designed for direct printing
 
 ## Phase 1: MVP
 

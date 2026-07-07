@@ -63,6 +63,7 @@ Organizer navigation:
 - Event dashboard or statistics
 - Event sales terminal
 - Event settings and products
+- Speisekarte
 
 Helper navigation:
 
@@ -71,6 +72,8 @@ Helper navigation:
 - Directly enter the assigned event sales terminal
 
 Helpers do not use event selection, do not see the organizer dashboard, and cannot access other events. Dashboard and statistics views are organizer-only. Operational recent sales can appear inside the Sales Terminal because they support the cashier during the event.
+
+Speisekarte is an organizer-only navigation item. It opens the Menu Designer for the selected event.
 
 ## Language Preferences
 
@@ -155,6 +158,42 @@ Sales analytics is a separate organizer-facing use case. The organizer does not 
 - filters for today, entire event, and later custom periods
 
 Architecture principle: operational sales history and business analytics must remain separated. The cashier needs speed. The organizer needs information.
+
+## Menu Designer
+
+The menu is a first-class organizer module, not an export side effect.
+
+Architecture:
+
+- Organizer
+- Event
+- Products
+- Menu Designer
+- PDF
+
+The organizer can create and manage the event menu directly inside eventBon through Speisekarte. The menu is generated automatically from the event products. It is not imported from Excel and not edited in Word.
+
+Products remain the single source of truth. Changing a product automatically updates:
+
+- Sales Terminal
+- Dashboard
+- Excel Export
+- Menu
+
+The Menu Designer is a live editor. Changes immediately update the preview.
+
+Menu options:
+
+- event logo
+- event title
+- date
+- categories
+- product image or icon
+- product description
+- price
+- allergens
+
+Output is a PDF designed for direct printing.
 
 ## Vercel
 
@@ -306,7 +345,7 @@ P0 architecture priorities:
 
 P1 architecture priorities:
 
-- Menu generation from event products.
+- Menu Designer inside Organizer.
 - Allergen management connected to menu/product data.
 - Printable menu PDF.
 

@@ -29,9 +29,11 @@ Helper access should be deliberately lightweight. The product concept is:
 
 In Version 1, helper registration should take less than one minute. Helpers can join through a QR code, invitation link, or event access code and only enter their name. No email and no password are required in Version 1.
 
-The navigation model follows the role split. Organizers use login, Meine Veranstaltungen, the selected event dashboard or statistics, the event sales terminal, and event settings or products. Helpers use an invitation link, QR code, or event access code, enter their name, and directly enter the assigned event sales terminal. Helpers do not see event selection, do not see the organizer dashboard, and cannot access other events.
+The navigation model follows the role split. Organizers use login, Meine Veranstaltungen, the selected event dashboard or statistics, the event sales terminal, event settings or products, and Speisekarte. Helpers use an invitation link, QR code, or event access code, enter their name, and directly enter the assigned event sales terminal. Helpers do not see event selection, do not see the organizer dashboard, and cannot access other events.
 
 Dashboard and statistics views are organizer-only. Helpers and cashiers only need the operational sales terminal during the event.
+
+Speisekarte is an organizer-only module. The menu is generated from event products inside eventBon and is managed with a live Menu Designer. It is not imported from Excel and not edited in Word.
 
 ## Mission
 
@@ -164,7 +166,7 @@ P0:
 
 P1:
 
-- Menu generation.
+- Menu Designer inside Organizer.
 - Allergen management.
 - Printable menu PDF.
 
@@ -174,4 +176,4 @@ P2:
 - Booking activation.
 - Event extension.
 
-The first P0 implementation step is the internationalization audit and cleanup. Printer implementation starts only after the language surface is consistent. Stripe and booking activation remain P2 because event-floor reliability comes before commercial automation.
+The first P0 implementation step is the internationalization audit and cleanup. Printer implementation starts only after the language surface is consistent. P1 Menu Designer work treats products as the single source of truth and generates a print-ready PDF from event data. Stripe and booking activation remain P2 because event-floor reliability comes before commercial automation.
