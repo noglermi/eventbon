@@ -33,6 +33,11 @@ type BookedEvent = {
   isPersisted: boolean;
 };
 
+type EventListEntry = {
+  event: BookedEvent;
+  lifecycle: EventLifecycle;
+};
+
 function toDateInput(value: string) {
   return value.slice(0, 10);
 }
@@ -47,6 +52,32 @@ function getLifecycleBadgeClass(lifecycle: EventLifecycle) {
   }
 
   return "bg-amber-50 text-amber-900 ring-amber-100";
+}
+
+function compareDateValue(left: string, right: string) {
+  return left.localeCompare(right);
+}
+
+function sortOpenEventEntries(left: EventListEntry, right: EventListEntry) {
+  const lifecycleOrder: Record<Exclude<EventLifecycle, "completed">, number> = {
+    active: 0,
+    upcoming: 1,
+  };
+  const leftOrder = left.lifecycle === "completed" ? 2 : lifecycleOrder[left.lifecycle];
+  const rightOrder = right.lifecycle === "completed" ? 2 : lifecycleOrder[right.lifecycle];
+
+  if (leftOrder !== rightOrder) {
+    return leftOrder - rightOrder;
+  }
+
+  return compareDateValue(left.event.settings.dateFrom, right.event.settings.dateFrom);
+}
+
+function sortCompletedEventEntries(left: EventListEntry, right: EventListEntry) {
+  const leftEnd = left.event.settings.dateTo || left.event.settings.dateFrom;
+  const rightEnd = right.event.settings.dateTo || right.event.settings.dateFrom;
+
+  return compareDateValue(rightEnd, leftEnd);
 }
 
 function mapPersistedEvent(event: PersistedEvent): BookedEvent {
@@ -218,8 +249,8 @@ export function OrganizerEventWorkspace() {
     event,
     lifecycle: getEventLifecycle(event.settings),
   }));
-  const openEvents = eventsWithLifecycle.filter((entry) => entry.lifecycle !== "completed");
-  const completedEvents = eventsWithLifecycle.filter((entry) => entry.lifecycle === "completed");
+  const openEvents = eventsWithLifecycle.filter((entry) => entry.lifecycle !== "completed").sort(sortOpenEventEntries);
+  const completedEvents = eventsWithLifecycle.filter((entry) => entry.lifecycle === "completed").sort(sortCompletedEventEntries);
 
   function getSalesUnavailableMessage(lifecycle: EventLifecycle) {
     if (lifecycle === "completed") {
@@ -712,9 +743,9 @@ export function OrganizerEventWorkspace() {
         {([
           [labels.openEvents, openEvents],
           [labels.completedEvents, completedEvents],
-        ] as Array<[string, typeof eventsWithLifecycle]>).map(([sectionTitle, sectionEvents]) => sectionEvents.length > 0 ? (
+        ] as Array<[string, EventListEntry[]]>).map(([sectionTitle, sectionEvents]) => sectionEvents.length > 0 ? (
           <section key={sectionTitle} className="grid gap-4" aria-label={sectionTitle}>
-            <h2 className="text-2xl font-black tracking-tight text-slate-900">{sectionTitle}</h2>
+            <h2 className="text-lg font-black uppercase tracking-widest text-slate-800">{sectionTitle}</h2>
             <div className="grid gap-4 md:grid-cols-2">
               {sectionEvents.map(({ event: bookedEvent, lifecycle }) => (
                 <article key={bookedEvent.id} className="grid gap-4 rounded-lg bg-white p-5 shadow-sm ring-1 ring-slate-200">
@@ -729,8 +760,8 @@ export function OrganizerEventWorkspace() {
                   </div>
 
                   <div className="rounded-lg bg-slate-50 px-4 py-3 text-sm font-bold text-slate-600 ring-1 ring-slate-100">
-                    <span className="font-black uppercase tracking-widest text-slate-500">{labels.salesActiveUntil}: </span>
-                    <span className="text-slate-950">{formatDate(bookedEvent.settings.dateTo || bookedEvent.settings.dateFrom, language)}</span>
+                    <span className="font-black uppercase tracking-widest text-slate-500">{labels.accessUntil}: </span>
+                    <span className="text-slate-950">{formatDate(bookedEvent.accessUntil, language)}</span>
                   </div>
 
                   <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -762,16 +793,6 @@ export function OrganizerEventWorkspace() {
                     >
                       {labels.menuTitle}
                     </button>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-3 rounded-lg bg-slate-50 px-4 py-3 ring-1 ring-slate-100">
-                    <button
-                      type="button"
-                      disabled
-                      className="min-h-10 rounded-lg bg-slate-200 px-4 text-sm font-black text-slate-500"
-                    >
-                      {labels.extendDays}
-                    </button>
-                    <p className="text-xs font-bold text-slate-500">{labels.extensionFutureOnly}</p>
                   </div>
                 </article>
               ))}
