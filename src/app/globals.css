@@ -3,6 +3,12 @@
 :root {
   --background: #f3f4ef;
   --foreground: #0f172a;
+  --printer-paper-width: 58mm;
+  --printer-printable-width: 52mm;
+  --printer-ticket-padding: 2mm;
+  --printer-ticket-gap: 4mm;
+  --printer-font-size: 10pt;
+  --printer-line-gap: 1mm;
 }
 
 @theme inline {
@@ -62,7 +68,7 @@ input {
     inset: 0 auto auto 0 !important;
     display: block !important;
     width: 100% !important;
-    max-width: 72mm !important;
+    max-width: var(--printer-printable-width) !important;
     margin: 0 !important;
     padding: 0 !important;
     background: white !important;
@@ -81,9 +87,9 @@ input {
 
   .voucher-ticket {
     width: 100%;
-    max-width: 72mm;
-    margin: 0 0 4mm;
-    padding: 3mm 2.5mm 4mm;
+    max-width: var(--printer-printable-width);
+    margin: 0 0 var(--printer-ticket-gap);
+    padding: var(--printer-ticket-padding);
     color: black !important;
     background: white !important;
     box-shadow: none !important;
@@ -96,7 +102,7 @@ input {
   .voucher-line {
     display: grid !important;
     grid-template-columns: auto 1fr !important;
-    column-gap: 2mm !important;
+    column-gap: var(--printer-line-gap) !important;
   }
 
   .voucher-cut-line {

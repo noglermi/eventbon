@@ -13,10 +13,12 @@ import { Cart } from "./Cart";
 import { defaultLanguage, groupLabels, translations } from "./i18n";
 import { initialCart, mockEventSettings, productTiles, tileGroups } from "./mock-data";
 import { PaymentPanel } from "./PaymentPanel";
+import { getPrinterCssVariables, PrinterSetupWizard } from "./PrinterSetupWizard";
 import { ProductTile } from "./ProductTile";
 import { RecentSalesPanel } from "./RecentSalesPanel";
 import { readTerminalId } from "./terminal-id-storage";
 import { loadViewSettings, saveViewSettings } from "./view-settings-storage";
+import { loadPrinterSettings, savePrinterSettings } from "./printer-settings-storage";
 import { VoucherPrintPreview } from "./VoucherPrintPreview";
 import type { ActiveHelperSession, CartItem, EventSettings, Language, PaymentMethod, ProductTileData, TileGroupName } from "./types";
 import type { ViewSettings } from "./view-settings-storage";
@@ -179,6 +181,7 @@ export function SalesTerminal({
   const viewPanelRef = useRef<HTMLDivElement | null>(null);
   const hasLoadedViewSettings = useRef(typeof window !== "undefined");
   const [viewSettings, setViewSettings] = useState<ViewSettings>(() => loadViewSettings());
+  const [printerSettings, setPrinterSettings] = useState(() => loadPrinterSettings());
   const [terminalId] = useState(() => readTerminalId());
   const [isViewPanelOpen, setIsViewPanelOpen] = useState(false);
   const [eventSettings] = useState<EventSettings>(initialEventSettings);
@@ -214,6 +217,14 @@ export function SalesTerminal({
 
     saveViewSettings(viewSettings);
   }, [viewSettings]);
+
+  useEffect(() => {
+    if (!hasLoadedViewSettings.current) {
+      return;
+    }
+
+    savePrinterSettings(printerSettings);
+  }, [printerSettings]);
 
   useEffect(() => {
     if (!isViewPanelOpen) {
@@ -805,6 +816,9 @@ export function SalesTerminal({
                 ) : null}
               </div>
             ) : null}
+            {!isHelperTerminal ? (
+              <PrinterSetupWizard labels={labels} language={language} printerSettings={printerSettings} onPrinterSettingsChange={setPrinterSettings} />
+            ) : null}
             <RecentSalesPanel labels={labels} language={language} recentSales={recentSales} onReprintSale={openReprintPreview} />
           </ScaledBlock>
         </div>
@@ -830,6 +844,7 @@ export function SalesTerminal({
           productsById={productsById}
           printMode={eventSettings.printMode}
           printedAt={printPreviewDate}
+          printerStyle={getPrinterCssVariables(printerSettings)}
           onCancel={closeInitialPrintPreview}
           onPrinted={handleInitialPrintRecorded}
         />
@@ -846,6 +861,7 @@ export function SalesTerminal({
           printMode={eventSettings.printMode}
           printedAt={reprintPreviewDate}
           reprintLabel={reprintSale.printCount + 1 > 1 ? labels.reprint : null}
+          printerStyle={getPrinterCssVariables(printerSettings)}
           onCancel={() => {
             setReprintSale(null);
             setReprintPreviewDate(null);

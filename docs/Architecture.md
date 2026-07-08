@@ -374,11 +374,24 @@ Stripe is never used for Bon sales to visitors. Visitor payments remain outside 
 
 ## Printing
 
-The MVP uses browser voucher printing.
+The MVP uses browser Bon printing first. eventBon does not select printers automatically and does not send ESC/POS or native printer commands yet.
+
+The printer setup foundation stores device-local browser print settings in localStorage. These settings are intentionally not event data and are not stored in Supabase.
+
+Initial tested printer profiles:
+
+- Generic 58 mm receipt printer
+- Generic 80 mm receipt printer
+- Brother TD-4000
+- Generic A4 test printer
+
+The organizer or device operator must install the printer in Windows first. eventBon then uses the browser print dialog and applies the selected profile to the Bon print CSS for width, density, and tear/cut spacing.
 
 Printing should be generated from recorded sales data so the printed result can be traced back to the order and event.
 
 Bon printing is an event-period capability. Outside the active event period or an explicitly enabled usage window, printing should be inactive even if product setup and read-only statistics access are still available.
+
+Direct printing, ESC/POS support, native printer integration, and automatic printer discovery are later hardening topics and are not part of the browser-print foundation.
 
 ## Release Candidate Architecture Priorities
 

@@ -1,4 +1,5 @@
 import { formatDateTime } from "@/lib/date-format";
+import type { CSSProperties } from "react";
 import type { Translation } from "./i18n";
 import type { CartItem, Language, PrintMode, ProductTileData } from "./types";
 
@@ -18,6 +19,7 @@ type VoucherPrintPreviewProps = {
   printMode: PrintMode;
   printedAt: Date;
   reprintLabel?: string | null;
+  printerStyle?: CSSProperties;
   onCancel: () => void;
   onPrinted?: () => void;
 };
@@ -60,7 +62,7 @@ function Voucher({ eventName, labels, lines, printedAtText, reprintLabel }: { ev
   );
 }
 
-export function VoucherPrintPreview({ eventName, language, labels, cartItems, lines: providedLines, productsById, printMode, printedAt, reprintLabel = null, onCancel, onPrinted }: VoucherPrintPreviewProps) {
+export function VoucherPrintPreview({ eventName, language, labels, cartItems, lines: providedLines, productsById, printMode, printedAt, reprintLabel = null, printerStyle, onCancel, onPrinted }: VoucherPrintPreviewProps) {
   const lines = providedLines ?? buildLines(cartItems, productsById, language);
   const printedAtText = formatDateTime(printedAt, language);
   const vouchers = printMode === "single_vouchers"
@@ -82,7 +84,7 @@ export function VoucherPrintPreview({ eventName, language, labels, cartItems, li
         </div>
 
         <div className="print-preview-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain bg-slate-100 p-6">
-          <div className="print-area mx-auto grid max-w-[80mm] gap-4">
+          <div className="print-area mx-auto grid max-w-[var(--printer-printable-width)] gap-4" style={printerStyle}>
             {vouchers.map((voucher) => (
               <Voucher key={voucher.id} eventName={eventName} labels={labels} lines={voucher.lines} printedAtText={printedAtText} reprintLabel={reprintLabel} />
             ))}
