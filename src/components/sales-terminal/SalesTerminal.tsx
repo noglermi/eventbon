@@ -184,6 +184,7 @@ export function SalesTerminal({
   const [printerSettings, setPrinterSettings] = useState(() => loadPrinterSettings());
   const [terminalId] = useState(() => readTerminalId());
   const [isViewPanelOpen, setIsViewPanelOpen] = useState(false);
+  const [isTerminalSetupOpen, setIsTerminalSetupOpen] = useState(false);
   const [eventSettings] = useState<EventSettings>(initialEventSettings);
   const [products, setProducts] = useState<ProductTileData[]>(productTiles);
   const [cartItems, setCartItems] = useState<CartItem[]>(initialCart);
@@ -681,6 +682,14 @@ export function SalesTerminal({
         </div>
 
         <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setIsTerminalSetupOpen(true)}
+            className="flex min-h-12 items-center gap-2 rounded-2xl bg-white px-4 text-base font-black text-slate-700 shadow-sm ring-1 ring-slate-200/80 transition active:scale-[0.98] focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200"
+          >
+            <PrinterIcon />
+            {labels.terminalSetup}
+          </button>
           <div className="flex min-h-12 items-center rounded-2xl bg-slate-100/80 px-2 ring-1 ring-slate-200/70" aria-label={labels.language}>
             <button
               type="button"
@@ -816,9 +825,6 @@ export function SalesTerminal({
                 ) : null}
               </div>
             ) : null}
-            {!isHelperTerminal ? (
-              <PrinterSetupWizard labels={labels} language={language} printerSettings={printerSettings} onPrinterSettingsChange={setPrinterSettings} />
-            ) : null}
             <RecentSalesPanel labels={labels} language={language} recentSales={recentSales} onReprintSale={openReprintPreview} />
           </ScaledBlock>
         </div>
@@ -868,6 +874,29 @@ export function SalesTerminal({
           }}
           onPrinted={handleReprintRecorded}
         />
+      ) : null}
+
+      {isTerminalSetupOpen ? (
+        <div className="fixed inset-0 z-[300] flex items-center justify-center bg-slate-950/50 p-8 backdrop-blur-sm" role="dialog" aria-modal="true" aria-label={labels.terminalSetup}>
+          <div className="flex max-h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-[2rem] bg-slate-50 shadow-2xl ring-1 ring-white/40">
+            <div className="flex shrink-0 items-center justify-between gap-4 border-b border-slate-200 bg-white px-7 py-5">
+              <div>
+                <p className="text-sm font-bold uppercase tracking-widest text-emerald-600">{labels.printerSetup}</p>
+                <h2 className="mt-1 text-3xl font-black tracking-normal text-slate-950">{labels.terminalSetup}</h2>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsTerminalSetupOpen(false)}
+                className="min-h-12 rounded-2xl bg-slate-100 px-5 text-lg font-black text-slate-700 transition active:scale-[0.98] focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200"
+              >
+                {labels.cancel}
+              </button>
+            </div>
+            <div className="min-h-0 flex-1 overflow-y-auto p-6">
+              <PrinterSetupWizard labels={labels} language={language} printerSettings={printerSettings} onPrinterSettingsChange={setPrinterSettings} />
+            </div>
+          </div>
+        </div>
       ) : null}
 
       {!isHelperTerminal && tileEditor ? (

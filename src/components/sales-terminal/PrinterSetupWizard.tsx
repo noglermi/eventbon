@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import { formatDateTime } from "@/lib/date-format";
 import type { Translation } from "./i18n";
@@ -36,18 +36,20 @@ export function getPrinterCssVariables(settings: PrinterSettings) {
 
 function TestVoucher({ labels, language, printerSettings, printedAt }: { labels: Translation; language: Language; printerSettings: PrinterSettings; printedAt: Date }) {
   const selectedProfile = getPrinterProfile(printerSettings.profileId);
+  const cutModeLabel = printerSettings.cutMode === "cutter" ? labels.cutterMode : labels.tearMode;
 
   return (
     <article className="voucher-ticket bg-white px-4 py-3 font-mono text-slate-950 shadow-sm ring-1 ring-slate-300">
       <div className="text-center">
         <p className="text-base font-black tracking-wide">eventBon</p>
-        <p className="mt-1 text-sm font-bold">{labels.testPrint}</p>
+        <p className="mt-1 text-sm font-black uppercase tracking-wide">{labels.testPrint}</p>
       </div>
       <div className="my-2 border-t border-dashed border-slate-500" />
       <div className="space-y-1 text-sm font-black leading-tight">
-        <p>{formatDateTime(printedAt, language)}</p>
-        <p>{selectedProfile.label[language]}</p>
+        <p>{labels.testPrintDateTime}: {formatDateTime(printedAt, language)}</p>
+        <p>{labels.printerProfile}: {selectedProfile.label[language]}</p>
         <p>{labels.paperWidth}: {formatPaperWidth(printerSettings.paperWidthMm)}</p>
+        <p>{labels.cutTearMode}: {cutModeLabel}</p>
       </div>
       <div className="voucher-cut-line mt-3 border-t border-dashed border-slate-700" />
     </article>
@@ -56,17 +58,19 @@ function TestVoucher({ labels, language, printerSettings, printedAt }: { labels:
 
 export function PrinterSetupWizard({ labels, language, printerSettings, onPrinterSettingsChange }: PrinterSetupWizardProps) {
   const selectedProfile = getPrinterProfile(printerSettings.profileId);
+  const pendingPrintRef = useRef(false);
   const [testPrintDate, setTestPrintDate] = useState<Date | null>(null);
   const previewDate = testPrintDate ?? new Date();
 
   useEffect(() => {
-    if (!testPrintDate) {
+    if (!testPrintDate || !pendingPrintRef.current) {
       return;
     }
 
     const timeoutId = window.setTimeout(() => {
+      pendingPrintRef.current = false;
       window.print();
-    }, 0);
+    }, 120);
 
     return () => {
       window.clearTimeout(timeoutId);
@@ -94,7 +98,7 @@ export function PrinterSetupWizard({ labels, language, printerSettings, onPrinte
     <section className="rounded-[2.25rem] bg-white/95 p-5 shadow-[0_18px_50px_rgba(15,23,42,0.06)] ring-1 ring-slate-200/75">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <p className="text-sm font-bold uppercase tracking-widest text-emerald-700">{labels.printerSetup}</p>
+          <p className="text-sm font-bold uppercase tracking-widest text-emerald-700">{labels.terminalSetup}</p>
           <h2 className="mt-1 text-2xl font-black tracking-tight text-slate-950">{selectedProfile.label[language]}</h2>
           <p className="mt-2 text-sm font-semibold leading-6 text-slate-500">{labels.printerBrowserDialogNote}</p>
         </div>
@@ -162,7 +166,10 @@ export function PrinterSetupWizard({ labels, language, printerSettings, onPrinte
 
         <button
           type="button"
-          onClick={() => setTestPrintDate(new Date())}
+          onClick={() => {
+            pendingPrintRef.current = true;
+            setTestPrintDate(new Date());
+          }}
           className="min-h-14 rounded-2xl bg-slate-950 px-5 text-lg font-black text-white transition active:scale-[0.98] focus:outline-none focus-visible:ring-4 focus-visible:ring-slate-300"
         >
           {labels.testPrintButton}
@@ -173,7 +180,7 @@ export function PrinterSetupWizard({ labels, language, printerSettings, onPrinte
         <div className="fixed inset-0 z-[420] flex items-center justify-center bg-slate-950/60 p-8 backdrop-blur-sm" role="dialog" aria-modal="true" aria-label={labels.testPrintPreview}>
           <div className="flex max-h-[90vh] w-full max-w-xl flex-col overflow-hidden rounded-[2rem] bg-white shadow-2xl">
             <div className="print-preview-chrome shrink-0 border-b border-slate-200 px-7 py-5">
-              <p className="text-sm font-bold uppercase tracking-widest text-emerald-600">{labels.printerSetup}</p>
+              <p className="text-sm font-bold uppercase tracking-widest text-emerald-600">{labels.terminalSetup}</p>
               <h2 className="mt-1 text-3xl font-black tracking-normal text-slate-950">{labels.testPrint}</h2>
             </div>
             <div className="print-preview-scroll min-h-0 flex-1 overflow-y-auto bg-slate-100 p-6">
