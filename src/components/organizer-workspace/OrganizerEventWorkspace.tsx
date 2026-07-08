@@ -22,6 +22,10 @@ import type { Session } from "@supabase/supabase-js";
 
 type BookedEventStatus = "preparation" | "active" | "stats_available" | "post_event_read_only" | "expired" | "archived" | "draft";
 type AuthMode = "login" | "register" | "reset";
+type AuthAlert = {
+  message: string;
+  title: string;
+};
 
 type BookedEvent = {
   id: string;
@@ -111,34 +115,64 @@ function getSessionOrganizerName(session: Session | null) {
   return mockOrganizer.name;
 }
 
-function getFriendlyAuthError(error: unknown, labels: Translation) {
+function getFriendlyAuthError(error: unknown, labels: Translation): AuthAlert {
   const category = getSupabaseErrorCategory(error);
 
   if (category === "unconfirmed_email") {
-    return labels.unconfirmedEmail;
+    return {
+      title: labels.authFailedTitle,
+      message: labels.unconfirmedEmail,
+    };
   }
 
   if (category === "invalid_credentials") {
-    return labels.invalidLogin;
+    return {
+      title: labels.authFailedTitle,
+      message: labels.invalidLogin,
+    };
   }
 
   if (category === "network") {
-    return labels.authNetworkError;
+    return {
+      title: labels.authNetworkTitle,
+      message: labels.authNetworkError,
+    };
   }
 
-  return labels.authGeneralError;
+  if (category === "too_many_attempts") {
+    return {
+      title: labels.authTooManyTitle,
+      message: labels.authTooManyError,
+    };
+  }
+
+  return {
+    title: labels.authServerTitle,
+    message: labels.authServerError,
+  };
 }
 
-function getFriendlySupabaseConfigError(labels: Translation) {
+function getFriendlySupabaseConfigError(labels: Translation): AuthAlert | null {
   if (supabaseConfigIssue === "missing_env") {
-    return labels.authMissingConfig;
+    return {
+      title: labels.authServerTitle,
+      message: labels.authServerError,
+    };
   }
 
   if (supabaseConfigIssue === "invalid_url") {
-    return labels.authInvalidSupabaseUrl;
+    return {
+      title: labels.authServerTitle,
+      message: labels.authServerError,
+    };
   }
 
-  return supabaseConfigWarning;
+  return supabaseConfigWarning
+    ? {
+      title: labels.authServerTitle,
+      message: labels.authServerError,
+    }
+    : null;
 }
 
 function DatePickerField({
@@ -223,7 +257,7 @@ export function OrganizerEventWorkspace() {
   const [isAuthLoading, setIsAuthLoading] = useState(() => !supabaseConfigWarning && !hasPasswordRecoveryParameters());
   const [authMode, setAuthMode] = useState<AuthMode>("login");
   const [authMessage, setAuthMessage] = useState<string | null>(null);
-  const [authError, setAuthError] = useState<string | null>(() => getFriendlySupabaseConfigError(labels));
+  const [authError, setAuthError] = useState<AuthAlert | null>(() => getFriendlySupabaseConfigError(labels));
   const [authErrorDetails, setAuthErrorDetails] = useState<string | null>(supabaseConfigWarning);
   const [isAuthSubmitting, setIsAuthSubmitting] = useState(false);
   const [currentOrganizer, setCurrentOrganizer] = useState<Organizer>(mockOrganizer);
@@ -454,7 +488,10 @@ export function OrganizerEventWorkspace() {
       setAuthMode("login");
     } catch (error) {
       const diagnostic = logSupabaseError("organizer password reset", error);
-      setAuthError(labels.resetPasswordError);
+      setAuthError({
+        title: labels.authServerTitle,
+        message: labels.resetPasswordError,
+      });
       setAuthErrorDetails(diagnostic);
     } finally {
       setIsAuthSubmitting(false);
@@ -472,7 +509,10 @@ export function OrganizerEventWorkspace() {
     const { error } = await supabase.auth.signOut();
     if (error) {
       const diagnostic = logSupabaseError("organizer logout", error);
-      setAuthError(labels.authGeneralError);
+      setAuthError({
+        title: labels.authServerTitle,
+        message: labels.authServerError,
+      });
       setAuthErrorDetails(diagnostic);
     }
   }
@@ -574,10 +614,16 @@ export function OrganizerEventWorkspace() {
           <p className="mt-2 text-lg font-semibold text-slate-600">{authMode === "reset" ? labels.resetPasswordIntro : labels.authRequiredIntro}</p>
 
           {authError ? (
-            <div className="mt-5 rounded-lg bg-amber-50 px-4 py-3 text-sm font-bold text-amber-900 ring-1 ring-amber-200">
-              <p>{authError}</p>
+            <div className="mt-5 rounded-2xl border border-rose-200 bg-rose-50 px-5 py-4 text-sm font-bold text-rose-950 shadow-sm">
+              <div className="flex gap-3">
+                <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-rose-100 text-lg font-black text-rose-700" aria-hidden="true">!</div>
+                <div>
+                  <p className="text-base font-black text-rose-950">{authError.title}</p>
+                  <p className="mt-1 whitespace-pre-line text-sm font-bold leading-6 text-rose-900">{authError.message}</p>
+                </div>
+              </div>
               {authErrorDetails ? (
-                <details className="mt-3 text-xs font-semibold text-amber-950">
+                <details className="mt-4 text-xs font-semibold text-rose-950">
                   <summary className="cursor-pointer font-black">{labels.technicalDetails}</summary>
                   <pre className="mt-2 whitespace-pre-wrap break-words rounded-lg bg-white/70 p-3 font-mono text-[11px] leading-relaxed">{authErrorDetails}</pre>
                 </details>

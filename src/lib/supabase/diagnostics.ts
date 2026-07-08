@@ -12,6 +12,7 @@ export type SupabaseErrorCategory =
   | "network"
   | "permission_denied"
   | "table_missing"
+  | "too_many_attempts"
   | "unconfirmed_email"
   | "unknown";
 
@@ -41,6 +42,7 @@ export function formatSupabaseError(context: string, error: unknown) {
     network: "Supabase network error",
     permission_denied: "Supabase permission denied / RLS policy issue",
     table_missing: "Supabase table does not exist",
+    too_many_attempts: "Supabase too many attempts",
     unconfirmed_email: "Supabase email not confirmed",
     unknown: "Supabase error",
   }[getSupabaseErrorCategory(error)];
@@ -71,6 +73,10 @@ export function getSupabaseErrorCategory(error: unknown): SupabaseErrorCategory 
 
   if (technicalMessage.includes("invalid_credentials") || technicalMessage.includes("invalid login credentials") || technicalMessage.includes("invalid credentials")) {
     return "invalid_credentials";
+  }
+
+  if (fields.status === 429 || technicalMessage.includes("too many") || technicalMessage.includes("rate limit") || technicalMessage.includes("rate_limit")) {
+    return "too_many_attempts";
   }
 
   if (fields.code === "42P01" || technicalMessage.includes("does not exist") || technicalMessage.includes("schema cache")) {
