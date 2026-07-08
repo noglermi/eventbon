@@ -541,3 +541,24 @@ RC-4 focuses on security hardening:
 - production hardening
 
 Until RC-4, major architecture refactoring should be avoided unless required for a beta blocker. Allowed work includes bug fixes, UX improvements, printing, and beta workflow improvements. Large security rewrites, large database redesigns, and unnecessary RPC redesigns should be avoided.
+
+## ADR-019 One Terminal, One Printer
+
+### Decision
+
+Each sales terminal or device uses exactly one configured printer.
+
+There is no multi-printer routing per terminal.
+
+### Reason
+
+eventBon must remain simple and reliable during events. Printer routing would add complexity, increase setup effort, and create additional support risk during live event operation.
+
+### Consequences
+
+- printer settings are device-local
+- each terminal can have its own printer
+- multiple terminals at one event are supported
+- each terminal prints to its own configured printer
+- no product-based printer routing in the MVP
+- no multiple printers per terminal

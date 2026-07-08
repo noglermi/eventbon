@@ -68,6 +68,14 @@ Focus:
 - print testing
 - print documentation
 
+Product rule:
+
+- one terminal/device uses one configured printer
+- each terminal can have its own device-local printer settings
+- multiple terminals at one event are supported
+- no product-based printer routing in the MVP
+- no multiple printers per terminal
+
 ### RC-3 Pilot Program
 
 Focus:

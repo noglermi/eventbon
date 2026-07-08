@@ -378,6 +378,8 @@ The MVP uses browser Bon printing first. eventBon does not select printers autom
 
 The printer setup foundation stores device-local browser print settings in localStorage. These settings are intentionally not event data and are not stored in Supabase.
 
+Each sales terminal or device uses exactly one configured printer. There is no multi-printer routing per terminal. Multiple terminals at one event are supported by configuring each terminal/device with its own local printer settings.
+
 Initial tested printer profiles:
 
 - Generic 58 mm receipt printer
@@ -392,6 +394,8 @@ Printing should be generated from recorded sales data so the printed result can 
 Bon printing is an event-period capability. Outside the active event period or an explicitly enabled usage window, printing should be inactive even if product setup and read-only statistics access are still available.
 
 Direct printing, ESC/POS support, native printer integration, and automatic printer discovery are later hardening topics and are not part of the browser-print foundation.
+
+Product-based printer routing, kitchen printer routing, and multiple printers per terminal are not part of the MVP. This keeps event-floor printing simple, predictable, and easier to support.
 
 ## Release Candidate Architecture Priorities
 
