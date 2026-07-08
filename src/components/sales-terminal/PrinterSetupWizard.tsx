@@ -105,6 +105,18 @@ export function PrinterSetupWizard({ labels, language, printerSettings, onPrinte
       </div>
 
       <div className="mt-5 grid gap-4">
+        <div className="rounded-2xl bg-emerald-50 p-4 ring-1 ring-emerald-100">
+          <p className="text-sm font-black uppercase tracking-widest text-emerald-800">{labels.printerDeviceGuidanceTitle}</p>
+          <div className="mt-3 grid gap-2 text-sm font-bold leading-6 text-slate-700">
+            <p>{labels.printerWindowsGuidance}</p>
+            <p>{labels.printerIpadGuidance}</p>
+            <p>{labels.printerAndroidGuidance}</p>
+          </div>
+          <p className="mt-4 rounded-xl bg-white/80 px-4 py-3 text-base font-black leading-6 text-emerald-900 ring-1 ring-emerald-100">
+            {labels.printerBetaRecommendation}
+          </p>
+        </div>
+
         <label className="grid gap-2 text-sm font-bold uppercase tracking-widest text-slate-500">
           {labels.printerProfile}
           <select
