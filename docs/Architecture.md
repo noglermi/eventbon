@@ -85,6 +85,25 @@ Sales terminal and helper devices use device-local language as part of local vie
 
 This separation lets an organizer use one language while helper devices at the same event use another language.
 
+## Event Settings And Device Settings
+
+eventBon separates event-specific settings from device-specific settings.
+
+Event settings belong to the booked event and are shared by all terminals working at that event:
+
+- Products
+- Helpers
+- Menu
+- Dashboard and statistics
+
+Device settings belong to the local browser or terminal and are never event-specific:
+
+- Receipt printer
+- Zoom
+- Device language
+
+One event may be used from multiple terminals. Each terminal has exactly one configured receipt printer and stores its own local configuration in localStorage. This keeps setup predictable at the event floor while allowing different sales points to use different printers, zoom levels, and device languages.
+
 ## Multi-Tenant Design
 
 eventBon must support multiple tenants even if the MVP interface exposes only a single event flow.
@@ -376,7 +395,7 @@ Stripe is never used for Bon sales to visitors. Visitor payments remain outside 
 
 The MVP uses browser Bon printing first. eventBon does not select printers automatically and does not send ESC/POS or native printer commands yet.
 
-The printer setup foundation stores device-local browser print settings in localStorage. These settings are intentionally not event data and are not stored in Supabase.
+The receipt printer setup foundation stores device-local browser print settings in localStorage. These settings are intentionally not event data and are not stored in Supabase.
 
 Each sales terminal or device uses exactly one configured printer. There is no multi-printer routing per terminal. Multiple terminals at one event are supported by configuring each terminal/device with its own local printer settings.
 

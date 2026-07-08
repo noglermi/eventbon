@@ -542,7 +542,7 @@ RC-4 focuses on security hardening:
 
 Until RC-4, major architecture refactoring should be avoided unless required for a beta blocker. Allowed work includes bug fixes, UX improvements, printing, and beta workflow improvements. Large security rewrites, large database redesigns, and unnecessary RPC redesigns should be avoided.
 
-## ADR-019 One Terminal, One Printer
+## ADR-019 One Terminal = One Printer, One Device = One Local Configuration
 
 ### Decision
 
@@ -550,15 +550,31 @@ Each sales terminal or device uses exactly one configured printer.
 
 There is no multi-printer routing per terminal.
 
+Each device has one local configuration. Local configuration includes:
+
+- printer profile
+- paper width
+- cut mode
+- zoom
+- device language
+
+These settings are never event-specific.
+
 ### Reason
 
 eventBon must remain simple and reliable during events. Printer routing would add complexity, increase setup effort, and create additional support risk during live event operation.
 
+One event may be used from multiple terminals. Each terminal needs local control over its printer, display zoom, and language without changing the event setup for other terminals.
+
 ### Consequences
 
 - printer settings are device-local
+- zoom settings are device-local
+- device language is device-local
 - each terminal can have its own printer
 - multiple terminals at one event are supported
 - each terminal prints to its own configured printer
 - no product-based printer routing in the MVP
 - no multiple printers per terminal
+- local device configuration is stored in localStorage, not in Supabase
+- event settings remain separate from device settings

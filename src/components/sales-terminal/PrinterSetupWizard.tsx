@@ -98,9 +98,10 @@ export function PrinterSetupWizard({ labels, language, printerSettings, onPrinte
     <section className="rounded-[2.25rem] bg-white/95 p-5 shadow-[0_18px_50px_rgba(15,23,42,0.06)] ring-1 ring-slate-200/75">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <p className="text-sm font-bold uppercase tracking-widest text-emerald-700">{labels.terminalSetup}</p>
+          <p className="text-sm font-bold uppercase tracking-widest text-emerald-700">{labels.receiptPrinter}</p>
           <h2 className="mt-1 text-2xl font-black tracking-tight text-slate-950">{selectedProfile.label[language]}</h2>
-          <p className="mt-2 text-sm font-semibold leading-6 text-slate-500">{labels.printerBrowserDialogNote}</p>
+          <p className="mt-2 text-sm font-semibold leading-6 text-slate-500">{labels.receiptPrinterSetupSubtitle}</p>
+          <p className="mt-1 text-sm font-semibold leading-6 text-slate-500">{labels.printerBrowserDialogNote}</p>
         </div>
       </div>
 

@@ -56,6 +56,13 @@ Product rule:
 - no product-based printer routing in the MVP
 - no multiple printers per terminal
 
+Device settings concept:
+
+- event settings: products, helpers, menu, dashboard
+- device settings: receipt printer, zoom, device language
+- device settings are local to the terminal and are not stored as event data
+- a future Dieses Gerät area may group receipt printer, zoom, and language settings
+
 ### RC-3 Pilot Program
 
 Focus:

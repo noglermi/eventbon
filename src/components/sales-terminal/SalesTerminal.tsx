@@ -881,8 +881,9 @@ export function SalesTerminal({
           <div className="flex max-h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-[2rem] bg-slate-50 shadow-2xl ring-1 ring-white/40">
             <div className="flex shrink-0 items-center justify-between gap-4 border-b border-slate-200 bg-white px-7 py-5">
               <div>
-                <p className="text-sm font-bold uppercase tracking-widest text-emerald-600">{labels.printerSetup}</p>
+                <p className="text-sm font-bold uppercase tracking-widest text-emerald-600">{labels.deviceSettings}</p>
                 <h2 className="mt-1 text-3xl font-black tracking-normal text-slate-950">{labels.terminalSetup}</h2>
+                <p className="mt-2 text-base font-semibold text-slate-500">{labels.receiptPrinterSetupSubtitle}</p>
               </div>
               <button
                 type="button"
@@ -893,6 +894,9 @@ export function SalesTerminal({
               </button>
             </div>
             <div className="min-h-0 flex-1 overflow-y-auto p-6">
+              <div className="mb-4 rounded-2xl bg-white px-5 py-4 text-sm font-bold leading-6 text-slate-600 ring-1 ring-slate-200">
+                {labels.futureDeviceSettingsNote}
+              </div>
               <PrinterSetupWizard labels={labels} language={language} printerSettings={printerSettings} onPrinterSettingsChange={setPrinterSettings} />
             </div>
           </div>

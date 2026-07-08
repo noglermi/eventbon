@@ -88,6 +88,8 @@ eventBon is built around:
 
 The architecture is multi-tenant by design. All application data is stored in Supabase. The system should be structured so Stripe and SumUp integrations can be added later without reworking the product model.
 
+Event settings and device settings are intentionally separate. Event settings include products, helpers, menu, and dashboard/statistics. Device settings include the receipt printer, zoom, and device language. One event may be used from multiple terminals, and each terminal stores its own local device configuration.
+
 ## Release Strategy
 
 eventBon follows a beta-first release strategy.
