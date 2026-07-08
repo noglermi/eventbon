@@ -52,9 +52,18 @@ Focus:
 - tablet optimization
 - sales workflow
 - password reset
+- organizer event workspace
 - Menu Designer
 - printer support
 - complete event workflow
+
+Organizer event workspace:
+
+- central organizer-only area for one booked event
+- navigation: Übersicht, Verkauf, Dashboard, Produkte, Helfer, Speisekarte, Bondrucker, Einstellungen
+- overview with event title, date, lifecycle badge, product count, helper count, sales count, and revenue
+- quick actions to open sales and dashboard
+- existing modules are reused instead of duplicating functionality
 
 ### RC-2 Receipt Printing
 

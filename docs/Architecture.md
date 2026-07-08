@@ -28,7 +28,7 @@ The main organizer-facing entry point is:
 
 - Meine Veranstaltungen
 
-From there, the organizer opens a booked event and enters the sales terminal for that event.
+From there, the organizer opens a booked event and enters the organizer event workspace for that event.
 
 The organizer is the commercial customer and owner of booked events. The primary product hierarchy is:
 
@@ -53,6 +53,33 @@ Supporting capabilities exist only where they are required by that event termina
 There is no dashboard in the MVP.
 
 User-facing product language should use Veranstalter for the organizer. Internally, the data model may still use tenant and tenant_id for multi-tenant boundaries, but the user-facing product should avoid Mandant.
+
+## Organizer Event Workspace
+
+The organizer event workspace is the central organizer-only area for one booked event.
+
+Workspace navigation:
+
+- Übersicht
+- Verkauf
+- Dashboard
+- Produkte
+- Helfer
+- Speisekarte
+- Bondrucker
+- Einstellungen
+
+The workspace does not duplicate business functionality. It organizes existing modules into one coherent event management area:
+
+- Verkauf opens the existing Sales Terminal.
+- Dashboard opens the existing organizer analytics dashboard.
+- Produkte are managed through the existing editable tile workflow in the Sales Terminal.
+- Helfer uses the existing helper invitation workflow.
+- Speisekarte opens the existing Menu Designer.
+- Bondrucker uses the existing device-local receipt printer setup.
+- Einstellungen shows event configuration context without adding new business rules.
+
+The overview page summarizes the selected event with title, date, lifecycle, product count, helper count, sales count, revenue, and quick actions for sales and dashboard.
 
 ## Navigation Model
 

@@ -2,12 +2,16 @@
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { createEvent, listEvents } from "@/lib/repositories/events";
+import { listHelperInvitations } from "@/lib/repositories/helpers";
 import { getOrganizerForAuthenticatedUser, mockOrganizer } from "@/lib/repositories/organizers";
+import { listProducts } from "@/lib/repositories/products";
+import { getSalesAnalytics } from "@/lib/repositories/sales";
 import { formatDate, formatDateRange } from "@/lib/date-format";
 import { getEventLifecycle, type EventLifecycle } from "@/lib/event-lifecycle";
 import { getSupabaseErrorCategory, logSupabaseError } from "@/lib/supabase/diagnostics";
 import { supabase, supabaseConfigIssue, supabaseConfigWarning } from "@/lib/supabase/client";
 import { SalesTerminal } from "@/components/sales-terminal/SalesTerminal";
+import { PrinterSetupWizard } from "@/components/sales-terminal/PrinterSetupWizard";
 import { LanguageSwitch } from "@/components/organizer-workspace/LanguageSwitch";
 import { HelperAccessPanel } from "@/components/organizer-workspace/HelperAccessPanel";
 import { MenuDesigner } from "@/components/organizer-workspace/MenuDesigner";
@@ -15,6 +19,8 @@ import { OrganizerSalesDashboard } from "@/components/organizer-workspace/Organi
 import { PasswordRecoveryForm } from "@/components/organizer-workspace/PasswordRecoveryForm";
 import { hasPasswordRecoveryParameters } from "@/lib/supabase/recovery-url";
 import { defaultLanguage, translations } from "@/components/sales-terminal/i18n";
+import { productTiles } from "@/components/sales-terminal/mock-data";
+import { loadPrinterSettings, savePrinterSettings } from "@/components/sales-terminal/printer-settings-storage";
 import type { Translation } from "@/components/sales-terminal/i18n";
 import type { EventSettings, Language, PrintMode } from "@/components/sales-terminal/types";
 import type { Event as PersistedEvent, Organizer } from "@/types/domain";
@@ -22,6 +28,7 @@ import type { Session } from "@supabase/supabase-js";
 
 type BookedEventStatus = "preparation" | "active" | "stats_available" | "post_event_read_only" | "expired" | "archived" | "draft";
 type AuthMode = "login" | "register" | "reset";
+type EventWorkspaceSection = "overview" | "sales" | "dashboard" | "products" | "helpers" | "menu" | "printer" | "settings";
 type AuthAlert = {
   message: string;
   title: string;
@@ -40,6 +47,13 @@ type BookedEvent = {
 type EventListEntry = {
   event: BookedEvent;
   lifecycle: EventLifecycle;
+};
+
+type EventWorkspaceSummary = {
+  helperCount: number;
+  productCount: number;
+  revenueCents: number;
+  saleCount: number;
 };
 
 function toDateInput(value: string) {
@@ -82,6 +96,14 @@ function sortCompletedEventEntries(left: EventListEntry, right: EventListEntry) 
   const rightEnd = right.event.settings.dateTo || right.event.settings.dateFrom;
 
   return compareDateValue(rightEnd, leftEnd);
+}
+
+function formatCurrency(cents: number, language: Language) {
+  return new Intl.NumberFormat(language === "de" ? "de-DE" : "en-US", { style: "currency", currency: "EUR" }).format(cents / 100);
+}
+
+function formatNumber(value: number, language: Language) {
+  return new Intl.NumberFormat(language === "de" ? "de-DE" : "en-US").format(value);
 }
 
 function mapPersistedEvent(event: PersistedEvent): BookedEvent {
@@ -262,6 +284,16 @@ export function OrganizerEventWorkspace() {
   const [isAuthSubmitting, setIsAuthSubmitting] = useState(false);
   const [currentOrganizer, setCurrentOrganizer] = useState<Organizer>(mockOrganizer);
   const [events, setEvents] = useState<BookedEvent[]>([]);
+  const [workspaceEvent, setWorkspaceEvent] = useState<BookedEvent | null>(null);
+  const [workspaceSection, setWorkspaceSection] = useState<EventWorkspaceSection>("overview");
+  const [workspaceSummary, setWorkspaceSummary] = useState<EventWorkspaceSummary>({
+    helperCount: 0,
+    productCount: productTiles.length,
+    revenueCents: 0,
+    saleCount: 0,
+  });
+  const [workspaceSummaryError, setWorkspaceSummaryError] = useState<string | null>(null);
+  const [printerSettings, setPrinterSettings] = useState(() => loadPrinterSettings());
   const [selectedEvent, setSelectedEvent] = useState<BookedEvent | null>(null);
   const [dashboardEvent, setDashboardEvent] = useState<BookedEvent | null>(null);
   const [helperEvent, setHelperEvent] = useState<BookedEvent | null>(null);
@@ -285,6 +317,63 @@ export function OrganizerEventWorkspace() {
   }));
   const openEvents = eventsWithLifecycle.filter((entry) => entry.lifecycle !== "completed").sort(sortOpenEventEntries);
   const completedEvents = eventsWithLifecycle.filter((entry) => entry.lifecycle === "completed").sort(sortCompletedEventEntries);
+
+  useEffect(() => {
+    savePrinterSettings(printerSettings);
+  }, [printerSettings]);
+
+  useEffect(() => {
+    let isActive = true;
+
+    async function loadWorkspaceSummary() {
+      if (!workspaceEvent) {
+        return;
+      }
+
+      if (!workspaceEvent.isPersisted || !workspaceEvent.tenantId || supabaseConfigWarning) {
+        setWorkspaceSummary({
+          helperCount: 0,
+          productCount: productTiles.length,
+          revenueCents: 0,
+          saleCount: 0,
+        });
+        setWorkspaceSummaryError(null);
+        return;
+      }
+
+      setWorkspaceSummaryError(null);
+
+      try {
+        const [products, helpers, analytics] = await Promise.all([
+          listProducts(workspaceEvent.id),
+          listHelperInvitations(workspaceEvent.id),
+          getSalesAnalytics({ eventId: workspaceEvent.id, tenantId: workspaceEvent.tenantId }),
+        ]);
+
+        if (!isActive) {
+          return;
+        }
+
+        setWorkspaceSummary({
+          helperCount: helpers.length,
+          productCount: products.length,
+          revenueCents: analytics.totalRevenueCents,
+          saleCount: analytics.saleCount,
+        });
+      } catch (error) {
+        if (isActive) {
+          const diagnostic = logSupabaseError("load event workspace summary", error);
+          setWorkspaceSummaryError(labels.statisticsLoadError + " " + labels.supabaseDiagnosticPrefix + ": " + diagnostic);
+        }
+      }
+    }
+
+    loadWorkspaceSummary();
+
+    return () => {
+      isActive = false;
+    };
+  }, [labels.statisticsLoadError, labels.supabaseDiagnosticPrefix, workspaceEvent]);
 
   function getSalesUnavailableMessage(lifecycle: EventLifecycle) {
     if (lifecycle === "completed") {
@@ -332,6 +421,8 @@ export function OrganizerEventWorkspace() {
         setDashboardEvent(null);
         setHelperEvent(null);
         setMenuEvent(null);
+        setWorkspaceEvent(null);
+        setWorkspaceSection("overview");
         return;
       }
 
@@ -340,6 +431,8 @@ export function OrganizerEventWorkspace() {
       setDashboardEvent(null);
       setHelperEvent(null);
       setMenuEvent(null);
+      setWorkspaceEvent(null);
+      setWorkspaceSection("overview");
       if (!nextSession) {
         setEvents([]);
         setCurrentOrganizer(mockOrganizer);
@@ -541,7 +634,8 @@ export function OrganizerEventWorkspace() {
           setIsCreateOpen(false);
           setNewEventDateFrom("");
           setNewEventDateTo("");
-          setSelectedEvent(bookedEvent);
+          setWorkspaceEvent(bookedEvent);
+          setWorkspaceSection("overview");
           return;
         }
       }
@@ -569,7 +663,8 @@ export function OrganizerEventWorkspace() {
     setIsCreateOpen(false);
     setNewEventDateFrom("");
     setNewEventDateTo("");
-    setSelectedEvent(bookedEvent);
+    setWorkspaceEvent(bookedEvent);
+    setWorkspaceSection("overview");
   }
 
   if (isAuthLoading) {
@@ -595,6 +690,8 @@ export function OrganizerEventWorkspace() {
           setDashboardEvent(null);
           setHelperEvent(null);
           setMenuEvent(null);
+          setWorkspaceEvent(null);
+          setWorkspaceSection("overview");
           setEvents([]);
           setCurrentOrganizer(mockOrganizer);
         }}
@@ -707,6 +804,7 @@ export function OrganizerEventWorkspace() {
           const bookedEvent = mapPersistedEvent(updatedEvent);
           setEvents((current) => current.map((event) => event.id === bookedEvent.id ? bookedEvent : event));
           setSelectedEvent(bookedEvent);
+          setWorkspaceEvent(bookedEvent);
         }}
       />
     );
@@ -734,6 +832,195 @@ export function OrganizerEventWorkspace() {
         onLanguageChange={setOrganizerLanguage}
         onBackToEvents={() => setMenuEvent(null)}
       />
+    );
+  }
+
+  if (workspaceEvent) {
+    const lifecycle = getEventLifecycle(workspaceEvent.settings);
+    const eventName = workspaceEvent.settings.name[language];
+    const workspaceNav: Array<[EventWorkspaceSection, string]> = [
+      ["overview", labels.overview],
+      ["sales", labels.salesNav],
+      ["dashboard", labels.dashboard],
+      ["products", labels.productsNav],
+      ["helpers", labels.helpers],
+      ["menu", labels.menuTitle],
+      ["printer", labels.receiptPrinter],
+      ["settings", labels.eventSettings],
+    ];
+    const metricCards = [
+      { label: labels.numberOfProducts, value: formatNumber(workspaceSummary.productCount, language) },
+      { label: labels.numberOfHelpers, value: formatNumber(workspaceSummary.helperCount, language) },
+      { label: labels.numberOfSales, value: formatNumber(workspaceSummary.saleCount, language) },
+      { label: labels.revenue, value: formatCurrency(workspaceSummary.revenueCents, language) },
+    ];
+
+    return (
+      <main className="min-h-screen bg-[#f6f7f5] px-6 py-7 text-slate-950">
+        <div className="mx-auto flex max-w-7xl flex-col gap-7">
+          <header className="flex flex-wrap items-start justify-between gap-5 border-b border-slate-200 pb-6">
+            <div>
+              <p className="text-2xl font-black tracking-normal text-emerald-600">eventBon</p>
+              <p className="mt-3 text-sm font-black uppercase tracking-widest text-slate-500">{labels.eventWorkspace}</p>
+              <h1 className="mt-2 text-4xl font-black tracking-tight">{eventName}</h1>
+              <div className="mt-3 flex flex-wrap items-center gap-3">
+                <p className="text-lg font-semibold text-slate-600">{formatDateRange(workspaceEvent.settings, language)}</p>
+                <span className={"rounded-full px-3 py-1.5 text-xs font-black uppercase tracking-widest ring-1 " + getLifecycleBadgeClass(lifecycle)}>
+                  {lifecycleLabels[lifecycle]}
+                </span>
+              </div>
+            </div>
+            <div className="flex flex-wrap justify-end gap-3">
+              <LanguageSwitch language={language} labels={labels} onLanguageChange={setOrganizerLanguage} />
+              <button
+                type="button"
+                onClick={() => {
+                  setWorkspaceEvent(null);
+                  setWorkspaceSection("overview");
+                }}
+                className="min-h-14 rounded-lg bg-slate-100 px-5 text-lg font-black text-slate-700 ring-1 ring-slate-200 transition active:scale-[0.98] focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200"
+              >
+                {labels.backToEvents}
+              </button>
+            </div>
+          </header>
+
+          <nav className="flex gap-2 overflow-x-auto rounded-lg bg-white p-2 shadow-sm ring-1 ring-slate-200" aria-label={labels.eventWorkspace}>
+            {workspaceNav.map(([section, label]) => (
+              <button
+                key={section}
+                type="button"
+                onClick={() => setWorkspaceSection(section)}
+                className={"min-h-12 shrink-0 rounded-lg px-4 text-base font-black transition active:scale-[0.98] focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200 " + (workspaceSection === section ? "bg-emerald-600 text-white shadow-sm shadow-emerald-700/20" : "text-slate-600 hover:bg-slate-50")}
+              >
+                {label}
+              </button>
+            ))}
+          </nav>
+
+          {workspaceSummaryError ? (
+            <p className="rounded-lg bg-amber-50 px-4 py-3 text-sm font-bold text-amber-900 ring-1 ring-amber-200">{workspaceSummaryError}</p>
+          ) : null}
+
+          {workspaceSection === "overview" ? (
+            <div className="grid gap-6">
+              <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4" aria-label={labels.overview}>
+                {metricCards.map((card) => (
+                  <article key={card.label} className="rounded-lg bg-white p-5 shadow-sm ring-1 ring-slate-200">
+                    <p className="text-sm font-bold uppercase tracking-widest text-slate-500">{card.label}</p>
+                    <p className="mt-3 text-3xl font-black tracking-tight text-slate-950">{card.value}</p>
+                  </article>
+                ))}
+              </section>
+
+              <section className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]" aria-label={labels.overview}>
+                <article className="rounded-lg bg-white p-5 shadow-sm ring-1 ring-slate-200">
+                  <h2 className="text-2xl font-black tracking-tight">{labels.openSales}</h2>
+                  <p className="mt-2 text-base font-semibold leading-7 text-slate-600">{labels.workspacePlaceholder}</p>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedEvent(workspaceEvent)}
+                    className="mt-5 min-h-14 rounded-lg bg-emerald-600 px-6 text-lg font-black text-white shadow-sm shadow-emerald-700/20 transition active:scale-[0.98] focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200"
+                  >
+                    {labels.openSales}
+                  </button>
+                </article>
+                <article className="rounded-lg bg-white p-5 shadow-sm ring-1 ring-slate-200">
+                  <h2 className="text-2xl font-black tracking-tight">{labels.openDashboard}</h2>
+                  <p className="mt-2 text-base font-semibold leading-7 text-slate-600">{labels.workspacePlaceholder}</p>
+                  <button
+                    type="button"
+                    onClick={() => setDashboardEvent(workspaceEvent)}
+                    className="mt-5 min-h-14 rounded-lg bg-slate-950 px-6 text-lg font-black text-white transition active:scale-[0.98] focus:outline-none focus-visible:ring-4 focus-visible:ring-slate-300"
+                  >
+                    {labels.openDashboard}
+                  </button>
+                </article>
+              </section>
+            </div>
+          ) : null}
+
+          {workspaceSection === "sales" || workspaceSection === "products" ? (
+            <section className="rounded-lg bg-white p-6 shadow-sm ring-1 ring-slate-200">
+              <h2 className="text-3xl font-black tracking-tight">{workspaceSection === "products" ? labels.productsNav : labels.salesTerminal}</h2>
+              <p className="mt-2 max-w-2xl text-base font-semibold leading-7 text-slate-600">{labels.workspacePlaceholder}</p>
+              <button
+                type="button"
+                onClick={() => setSelectedEvent(workspaceEvent)}
+                className="mt-5 min-h-14 rounded-lg bg-emerald-600 px-6 text-lg font-black text-white shadow-sm shadow-emerald-700/20 transition active:scale-[0.98] focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200"
+              >
+                {labels.openSales}
+              </button>
+            </section>
+          ) : null}
+
+          {workspaceSection === "dashboard" ? (
+            <section className="rounded-lg bg-white p-6 shadow-sm ring-1 ring-slate-200">
+              <h2 className="text-3xl font-black tracking-tight">{labels.dashboard}</h2>
+              <p className="mt-2 max-w-2xl text-base font-semibold leading-7 text-slate-600">{labels.workspacePlaceholder}</p>
+              <button
+                type="button"
+                onClick={() => setDashboardEvent(workspaceEvent)}
+                className="mt-5 min-h-14 rounded-lg bg-slate-950 px-6 text-lg font-black text-white transition active:scale-[0.98] focus:outline-none focus-visible:ring-4 focus-visible:ring-slate-300"
+              >
+                {labels.openDashboard}
+              </button>
+            </section>
+          ) : null}
+
+          {workspaceSection === "menu" ? (
+            <section className="rounded-lg bg-white p-6 shadow-sm ring-1 ring-slate-200">
+              <h2 className="text-3xl font-black tracking-tight">{labels.menuTitle}</h2>
+              <p className="mt-2 max-w-2xl text-base font-semibold leading-7 text-slate-600">{labels.menuDesignerIntro}</p>
+              <button
+                type="button"
+                onClick={() => setMenuEvent(workspaceEvent)}
+                className="mt-5 min-h-14 rounded-lg bg-amber-50 px-6 text-lg font-black text-amber-900 ring-1 ring-amber-200 transition active:scale-[0.98] focus:outline-none focus-visible:ring-4 focus-visible:ring-amber-200"
+              >
+                {labels.menuTitle}
+              </button>
+            </section>
+          ) : null}
+
+          {workspaceSection === "printer" ? (
+            <PrinterSetupWizard labels={labels} language={language} printerSettings={printerSettings} onPrinterSettingsChange={setPrinterSettings} />
+          ) : null}
+
+          {workspaceSection === "settings" ? (
+            <section className="grid gap-4 rounded-lg bg-white p-6 shadow-sm ring-1 ring-slate-200">
+              <h2 className="text-3xl font-black tracking-tight">{labels.eventSettings}</h2>
+              <dl className="grid gap-3 md:grid-cols-2">
+                <div className="rounded-lg bg-slate-50 p-4 ring-1 ring-slate-100">
+                  <dt className="text-sm font-bold uppercase tracking-widest text-slate-500">{labels.eventName}</dt>
+                  <dd className="mt-2 text-xl font-black text-slate-950">{eventName}</dd>
+                </div>
+                <div className="rounded-lg bg-slate-50 p-4 ring-1 ring-slate-100">
+                  <dt className="text-sm font-bold uppercase tracking-widest text-slate-500">{labels.eventDate}</dt>
+                  <dd className="mt-2 text-xl font-black text-slate-950">{formatDateRange(workspaceEvent.settings, language)}</dd>
+                </div>
+                <div className="rounded-lg bg-slate-50 p-4 ring-1 ring-slate-100">
+                  <dt className="text-sm font-bold uppercase tracking-widest text-slate-500">{labels.voucherPrinting}</dt>
+                  <dd className="mt-2 text-xl font-black text-slate-950">{workspaceEvent.settings.printMode === "single_vouchers" ? labels.singleVouchers : labels.combinedVoucher}</dd>
+                </div>
+                <div className="rounded-lg bg-slate-50 p-4 ring-1 ring-slate-100">
+                  <dt className="text-sm font-bold uppercase tracking-widest text-slate-500">{labels.accessUntil}</dt>
+                  <dd className="mt-2 text-xl font-black text-slate-950">{formatDate(workspaceEvent.accessUntil, language)}</dd>
+                </div>
+              </dl>
+            </section>
+          ) : null}
+        </div>
+
+        {workspaceSection === "helpers" ? (
+          <HelperAccessPanel
+            eventId={workspaceEvent.isPersisted ? workspaceEvent.id : null}
+            eventName={eventName}
+            labels={labels}
+            language={language}
+            onClose={() => setWorkspaceSection("overview")}
+          />
+        ) : null}
+      </main>
     );
   }
 
@@ -813,7 +1100,10 @@ export function OrganizerEventWorkspace() {
                   <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
                     <button
                       type="button"
-                      onClick={() => setSelectedEvent(bookedEvent)}
+                      onClick={() => {
+                        setWorkspaceEvent(bookedEvent);
+                        setWorkspaceSection("overview");
+                      }}
                       className="min-h-14 rounded-lg bg-slate-950 px-5 text-base font-black text-white transition active:scale-[0.98] focus:outline-none focus-visible:ring-4 focus-visible:ring-slate-300"
                     >
                       {labels.openEvent}
