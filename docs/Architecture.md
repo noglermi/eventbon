@@ -91,7 +91,7 @@ eventBon must support multiple tenants even if the MVP interface exposes only a 
 
 Tenant-aware records should include a tenant reference. Booked event, product, sale, payment, voucher, helper access, and summary data should be scoped to the owning tenant.
 
-Tenant separation should be enforced at the data access layer and, where applicable, by Supabase row-level security.
+Tenant separation should be enforced at the data access layer and, where applicable, by Supabase row-level security. Full production-grade RLS hardening is intentionally scheduled for RC-4 after successful field beta and pilot operation, because the beta database schema, RPC signatures, helper workflow, printing, dashboard, and organizer workflow are still evolving.
 
 The organizer account may own multiple booked events over time. Helpers and volunteers are invited into specific booked events and should not automatically gain access to other events owned by the same organizer. Helpers are not global users in the product concept.
 
@@ -395,27 +395,67 @@ Direct printing, ESC/POS support, native printer integration, and automatic prin
 
 ## Release Candidate Architecture Priorities
 
-The Release Candidate roadmap is ordered by beta risk.
+The Release Candidate roadmap is ordered around beta learning first and production hardening later.
 
-P0 architecture priorities:
+### RC-1 Beta Completion
 
-- Complete internationalization for organizer UI, helper UI, sales terminal, dashboard, and exports.
-- Receipt printer integration.
-- Printer setup wizard.
+Focus:
 
-P1 architecture priorities:
+- UX
+- bug fixes
+- tablet optimization
+- sales workflow
+- password reset
+- Menu Designer
+- printer support
+- complete event workflow
 
-- Menu Designer inside Organizer.
-- Allergen management connected to menu/product data.
-- Printable menu PDF.
+### RC-2 Receipt Printing
 
-P2 architecture priorities:
+Focus:
 
-- Stripe pay-per-event.
-- Booking activation.
-- Event extension.
+- printer setup wizard
+- generic thermal printer support
+- Brother TD-4000 reference implementation
+- Epson reference profiles
+- browser print optimization
+- print testing
+- print documentation
 
-The current P0 implementation starts with internationalization only. Receipt printer integration and the printer setup wizard are documented as P0, but are not implemented in this step. Stripe remains separate from Bon sales and stays in P2 for the Release Candidate plan.
+### RC-3 Pilot Program
+
+Focus:
+
+- five real pilot events
+- feedback collection
+- UX fixes
+- no major architecture changes
+
+Typical pilots:
+
+- Reitturnier
+- Feuerwehrfest
+- Musikverein
+- Sportveranstaltung
+- Weihnachtsmarkt
+
+### RC-4 Security Hardening
+
+Full production security hardening happens only after successful pilot operation.
+
+Focus:
+
+- Full Row Level Security
+- RPC security review
+- storage policies
+- server-side validation
+- token review
+- permission review
+- security testing
+- DSGVO review
+- production hardening
+
+Until RC-4, avoid major architecture refactoring unless required for a beta blocker. Allowed work includes bug fixes, UX improvements, printing, and beta workflow improvements. Avoid large security rewrites, large database redesigns, and unnecessary RPC redesigns.
 
 ## Icon And Image Assets
 

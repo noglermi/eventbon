@@ -474,3 +474,70 @@ Organizers need long-term access to event information and results, but eventBon 
 - The Sales Terminal blocks new sales and Bon printing outside paid active event days.
 - Upcoming events can be prepared before the event, but sales are inactive until the paid event window.
 - Stripe later handles paid event activation and extensions, but Stripe is still separate from Bon sales.
+
+## ADR-018 Beta First - Security Hardening After Pilot
+
+### Decision
+
+eventBon prioritizes a complete, testable event workflow before production security hardening.
+
+Full production security hardening is intentionally scheduled after the first successful field beta and pilot operation.
+
+Security remains mandatory before production release.
+
+### Reason
+
+During beta, the application is still evolving:
+
+- database schema
+- RPC signatures
+- helper workflow
+- printing
+- dashboard
+- organizer workflow
+
+Implementing production-grade Row Level Security too early would create unnecessary rework and increase regression risk while the workflow is still being validated with real events.
+
+### Implications
+
+RC-1 focuses on beta completion:
+
+- UX
+- bug fixes
+- tablet optimization
+- sales workflow
+- password reset
+- Menu Designer
+- printer support
+- complete event workflow
+
+RC-2 focuses on receipt printing:
+
+- printer setup wizard
+- generic thermal printer support
+- Brother TD-4000 reference implementation
+- Epson reference profiles
+- browser print optimization
+- print testing
+- print documentation
+
+RC-3 focuses on pilot operation:
+
+- five real pilot events
+- feedback collection
+- UX fixes
+- no major architecture changes
+
+RC-4 focuses on security hardening:
+
+- Full Row Level Security
+- RPC security review
+- storage policies
+- server-side validation
+- token review
+- permission review
+- security testing
+- DSGVO review
+- production hardening
+
+Until RC-4, major architecture refactoring should be avoided unless required for a beta blocker. Allowed work includes bug fixes, UX improvements, printing, and beta workflow improvements. Large security rewrites, large database redesigns, and unnecessary RPC redesigns should be avoided.

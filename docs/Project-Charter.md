@@ -154,26 +154,78 @@ Every proposed feature should be checked against the mission:
 
 If the answer is no, the feature is outside the product scope.
 
-## Release Candidate Priorities
+## Release Strategy
 
-The Release Candidate phase focuses on beta readiness for real event use.
+eventBon follows a beta-first release strategy.
 
-P0:
+The project intentionally postpones full production security hardening until after the first successful field beta. During beta, the application is still evolving across database schema, RPC signatures, helper workflow, printing, dashboard, and organizer workflow. Implementing production-grade RLS too early would create unnecessary rework and increase regression risk.
 
-- Complete internationalization across organizer, helper, sales terminal, dashboard, and export surfaces.
-- Receipt printer integration.
-- Printer setup wizard.
+Security remains mandatory before production release. Full Row Level Security, RPC security review, storage policies, server-side validation, token review, permission review, security testing, DSGVO review, and production hardening are scheduled for RC-4 after successful pilot operation.
 
-P1:
+### RC-1 Beta Completion
 
-- Menu Designer inside Organizer.
-- Allergen management.
-- Printable menu PDF.
+Focus:
 
-P2:
+- UX
+- bug fixes
+- tablet optimization
+- sales workflow
+- password reset
+- Menu Designer
+- printer support
+- complete event workflow
 
-- Stripe pay-per-event.
-- Booking activation.
-- Event extension.
+### RC-2 Receipt Printing
 
-The first P0 implementation step is the internationalization audit and cleanup. Printer implementation starts only after the language surface is consistent. P1 Menu Designer work treats products as the single source of truth and generates a print-ready PDF from event data. Stripe and booking activation remain P2 because event-floor reliability comes before commercial automation.
+Focus:
+
+- printer setup wizard
+- generic thermal printer support
+- Brother TD-4000 reference implementation
+- Epson reference profiles
+- browser print optimization
+- print testing
+- print documentation
+
+### RC-3 Pilot Program
+
+Focus:
+
+- five real pilot events
+- typical pilots: Reitturnier, Feuerwehrfest, Musikverein, Sportveranstaltung, Weihnachtsmarkt
+- collect feedback
+- fix UX issues
+- no major architecture changes
+
+### RC-4 Security Hardening
+
+Only after successful pilot operation.
+
+Focus:
+
+- Full Row Level Security
+- RPC security review
+- storage policies
+- server-side validation
+- token review
+- permission review
+- security testing
+- DSGVO review
+- production hardening
+
+### Development Rule
+
+Until RC-4, do not make major architecture refactors unless required for a beta blocker.
+
+Allowed:
+
+- bug fixes
+- UX improvements
+- printing
+- beta workflow improvements
+
+Avoid:
+
+- large security rewrites
+- large database redesigns
+- unnecessary RPC redesigns

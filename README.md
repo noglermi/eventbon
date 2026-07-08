@@ -88,6 +88,23 @@ eventBon is built around:
 
 The architecture is multi-tenant by design. All application data is stored in Supabase. The system should be structured so Stripe and SumUp integrations can be added later without reworking the product model.
 
+## Release Strategy
+
+eventBon follows a beta-first release strategy.
+
+The project intentionally prioritizes a complete, testable event workflow before full production security hardening. During beta, the database schema, RPC signatures, helper workflow, printing, dashboard, and organizer workflow are still evolving. Implementing production-grade RLS too early would create unnecessary rework and increase regression risk.
+
+Security remains mandatory before production release. Full RLS, RPC security review, storage policies, server-side validation, token review, permission review, security testing, DSGVO review, and production hardening are scheduled for RC-4 after successful field beta and pilot operation.
+
+Release candidates:
+
+- RC-1 Beta Completion: UX, bug fixes, tablet optimization, sales workflow, password reset, Menu Designer, printer support, and complete event workflow.
+- RC-2 Receipt Printing: printer setup wizard, generic thermal printer support, Brother TD-4000 reference implementation, Epson reference profiles, browser print optimization, print testing, and print documentation.
+- RC-3 Pilot Program: five real pilot events, feedback collection, UX fixes, and no major architecture changes.
+- RC-4 Security Hardening: production security hardening after successful pilot operation.
+
+Until RC-4, major architecture refactoring should be avoided unless it is required for a beta blocker. Allowed work includes bug fixes, UX improvements, printing, and beta workflow improvements.
+
 ## Documentation
 
 - [Project Charter](docs/Project-Charter.md)

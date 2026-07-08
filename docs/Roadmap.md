@@ -37,32 +37,90 @@ Booking lifecycle:
 
 ## Release Candidate Roadmap
 
-The Release Candidate phase prioritizes beta readiness over new commercial scope.
+The Release Candidate phase prioritizes beta readiness, field learning, and then production hardening.
 
-P0:
+Full production security hardening is intentionally postponed until after the first successful field beta. During beta, the database schema, RPC signatures, helper workflow, printing, dashboard, and organizer workflow are still evolving. Implementing production-grade RLS now would create unnecessary rework and increase regression risk.
 
-- Complete internationalization across organizer UI, helper UI, sales terminal, dashboard, and exports.
-- Receipt printer integration.
-- Printer setup wizard.
+Security remains mandatory before production release.
 
-P1:
+### RC-1 Beta Completion
 
-- Menu Designer inside Organizer.
-- Allergen management.
-- Printable menu PDF.
+Focus:
 
-P2:
+- UX
+- bug fixes
+- tablet optimization
+- sales workflow
+- password reset
+- Menu Designer
+- printer support
+- complete event workflow
 
-- Stripe pay-per-event.
-- Booking activation.
-- Event extension.
+### RC-2 Receipt Printing
 
-Implementation order:
+Focus:
 
-- Start P0 with the internationalization audit and cleanup.
-- Do not start receipt printer integration or the printer setup wizard until the i18n pass is complete.
-- Treat the menu as a native organizer module, not as an export.
-- Keep Stripe, booking activation, and event extension behind P2 until the operational beta workflow is stable.
+- printer setup wizard
+- generic thermal printer support
+- Brother TD-4000 reference implementation
+- Epson reference profiles
+- browser print optimization
+- print testing
+- print documentation
+
+### RC-3 Pilot Program
+
+Focus:
+
+- five real pilot events
+- typical pilots: Reitturnier, Feuerwehrfest, Musikverein, Sportveranstaltung, Weihnachtsmarkt
+- collect feedback
+- fix UX issues
+- no major architecture changes
+
+### RC-4 Security Hardening
+
+Only after successful pilot operation.
+
+Focus:
+
+- Full Row Level Security
+- RPC security review
+- storage policies
+- server-side validation
+- token review
+- permission review
+- security testing
+- DSGVO review
+- production hardening
+
+### Development Rule
+
+Until RC-4, do not make major architecture refactors unless required for a beta blocker.
+
+Allowed:
+
+- bug fixes
+- UX improvements
+- printing
+- beta workflow improvements
+
+Avoid:
+
+- large security rewrites
+- large database redesigns
+- unnecessary RPC redesigns
+
+### Sprint Planning
+
+| Sprint | Name |
+| --- | --- |
+| RC1-01 | Beta Workflow |
+| RC1-02 | Menu Designer |
+| RC1-03 | Receipt Printing |
+| RC1-04 | Beta Polish |
+| RC2-01 | Pilot Events |
+| RC3-01 | Security Hardening |
 
 Release Candidate quality gate:
 
