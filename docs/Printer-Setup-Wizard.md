@@ -28,16 +28,49 @@ The wizard is not a cash register, fiscal printer, or POS hardware layer. It con
 - The first implementation uses browser printing.
 - Future direct ESC/POS or native printing may be added later.
 
+## Printer Engine Foundation
+
+The Printer Setup Wizard configures the active printer profile used by the printer engine.
+
+Architecture:
+
+- Sales Terminal
+- Print Service
+- Printer Profile
+- Renderer
+- Browser Print
+
+The Sales Terminal requests Bon printing without knowing printer details.
+
+The Print Service selects the active device-local profile.
+
+The Printer Profile defines:
+
+- paper width
+- margins
+- font scaling
+- cutter or tear-off behavior
+- browser print CSS values
+
+The Renderer turns sale lines and the event print mode into printable Bons.
+
+Browser Print opens the normal browser print dialog.
+
+No printer detection, ESC/POS command, Brother-specific command, Epson-specific command, or Star-specific command is part of the foundation.
+
 ## Supported Printer Profiles
 
 Initial profiles:
 
-- Generic 58 mm receipt printer
-- Generic 80 mm receipt printer
-- Brother TD-4000
-- Generic A4 test printer
+- Generic 58 mm Receipt
+- Generic 80 mm Receipt
+- Brother TD Label
+- Epson Receipt
+- Star Receipt
 
 The Brother TD-4000 is the first real thermal printer reference device for beta validation.
+
+The Brother TD Label profile is intentionally generic in the first engine foundation. Brother-specific driver behavior and commands are not implemented yet.
 
 The Brother QL-720NW may be useful for label experiments, but it is not the main Bon printer reference device.
 

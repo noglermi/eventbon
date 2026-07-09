@@ -13,7 +13,7 @@ import { Cart } from "./Cart";
 import { defaultLanguage, groupLabels, translations } from "./i18n";
 import { initialCart, mockEventSettings, productTiles, tileGroups } from "./mock-data";
 import { PaymentPanel } from "./PaymentPanel";
-import { getPrinterCssVariables, PrinterSetupWizard } from "./PrinterSetupWizard";
+import { PrinterSetupWizard } from "./PrinterSetupWizard";
 import { ProductTile } from "./ProductTile";
 import { RecentSalesPanel } from "./RecentSalesPanel";
 import { readTerminalId } from "./terminal-id-storage";
@@ -850,7 +850,7 @@ export function SalesTerminal({
           productsById={productsById}
           printMode={eventSettings.printMode}
           printedAt={printPreviewDate}
-          printerStyle={getPrinterCssVariables(printerSettings)}
+          printerSettings={printerSettings}
           onCancel={closeInitialPrintPreview}
           onPrinted={handleInitialPrintRecorded}
         />
@@ -867,7 +867,7 @@ export function SalesTerminal({
           printMode={eventSettings.printMode}
           printedAt={reprintPreviewDate}
           reprintLabel={reprintSale.printCount + 1 > 1 ? labels.reprint : null}
-          printerStyle={getPrinterCssVariables(printerSettings)}
+          printerSettings={printerSettings}
           onCancel={() => {
             setReprintSale(null);
             setReprintPreviewDate(null);

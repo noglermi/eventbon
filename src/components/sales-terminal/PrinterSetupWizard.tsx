@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
-import type { CSSProperties } from "react";
 import { formatDateTime } from "@/lib/date-format";
+import { createPrinterStyle } from "@/lib/printing/print-renderer";
+import { printService } from "@/lib/printing/print-service";
 import type { Translation } from "./i18n";
 import type { Language } from "./types";
 import { getPrinterProfile, printerProfiles } from "./printer-settings-storage";
@@ -15,23 +16,6 @@ type PrinterSetupWizardProps = {
 
 function formatPaperWidth(width: number) {
   return width + " mm";
-}
-
-export function getPrinterCssVariables(settings: PrinterSettings) {
-  const printableWidthMm = Math.max(40, settings.paperWidthMm - (settings.profileId === "generic_a4" ? 20 : 6));
-  const paddingMm = settings.density === "compact" ? 2 : 3;
-  const ticketGapMm = settings.cutMode === "cutter" ? 6 : 4;
-  const fontSizePt = settings.density === "compact" ? 10 : 11;
-  const lineGapMm = settings.density === "compact" ? 1 : 1.5;
-
-  return {
-    "--printer-paper-width": settings.paperWidthMm + "mm",
-    "--printer-printable-width": printableWidthMm + "mm",
-    "--printer-ticket-padding": paddingMm + "mm",
-    "--printer-ticket-gap": ticketGapMm + "mm",
-    "--printer-font-size": fontSizePt + "pt",
-    "--printer-line-gap": lineGapMm + "mm",
-  } as CSSProperties;
 }
 
 function TestVoucher({ labels, language, printerSettings, printedAt }: { labels: Translation; language: Language; printerSettings: PrinterSettings; printedAt: Date }) {
@@ -69,7 +53,7 @@ export function PrinterSetupWizard({ labels, language, printerSettings, onPrinte
 
     const timeoutId = window.setTimeout(() => {
       pendingPrintRef.current = false;
-      window.print();
+      printService.requestBrowserPrint();
     }, 120);
 
     return () => {
@@ -80,7 +64,7 @@ export function PrinterSetupWizard({ labels, language, printerSettings, onPrinte
   function selectProfile(profileId: PrinterProfileId) {
     const profile = getPrinterProfile(profileId);
     onPrinterSettingsChange({
-      profileId: profile.profileId,
+      profileId: profile.id,
       paperWidthMm: profile.paperWidthMm,
       density: profile.density,
       cutMode: profile.cutMode,
@@ -126,7 +110,7 @@ export function PrinterSetupWizard({ labels, language, printerSettings, onPrinte
             className="min-h-12 rounded-2xl border border-slate-200 bg-white px-4 text-base font-black normal-case tracking-normal text-slate-800 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
           >
             {printerProfiles.map((profile) => (
-              <option key={profile.profileId} value={profile.profileId}>{profile.label[language]}</option>
+              <option key={profile.id} value={profile.id}>{profile.label[language]}</option>
             ))}
           </select>
         </label>
@@ -172,7 +156,7 @@ export function PrinterSetupWizard({ labels, language, printerSettings, onPrinte
 
         <div className="rounded-2xl bg-slate-50 p-4 ring-1 ring-slate-200/75">
           <p className="text-sm font-black text-slate-700">{labels.testPrintPreview}</p>
-          <div className="mt-3 max-w-[var(--printer-printable-width)]" style={getPrinterCssVariables(printerSettings)}>
+          <div className="mt-3 max-w-[var(--printer-printable-width)]" style={createPrinterStyle(printerSettings)}>
             <TestVoucher labels={labels} language={language} printerSettings={printerSettings} printedAt={previewDate} />
           </div>
         </div>
@@ -197,7 +181,7 @@ export function PrinterSetupWizard({ labels, language, printerSettings, onPrinte
               <h2 className="mt-1 text-3xl font-black tracking-normal text-slate-950">{labels.testPrint}</h2>
             </div>
             <div className="print-preview-scroll min-h-0 flex-1 overflow-y-auto bg-slate-100 p-6">
-              <div className="print-area mx-auto grid max-w-[var(--printer-printable-width)]" style={getPrinterCssVariables(printerSettings)}>
+              <div className="print-area mx-auto grid max-w-[var(--printer-printable-width)]" style={createPrinterStyle(printerSettings)}>
                 <TestVoucher labels={labels} language={language} printerSettings={printerSettings} printedAt={testPrintDate} />
               </div>
             </div>

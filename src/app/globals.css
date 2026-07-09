@@ -9,6 +9,7 @@
   --printer-ticket-gap: 4mm;
   --printer-font-size: 10pt;
   --printer-line-gap: 1mm;
+  --printer-cut-line-margin-top: 4mm;
 }
 
 @theme inline {
@@ -90,6 +91,7 @@ input {
     max-width: var(--printer-printable-width);
     margin: 0 0 var(--printer-ticket-gap);
     padding: var(--printer-ticket-padding);
+    font-size: var(--printer-font-size);
     color: black !important;
     background: white !important;
     box-shadow: none !important;
@@ -107,6 +109,6 @@ input {
 
   .voucher-cut-line {
     border-top: 1px dashed black !important;
-    margin-top: 4mm !important;
+    margin-top: var(--printer-cut-line-margin-top) !important;
   }
 }

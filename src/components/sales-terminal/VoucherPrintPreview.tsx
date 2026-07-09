@@ -1,30 +1,26 @@
 import { formatDateTime } from "@/lib/date-format";
-import type { CSSProperties } from "react";
+import { printService } from "@/lib/printing/print-service";
+import type { PrintVoucherLine } from "@/lib/printing/print-renderer";
 import type { Translation } from "./i18n";
 import type { CartItem, Language, PrintMode, ProductTileData } from "./types";
-
-type VoucherLine = {
-  id: string;
-  name: string;
-  quantity: number;
-};
+import type { PrinterSettings } from "./printer-settings-storage";
 
 type VoucherPrintPreviewProps = {
   eventName: string;
   language: Language;
   labels: Translation;
   cartItems: CartItem[];
-  lines?: VoucherLine[];
+  lines?: PrintVoucherLine[];
   productsById: Map<string, ProductTileData>;
   printMode: PrintMode;
   printedAt: Date;
   reprintLabel?: string | null;
-  printerStyle?: CSSProperties;
+  printerSettings: PrinterSettings;
   onCancel: () => void;
   onPrinted?: () => void;
 };
 
-function buildLines(cartItems: CartItem[], productsById: Map<string, ProductTileData>, language: Language) {
+function buildLines(cartItems: CartItem[], productsById: Map<string, ProductTileData>, language: Language): PrintVoucherLine[] {
   return cartItems.flatMap((item) => {
     const product = productsById.get(item.productId);
     if (!product) {
@@ -35,7 +31,7 @@ function buildLines(cartItems: CartItem[], productsById: Map<string, ProductTile
   });
 }
 
-function Voucher({ eventName, labels, lines, printedAtText, reprintLabel }: { eventName: string; labels: Translation; lines: VoucherLine[]; printedAtText: string; reprintLabel?: string | null }) {
+function Voucher({ eventName, labels, lines, printedAtText, reprintLabel }: { eventName: string; labels: Translation; lines: PrintVoucherLine[]; printedAtText: string; reprintLabel?: string | null }) {
   return (
     <article className="voucher-ticket break-inside-avoid bg-white px-4 py-3 font-mono text-slate-950 shadow-sm ring-1 ring-slate-300">
       <div className="text-center">
@@ -62,16 +58,13 @@ function Voucher({ eventName, labels, lines, printedAtText, reprintLabel }: { ev
   );
 }
 
-export function VoucherPrintPreview({ eventName, language, labels, cartItems, lines: providedLines, productsById, printMode, printedAt, reprintLabel = null, printerStyle, onCancel, onPrinted }: VoucherPrintPreviewProps) {
+export function VoucherPrintPreview({ eventName, language, labels, cartItems, lines: providedLines, productsById, printMode, printedAt, reprintLabel = null, printerSettings, onCancel, onPrinted }: VoucherPrintPreviewProps) {
   const lines = providedLines ?? buildLines(cartItems, productsById, language);
   const printedAtText = formatDateTime(printedAt, language);
-  const vouchers = printMode === "single_vouchers"
-    ? lines.flatMap((line) => Array.from({ length: line.quantity }, (_, index) => ({ id: line.id + "-" + index, lines: [{ ...line, quantity: 1 }] })))
-    : [{ id: "combined", lines }];
+  const printJob = printService.createBonPrintJob({ lines, printMode, printerSettings });
 
   function printVouchers() {
-    window.print();
-    onPrinted?.();
+    printService.requestBrowserPrint(onPrinted);
   }
 
   return (
@@ -84,8 +77,8 @@ export function VoucherPrintPreview({ eventName, language, labels, cartItems, li
         </div>
 
         <div className="print-preview-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain bg-slate-100 p-6">
-          <div className="print-area mx-auto grid max-w-[var(--printer-printable-width)] gap-4" style={printerStyle}>
-            {vouchers.map((voucher) => (
+          <div className="print-area mx-auto grid max-w-[var(--printer-printable-width)] gap-4" style={printJob.printerStyle}>
+            {printJob.vouchers.map((voucher) => (
               <Voucher key={voucher.id} eventName={eventName} labels={labels} lines={voucher.lines} printedAtText={printedAtText} reprintLabel={reprintLabel} />
             ))}
           </div>

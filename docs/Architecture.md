@@ -422,6 +422,30 @@ Stripe is never used for Bon sales to visitors. Visitor payments remain outside 
 
 The MVP uses browser Bon printing first. eventBon does not select printers automatically and does not send ESC/POS or native printer commands yet.
 
+The printer engine foundation separates the Sales Terminal from printer details.
+
+Architecture:
+
+- Sales Terminal
+- Print Service
+- Printer Profile
+- Renderer
+- Browser Print
+
+The Sales Terminal requests Bon printing. It does not know paper widths, print CSS, cutter spacing, or printer-specific layout values.
+
+The Print Service selects the active device-local printer profile and creates a print job. The Printer Profile defines paper width, margins, font scaling, cutter or tear-off behavior, and browser print CSS values. The Renderer turns the selected profile and sale lines into browser-printable Bons. Browser Print remains the only output mechanism in the foundation.
+
+Supported foundation profiles:
+
+- Generic 58 mm Receipt
+- Generic 80 mm Receipt
+- Brother TD Label
+- Epson Receipt
+- Star Receipt
+
+The Brother TD Label profile is an abstraction only at this stage. It does not implement Brother-specific commands or direct device support.
+
 The receipt printer setup foundation stores device-local browser print settings in localStorage. These settings are intentionally not event data and are not stored in Supabase.
 
 Each sales terminal or device uses exactly one configured printer. There is no multi-printer routing per terminal. Multiple terminals at one event are supported by configuring each terminal/device with its own local printer settings.
