@@ -1,12 +1,15 @@
 export type PrinterProfileId = "generic_58" | "generic_80" | "brother_td_label" | "epson_receipt" | "star_receipt";
 export type PrinterLayoutDensity = "compact" | "comfortable";
 export type PrinterCutMode = "tear" | "cutter";
+export type PrintOutputMode = "browser" | "qz_tray";
 
 export type PrinterSettings = {
   cutMode: PrinterCutMode;
   density: PrinterLayoutDensity;
   paperWidthMm: number;
+  outputMode: PrintOutputMode;
   profileId: PrinterProfileId;
+  qzPrinterName: string;
 };
 
 export type BrowserPrintCssProfile = {
@@ -129,8 +132,10 @@ export const printerProfiles: PrinterProfile[] = [
 export const defaultPrinterSettings: PrinterSettings = {
   cutMode: "tear",
   density: "compact",
+  outputMode: "browser",
   paperWidthMm: 58,
   profileId: "generic_58",
+  qzPrinterName: "",
 };
 
 const legacyProfileIds: Record<string, PrinterProfileId> = {
@@ -141,6 +146,7 @@ const legacyProfileIds: Record<string, PrinterProfileId> = {
 const profileIds = printerProfiles.map((profile) => profile.id);
 const densityValues: PrinterLayoutDensity[] = ["compact", "comfortable"];
 const cutModeValues: PrinterCutMode[] = ["tear", "cutter"];
+const outputModeValues: PrintOutputMode[] = ["browser", "qz_tray"];
 
 export function getPrinterProfile(profileId: PrinterProfileId) {
   return printerProfiles.find((profile) => profile.id === profileId) ?? printerProfiles[0];
@@ -169,4 +175,12 @@ export function normalizePrinterDensity(value: unknown, fallback: PrinterLayoutD
 
 export function normalizePrinterCutMode(value: unknown, fallback: PrinterCutMode) {
   return typeof value === "string" && cutModeValues.includes(value as PrinterCutMode) ? value as PrinterCutMode : fallback;
+}
+
+export function normalizePrintOutputMode(value: unknown): PrintOutputMode {
+  return typeof value === "string" && outputModeValues.includes(value as PrintOutputMode) ? value as PrintOutputMode : defaultPrinterSettings.outputMode;
+}
+
+export function normalizeQzPrinterName(value: unknown) {
+  return typeof value === "string" ? value.trim() : "";
 }

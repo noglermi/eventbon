@@ -6,6 +6,9 @@ import { listProducts, saveProduct } from "@/lib/repositories/products";
 import { listRecentSales, recordSalePrint, saveCompletedSale } from "@/lib/repositories/sales";
 import type { RecentSale } from "@/lib/repositories/sales";
 import { formatDateRange } from "@/lib/date-format";
+import { printService } from "@/lib/printing/print-service";
+import { printBonWithQzTray } from "@/lib/printing/qz-tray-output";
+import type { PrintVoucherLine } from "@/lib/printing/print-renderer";
 import { logSupabaseError } from "@/lib/supabase/diagnostics";
 import { supabaseConfigWarning } from "@/lib/supabase/client";
 import { AddTileDialog } from "./AddTileDialog";
@@ -200,6 +203,7 @@ export function SalesTerminal({
   const [completedSale, setCompletedSale] = useState<{ saleId: string | null; printRecorded: boolean } | null>(null);
   const [reprintSale, setReprintSale] = useState<RecentSale | null>(null);
   const [reprintPreviewDate, setReprintPreviewDate] = useState<Date | null>(null);
+  const [browserPrintFallbackContext, setBrowserPrintFallbackContext] = useState<"initial" | "reprint" | null>(null);
   const { blockZoom, language, visibleCategories } = viewSettings;
   const labels = getLabels(language);
   const eventName = eventSettings.name[language];
@@ -386,6 +390,7 @@ export function SalesTerminal({
     setReceivedEntry("");
     setCompletedSale(null);
     setPrintPreviewDate(null);
+    setBrowserPrintFallbackContext(null);
     requestAnimationFrame(() => receivedInputRef.current?.focus());
   }
 
@@ -411,7 +416,127 @@ export function SalesTerminal({
     setPrintPreviewDate(null);
     setReprintSale(null);
     setReprintPreviewDate(null);
+    setBrowserPrintFallbackContext(null);
     requestAnimationFrame(() => receivedInputRef.current?.focus());
+  }
+
+  function buildPrintLinesFromCart(): PrintVoucherLine[] {
+    return cartItems.flatMap((item) => {
+      const product = productsById.get(item.productId);
+      if (!product) {
+        return [];
+      }
+
+      return [{ id: item.productId, name: product.name[language], quantity: item.quantity }];
+    });
+  }
+
+  function createCurrentCartPrintJob() {
+    return printService.createBonPrintJob({
+      flow: "cashierDirectPrintCandidate",
+      lines: buildPrintLinesFromCart(),
+      printMode: eventSettings.printMode,
+      printerSettings,
+    });
+  }
+
+  function createRecentSalePrintJob(sale: RecentSale) {
+    return printService.createBonPrintJob({
+      flow: "cashierDirectPrintCandidate",
+      lines: sale.items.map((item) => ({ id: item.id, name: item.nameSnapshot, quantity: item.quantity })),
+      printMode: eventSettings.printMode,
+      printerSettings,
+    });
+  }
+
+  async function finalizePrintedInitialSale(sale: { saleId: string | null; printRecorded: boolean }) {
+    if (sale.printRecorded) {
+      resetSaleInputs();
+      setPersistenceMessage(labels.printSuccessful);
+      setPersistenceDetails(null);
+      return;
+    }
+
+    if (sale.saleId && tenantId && !supabaseConfigWarning) {
+      await recordSalePrint({ saleId: sale.saleId, tenantId });
+      await reloadRecentSales();
+    }
+
+    resetSaleInputs();
+    setPersistenceMessage(labels.printSuccessful);
+    setPersistenceDetails(null);
+  }
+
+  async function printInitialSaleWithQz(sale: { saleId: string | null; printRecorded: boolean }, printedAt: Date) {
+    if (!printerSettings.qzPrinterName.trim()) {
+      throw new Error(labels.printerNotConnected);
+    }
+
+    await printBonWithQzTray({
+      eventName,
+      labels,
+      language,
+      printJob: createCurrentCartPrintJob(),
+      printedAt,
+      printerSettings,
+    });
+
+    try {
+      await finalizePrintedInitialSale(sale);
+    } catch (error) {
+      const diagnostic = logSupabaseError("record initial qz sale print", error);
+      resetSaleInputs();
+      setPersistenceMessage(labels.printTrackingError);
+      setPersistenceDetails(diagnostic);
+    }
+  }
+
+  async function printReprintWithQz(sale: RecentSale, printedAt: Date) {
+    if (!printerSettings.qzPrinterName.trim()) {
+      throw new Error(labels.printerNotConnected);
+    }
+
+    await printBonWithQzTray({
+      eventName,
+      labels,
+      language,
+      printJob: createRecentSalePrintJob(sale),
+      printedAt,
+      printerSettings,
+      reprintLabel: sale.printCount + 1 > 1 ? labels.reprint : null,
+    });
+
+    if (tenantId && !supabaseConfigWarning) {
+      try {
+        await recordSalePrint({ saleId: sale.id, tenantId });
+        await reloadRecentSales();
+      } catch (error) {
+        const diagnostic = logSupabaseError("record qz sale reprint", error);
+        setPersistenceMessage(labels.printTrackingError);
+        setPersistenceDetails(diagnostic);
+        return;
+      }
+    }
+
+    setPersistenceMessage(labels.printSuccessful);
+    setPersistenceDetails(null);
+  }
+
+  function useBrowserPrintFallback() {
+    if (browserPrintFallbackContext === "initial") {
+      setBrowserPrintFallbackContext(null);
+      setPersistenceMessage(null);
+      setPersistenceDetails(null);
+      setPrintPreviewDate(new Date());
+      return;
+    }
+
+    if (browserPrintFallbackContext === "reprint" && reprintSale) {
+      setBrowserPrintFallbackContext(null);
+      setPersistenceMessage(null);
+      setPersistenceDetails(null);
+      setReprintPreviewDate(new Date());
+    }
   }
 
   function toggleCategory(filter: ProductFilter) {
@@ -460,10 +585,13 @@ export function SalesTerminal({
       return;
     }
 
+    let saleToPrint: { saleId: string | null; printRecorded: boolean } | null = null;
+
     if (eventId && tenantId && !supabaseConfigWarning) {
       setIsSavingSale(true);
       setPersistenceMessage(null);
       setPersistenceDetails(null);
+      setBrowserPrintFallbackContext(null);
 
       const persistedReceivedCents = paymentMethod === "card_manual" ? totalCents : receivedCents;
       const persistedChangeCents = paymentMethod === "card_manual" ? 0 : Math.max(receivedCents - totalCents, 0);
@@ -482,7 +610,8 @@ export function SalesTerminal({
           terminalId,
           totalCents,
         });
-        setCompletedSale({ saleId, printRecorded: false });
+        saleToPrint = { saleId, printRecorded: false };
+        setCompletedSale(saleToPrint);
       } catch (error) {
         const diagnostic = logSupabaseError("save completed sale", error);
         setPersistenceMessage(labels.saleSaveError);
@@ -495,7 +624,23 @@ export function SalesTerminal({
     }
 
     if (!eventId || !tenantId || supabaseConfigWarning) {
-      setCompletedSale({ saleId: null, printRecorded: false });
+      saleToPrint = { saleId: null, printRecorded: false };
+      setCompletedSale(saleToPrint);
+    }
+
+    if (printerSettings.outputMode === "qz_tray" && saleToPrint) {
+      setIsSavingSale(true);
+      const printedAt = new Date();
+      try {
+        await printInitialSaleWithQz(saleToPrint, printedAt);
+      } catch (error) {
+        setPersistenceMessage(labels.qzTrayUnavailable + " " + labels.useBrowserPrintFallback);
+        setPersistenceDetails(error instanceof Error ? error.message : String(error));
+        setBrowserPrintFallbackContext("initial");
+      } finally {
+        setIsSavingSale(false);
+      }
+      return;
     }
 
     setPrintPreviewDate(new Date());
@@ -522,11 +667,7 @@ export function SalesTerminal({
     }
 
     try {
-      await recordSalePrint({ saleId: completedSale.saleId, tenantId });
-      await reloadRecentSales();
-      resetActiveSale();
-      setPersistenceMessage(null);
-      setPersistenceDetails(null);
+      await finalizePrintedInitialSale(completedSale);
     } catch (error) {
       const diagnostic = logSupabaseError("record initial sale print", error);
       setPersistenceMessage(labels.printTrackingError);
@@ -571,9 +712,27 @@ export function SalesTerminal({
     }
   }
 
-  function openReprintPreview(sale: RecentSale) {
+  async function openReprintPreview(sale: RecentSale) {
     setReprintSale(sale);
-    setReprintPreviewDate(new Date());
+
+    if (printerSettings.outputMode !== "qz_tray") {
+      setReprintPreviewDate(new Date());
+      return;
+    }
+
+    setBrowserPrintFallbackContext(null);
+    setPersistenceMessage(null);
+    setPersistenceDetails(null);
+
+    try {
+      await printReprintWithQz(sale, new Date());
+      setReprintSale(null);
+      setReprintPreviewDate(null);
+    } catch (error) {
+      setPersistenceMessage(labels.qzTrayUnavailable + " " + labels.useBrowserPrintFallback);
+      setPersistenceDetails(error instanceof Error ? error.message : String(error));
+      setBrowserPrintFallbackContext("reprint");
+    }
   }
 
   async function saveTile(tile: ProductTileData) {
@@ -790,6 +949,15 @@ export function SalesTerminal({
                         <pre className="mt-2 whitespace-pre-wrap break-words rounded-xl bg-white/70 p-3 font-mono text-[11px] leading-relaxed">{persistenceDetails}</pre>
                       </details>
                     ) : null}
+                    {browserPrintFallbackContext ? (
+                      <button
+                        type="button"
+                        onClick={useBrowserPrintFallback}
+                        className="mt-3 min-h-11 rounded-xl bg-slate-950 px-4 text-sm font-black text-white transition active:scale-[0.98] focus:outline-none focus-visible:ring-4 focus-visible:ring-slate-300"
+                      >
+                        {labels.useBrowserPrintFallback}
+                      </button>
+                    ) : null}
                   </div>
                 ) : null}
                 {isLoadingProducts ? (
@@ -817,6 +985,15 @@ export function SalesTerminal({
                     <summary className="cursor-pointer font-black">{labels.technicalDetails}</summary>
                     <pre className="mt-2 whitespace-pre-wrap break-words rounded-xl bg-white/70 p-3 font-mono text-[11px] leading-relaxed">{persistenceDetails}</pre>
                   </details>
+                ) : null}
+                {browserPrintFallbackContext ? (
+                  <button
+                    type="button"
+                    onClick={useBrowserPrintFallback}
+                    className="mt-3 min-h-11 rounded-xl bg-slate-950 px-4 text-sm font-black text-white transition active:scale-[0.98] focus:outline-none focus-visible:ring-4 focus-visible:ring-slate-300"
+                  >
+                    {labels.useBrowserPrintFallback}
+                  </button>
                 ) : null}
                 {!salesAllowed && salesUnavailableMessage ? (
                   <div className="mt-4 rounded-2xl bg-amber-50 px-4 py-3 text-sm font-black text-amber-900 ring-1 ring-amber-200">

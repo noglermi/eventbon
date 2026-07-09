@@ -1,11 +1,14 @@
 import {
   defaultPrinterSettings,
   getPrinterProfile,
+  normalizePrintOutputMode,
   normalizePrinterCutMode,
   normalizePrinterDensity,
   normalizePrinterPaperWidth,
   normalizePrinterProfileId,
+  normalizeQzPrinterName,
   printerProfiles,
+  type PrintOutputMode,
   type PrinterCutMode,
   type PrinterLayoutDensity,
   type PrinterProfile,
@@ -17,6 +20,7 @@ export {
   defaultPrinterSettings,
   getPrinterProfile,
   printerProfiles,
+  type PrintOutputMode,
   type PrinterCutMode,
   type PrinterLayoutDensity,
   type PrinterProfile,
@@ -55,6 +59,8 @@ export function loadPrinterSettings() {
       paperWidthMm: profile.isFixedMedia ? profile.paperWidthMm : normalizePrinterPaperWidth(stored.paperWidthMm, profile.paperWidthMm),
       density: normalizePrinterDensity(stored.density, profile.density),
       cutMode: normalizePrinterCutMode(stored.cutMode, profile.cutMode),
+      outputMode: normalizePrintOutputMode(stored.outputMode),
+      qzPrinterName: normalizeQzPrinterName(stored.qzPrinterName),
     };
   } catch {
     return clonePrinterSettings(defaultPrinterSettings);

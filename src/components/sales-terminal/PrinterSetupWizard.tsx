@@ -5,7 +5,7 @@ import { printService } from "@/lib/printing/print-service";
 import type { Translation } from "./i18n";
 import type { Language } from "./types";
 import { getPrinterProfile, printerProfiles } from "./printer-settings-storage";
-import type { PrinterCutMode, PrinterLayoutDensity, PrinterProfileId, PrinterSettings } from "./printer-settings-storage";
+import type { PrintOutputMode, PrinterCutMode, PrinterLayoutDensity, PrinterProfileId, PrinterSettings } from "./printer-settings-storage";
 
 type PrinterSetupWizardProps = {
   labels: Translation;
@@ -74,6 +74,7 @@ export function PrinterSetupWizard({ labels, language, printerSettings, onPrinte
     const profile = getPrinterProfile(profileId);
     setTestResult(null);
     onPrinterSettingsChange({
+      ...printerSettings,
       profileId: profile.id,
       paperWidthMm: profile.paperWidthMm,
       density: profile.density,
@@ -135,6 +136,31 @@ export function PrinterSetupWizard({ labels, language, printerSettings, onPrinte
             ))}
           </select>
         </label>
+
+        <label className="grid gap-2 text-sm font-bold uppercase tracking-widest text-slate-500">
+          {labels.printOutput}
+          <select
+            value={printerSettings.outputMode}
+            onChange={(event) => onPrinterSettingsChange({ ...printerSettings, outputMode: event.target.value as PrintOutputMode })}
+            className="min-h-12 rounded-2xl border border-slate-200 bg-white px-4 text-base font-black normal-case tracking-normal text-slate-800 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
+          >
+            <option value="browser">{labels.browserPrintFallback}</option>
+            <option value="qz_tray">{labels.qzTrayDirectPrint}</option>
+          </select>
+        </label>
+
+        {printerSettings.outputMode === "qz_tray" ? (
+          <label className="grid gap-2 text-sm font-bold uppercase tracking-widest text-slate-500">
+            {labels.qzPrinterName}
+            <input
+              type="text"
+              value={printerSettings.qzPrinterName}
+              onChange={(event) => onPrinterSettingsChange({ ...printerSettings, qzPrinterName: event.target.value })}
+              placeholder="Brother TD-4000"
+              className="min-h-12 rounded-2xl border border-slate-200 bg-white px-4 text-base font-black normal-case tracking-normal text-slate-800 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
+            />
+          </label>
+        ) : null}
 
         <div className="grid grid-cols-3 gap-3">
           <label className="grid gap-2 text-sm font-bold uppercase tracking-widest text-slate-500">

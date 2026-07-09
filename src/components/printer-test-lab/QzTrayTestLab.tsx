@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import { loadPrinterSettings, savePrinterSettings } from "@/components/sales-terminal/printer-settings-storage";
 
 type QzTray = typeof import("qz-tray").default;
 
@@ -54,6 +55,7 @@ export function QzTrayTestLab() {
   const [printState, setPrintState] = useState<PrintState>("idle");
   const [message, setMessage] = useState<string | null>(null);
   const [technicalDetails, setTechnicalDetails] = useState<string | null>(null);
+  const [savedPrinterName, setSavedPrinterName] = useState(() => loadPrinterSettings().qzPrinterName);
 
   const detectedBrotherPrinter = useMemo(() => printers.find(isBrotherTdPrinter) ?? "", [printers]);
   const isConnected = connectionState === "connected";
@@ -111,7 +113,7 @@ export function QzTrayTestLab() {
       const brotherPrinter = availablePrinters.find(isBrotherTdPrinter) ?? "";
 
       setPrinters(availablePrinters);
-      setSelectedPrinter((current) => current || brotherPrinter || availablePrinters[0] || "");
+      setSelectedPrinter((current) => current || savedPrinterName || brotherPrinter || availablePrinters[0] || "");
       setConnectionState("connected");
       setMessage(availablePrinters.length > 0 ? "Druckerliste geladen." : "Keine Drucker gefunden.");
     } catch (error) {
@@ -163,6 +165,22 @@ export function QzTrayTestLab() {
       setMessage("Testdruck konnte nicht gesendet werden.");
       setTechnicalDetails(getErrorMessage(error));
     }
+  }
+
+  function saveSelectedPrinterForSalesTerminal() {
+    if (!selectedPrinter) {
+      setMessage("Bitte zuerst einen Drucker auswählen.");
+      return;
+    }
+
+    const currentSettings = loadPrinterSettings();
+    savePrinterSettings({
+      ...currentSettings,
+      outputMode: "qz_tray",
+      qzPrinterName: selectedPrinter,
+    });
+    setSavedPrinterName(selectedPrinter);
+    setMessage("QZ Tray Drucker wurde für dieses Gerät gespeichert.");
   }
 
   return (
@@ -267,6 +285,21 @@ export function QzTrayTestLab() {
           >
             {printState === "printing" ? "Testdruck wird gesendet..." : "QZ Testbon drucken"}
           </button>
+
+          <button
+            type="button"
+            onClick={saveSelectedPrinterForSalesTerminal}
+            disabled={!selectedPrinter}
+            className="min-h-14 rounded-lg bg-emerald-600 px-6 text-lg font-black text-white shadow-sm shadow-emerald-700/20 transition active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-slate-300 focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200"
+          >
+            Für Verkaufsterminal speichern
+          </button>
+
+          {savedPrinterName ? (
+            <p className="rounded-lg bg-emerald-50 px-4 py-3 text-sm font-black text-emerald-900 ring-1 ring-emerald-100">
+              Gespeicherter QZ-Drucker: {savedPrinterName}
+            </p>
+          ) : null}
 
           <div className="rounded-lg bg-slate-50 p-4 ring-1 ring-slate-200">
             <p className="text-sm font-black uppercase tracking-widest text-slate-500">Testbon Inhalt</p>

@@ -342,7 +342,9 @@ Fast beta print bridge candidate:
 
 ## QZ Tray Evaluation Status
 
-eventBon includes a developer-only proof-of-concept page named Drucker Testlabor.
+QZ Tray is the current Windows beta direct print path for cashier printing.
+
+eventBon also includes a developer-only proof-of-concept page named Drucker Testlabor.
 
 Purpose:
 
@@ -361,11 +363,20 @@ The test job contains:
 
 Scope:
 
-- evaluation only
+- beta direct-print evaluation and cashier output option
 - no replacement of the existing browser-print workflow
-- no change to the Sales Terminal print flow
+- Sales Terminal can use QZ Tray when the device-local print output is set to QZ Tray direct print
+- Browser print remains the fallback output
 - no change to printer profiles
 - no silent production printing mode yet
+
+Cashier flow:
+
+- completed sale is saved atomically first
+- if QZ Tray direct print is selected, eventBon sends the voucher print job to QZ Tray
+- successful QZ printing clears the cart/payment state and refreshes recent sales
+- if QZ Tray is not reachable, eventBon shows a friendly error and offers browser print fallback
+- reprints from Letzte VerkÃ¤ufe use QZ Tray when selected and never create a new sale
 
 If QZ Tray is not installed or cannot be reached, the UI must show a friendly message:
 
