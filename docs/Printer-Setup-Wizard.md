@@ -340,6 +340,39 @@ Fast beta print bridge candidate:
 
 - QZ Tray
 
+## QZ Tray Evaluation Status
+
+eventBon includes a developer-only proof-of-concept page named Drucker Testlabor.
+
+Purpose:
+
+- verify whether QZ Tray is installed on the current device
+- connect the browser app to QZ Tray
+- list locally available printers
+- select the Brother TD-4000
+- send a simple QZ Tray test print
+
+The test job contains:
+
+- eventBon
+- QZ Tray Testdruck
+- Brother TD-4000
+- Datum/Uhrzeit
+
+Scope:
+
+- evaluation only
+- no replacement of the existing browser-print workflow
+- no change to the Sales Terminal print flow
+- no change to printer profiles
+- no silent production printing mode yet
+
+If QZ Tray is not installed or cannot be reached, the UI must show a friendly message:
+
+- QZ Tray ist auf diesem GerÃ¤t nicht installiert.
+
+Technical errors should remain available as developer details so setup problems can be diagnosed during beta testing.
+
 Beta goals:
 
 - verify that a non-technical organizer can complete setup

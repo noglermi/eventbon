@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { formatDateTime } from "@/lib/date-format";
 import { printService } from "@/lib/printing/print-service";
@@ -101,6 +102,12 @@ export function PrinterSetupWizard({ labels, language, printerSettings, onPrinte
           <p className="mt-2 text-sm font-semibold leading-6 text-slate-500">{labels.receiptPrinterSetupSubtitle}</p>
           <p className="mt-1 text-sm font-semibold leading-6 text-slate-500">{labels.printerBrowserDialogNote}</p>
         </div>
+        <Link
+          href="/printer-test-lab"
+          className="min-h-12 shrink-0 rounded-2xl bg-slate-950 px-4 py-3 text-base font-black text-white transition active:scale-[0.98] focus:outline-none focus-visible:ring-4 focus-visible:ring-slate-300"
+        >
+          Drucker Testlabor
+        </Link>
       </div>
 
       <div className="mt-5 grid gap-4">
