@@ -90,6 +90,8 @@ The architecture is multi-tenant by design. All application data is stored in Su
 
 Event settings and device settings are intentionally separate. Event settings include products, helpers, menu, and dashboard/statistics. Device settings include the receipt printer, zoom, and device language. One event may be used from multiple terminals, and each terminal stores its own local device configuration.
 
+Reliable production receipt printing targets a local print bridge while eventBon remains a web app. Browser and CSS printing remain useful for setup, test prints, and fallback, but Chrome print preview must not be the final cashier workflow. A fast beta candidate is QZ Tray; later printer-specific adapters may use ESC/POS for Epson and Star devices, Brother label/raster output or Brother SDK support through the bridge, Epson ePOS, and Star webPRNT.
+
 ## Release Strategy
 
 eventBon follows a beta-first release strategy.
@@ -101,7 +103,7 @@ Security remains mandatory before production release. Full RLS, RPC security rev
 Release candidates:
 
 - RC-1 Beta Completion: UX, bug fixes, tablet optimization, sales workflow, password reset, Menu Designer, printer support, and complete event workflow.
-- RC-2 Receipt Printing: printer setup wizard, generic thermal printer support, Brother TD-4000 reference implementation, Epson reference profiles, browser print optimization, print testing, and print documentation.
+- RC-2 Receipt Printing: printer setup wizard, local print bridge architecture, generic thermal printer support, Brother TD-4000 reference implementation, Epson and Star reference paths, browser print fallback, print testing, and print documentation.
 - RC-3 Pilot Program: five real pilot events, feedback collection, UX fixes, and no major architecture changes.
 - RC-4 Security Hardening: production security hardening after successful pilot operation.
 

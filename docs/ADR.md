@@ -627,3 +627,75 @@ One event may be used from multiple terminals. Each terminal needs local control
 - no multiple printers per terminal
 - local device configuration is stored in localStorage, not in Supabase
 - event settings remain separate from device settings
+
+## ADR-021 Local Print Bridge as Target Receipt Printing Architecture
+
+### Decision
+
+eventBon remains a web app.
+
+Reliable production receipt printing will use a local print bridge.
+
+Browser and CSS printing are only setup, test, and fallback paths. They are not the final cashier workflow.
+
+Target receipt-printing architecture:
+
+- eventBon Web App
+- PrintService
+- PrintJob IR
+- Renderer Adapters
+- Output Adapters
+
+The PrintJob IR contains:
+
+- voucher lines
+- print mode
+- paper profile
+- printer profile
+- cut mode
+- reprint marker
+- helper or terminal context if needed
+
+Renderer Adapters:
+
+- Browser CSS renderer
+- ESC/POS renderer
+- Raster/PDF label renderer
+- Vendor SDK renderer later
+
+Output Adapters:
+
+- Browser Print fallback
+- Local Print Bridge
+- Epson ePOS network adapter
+- Star webPRNT network adapter
+
+Technology direction:
+
+- Primary future path: local print bridge
+- Fast beta candidate: QZ Tray
+- Fallback: browser/CSS print
+- Printer-specific adapters: ESC/POS for Epson and Star, Brother label/raster or Brother SDK through the bridge, Epson ePOS, and Star webPRNT
+
+### Reason
+
+Real Brother TD-4000 testing showed that browser printing can reach the printer, but browser preview and CSS pagination are not reliable enough for production event-floor checkout. Test prints produced repeated or cut Bons, and single-voucher sales did not reliably print every voucher.
+
+Cashiers need a fast, predictable print path. They should not fight Chrome print preview during active sales.
+
+A local print bridge keeps eventBon as a web app while allowing direct or near-direct access to locally installed printers, printer-specific command formats, and better diagnostics.
+
+### Consequences
+
+- Browser printing remains useful for setup, test prints, and fallback.
+- The Printer Setup Wizard must support local device configuration and later bridge readiness.
+- PrintService must work with a printer-independent PrintJob IR.
+- Epson and Star can be supported through ESC/POS and vendor network protocols where suitable.
+- Brother TD printers can be supported through label/raster output or Brother SDK integration through the bridge.
+- QZ Tray is the fastest beta candidate for validating bridge-based printing.
+
+### Explicit Non-Decisions
+
+- WebUSB, WebSerial, and WebHID are not the core architecture. They may be explored only for special cases.
+- Electron is not the primary product. eventBon should remain a web app.
+- Chrome print preview must not remain the production cashier workflow.

@@ -420,19 +420,52 @@ Stripe is never used for Bon sales to visitors. Visitor payments remain outside 
 
 ## Printing
 
-The MVP uses browser Bon printing first for setup, test prints, and temporary validation. eventBon does not select printers automatically and does not send ESC/POS or native printer commands yet.
+eventBon remains a web app. Reliable production receipt printing targets a local print bridge. Browser and CSS printing are acceptable for setup, test prints, and fallback, but they are not the final cashier workflow.
 
-Real Brother TD-4000 testing confirmed that Windows and browser printing can reach the printer, but browser print preview is not acceptable as the final cashier workflow. Receipt printing is a beta blocker. Production operation requires direct or near-direct printing so the cashier can complete a sale without a disruptive preview step.
+Real Brother TD-4000 testing confirmed that Windows and browser printing can reach the printer, but browser print preview caused repeated labels, incomplete single-voucher output, and too much cashier friction. Receipt printing is therefore a beta blocker. Production operation requires direct or near-direct printing so the cashier can complete a sale without a disruptive preview step.
 
 The printer engine foundation separates the Sales Terminal from printer details.
 
-Current browser-print architecture:
+Target receipt-printing architecture:
 
-- Sales Terminal
-- Print Service
-- Printer Profile
-- Renderer
-- Browser Print
+- eventBon Web App
+- PrintService
+- PrintJob IR
+- Renderer Adapters
+- Output Adapters
+
+The Sales Terminal requests Print Bon. It does not know paper widths, print CSS, printer commands, cutter spacing, output target, or printer-specific layout values.
+
+The PrintJob IR is the internal print representation. It contains:
+
+- voucher lines
+- print mode
+- paper profile
+- printer profile
+- cut mode
+- reprint marker
+- helper or terminal context if needed
+
+Renderer Adapters turn the PrintJob IR into output-specific print data:
+
+- Browser CSS renderer
+- ESC/POS renderer
+- Raster/PDF label renderer
+- Vendor SDK renderer later
+
+Output Adapters deliver the rendered job:
+
+- Browser Print fallback
+- Local Print Bridge
+- Epson ePOS network adapter
+- Star webPRNT network adapter
+
+Technology decision:
+
+- Primary future path: local print bridge
+- Fast beta candidate: QZ Tray
+- Fallback: browser/CSS print
+- Printer-specific adapters: ESC/POS for Epson and Star, Brother label/raster or Brother SDK through the bridge, Epson ePOS, and Star webPRNT
 
 The internal print flow distinguishes:
 
@@ -441,9 +474,7 @@ The internal print flow distinguishes:
 
 The current implementation still uses browser printing for both flows, but the distinction keeps the setup/test path separate from the future cashier direct-print path.
 
-The Sales Terminal requests Bon printing. It does not know paper widths, print CSS, cutter spacing, or printer-specific layout values.
-
-The Print Service selects the active device-local printer profile and creates a print job. The Printer Profile defines paper width, margins, font scaling, cutter or tear-off behavior, and browser print CSS values. The Renderer turns the selected profile and sale lines into printable Bons. Browser Print remains the only output mechanism in the foundation, but the service boundary must allow a later native or near-direct output target.
+The PrintService selects the active device-local printer profile, creates the PrintJob IR, chooses a renderer adapter, and sends the rendered result to an output adapter. The Printer Profile defines paper width, margins, font scaling, cutter or tear-off behavior, and profile-specific layout values.
 
 Supported foundation profiles:
 
@@ -466,19 +497,17 @@ Initial tested printer profiles:
 - Brother TD-4000
 - Generic A4 test printer
 
-The organizer or device operator must install the printer in Windows first. eventBon then uses the browser print dialog and applies the selected profile to the Bon print CSS for width, density, and tear/cut spacing. This is acceptable for setup and testing, but it is not the final cashier workflow.
+The organizer or device operator must install the printer in the operating system first for browser-print fallback and for bridge-based output where the bridge uses installed printers. eventBon then applies the selected printer profile for width, density, and tear/cut spacing. Browser printing is acceptable for setup and testing, but it is not the final cashier workflow.
 
 Printing should be generated from recorded sales data so the printed result can be traced back to the order and event.
 
 Bon printing is an event-period capability. Outside the active event period or an explicitly enabled usage window, printing should be inactive even if product setup and read-only statistics access are still available.
 
-Direct printing, ESC/POS support, native printer integration, local print bridges, kiosk print options, and automatic printer discovery are later hardening topics and are not part of the browser-print foundation. The next receipt-printing work should investigate:
+The architecture explicitly does not make WebUSB, WebSerial, or WebHID the core printer architecture. These browser device APIs may be explored for special cases, but they are too dependent on browser, platform, permissions, and device support to be the product foundation.
 
-- local print bridge
-- ESC/POS where supported
-- native helper app
-- browser kiosk print options
-- vendor SDK integration
+The architecture also does not make Electron the primary product. A native shell may be revisited only if the web app plus local print bridge cannot satisfy field requirements.
+
+eventBon should stop treating Chrome print preview as the production cashier workflow. The preview path remains for setup, test prints, and fallback only.
 
 Product-based printer routing, kitchen printer routing, and multiple printers per terminal are not part of the MVP. This keeps event-floor printing simple, predictable, and easier to support.
 
@@ -504,10 +533,14 @@ Focus:
 Focus:
 
 - printer setup wizard
+- local print bridge as target production architecture
+- QZ Tray as fast beta candidate
 - generic thermal printer support
 - Brother TD-4000 reference implementation
-- Epson reference profiles
-- browser print optimization
+- Epson and Star reference paths
+- ESC/POS renderer path for Epson and Star
+- Brother label/raster or Brother SDK path through the bridge
+- browser print fallback
 - print testing
 - print documentation
 

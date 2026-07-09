@@ -70,10 +70,14 @@ Organizer event workspace:
 Focus:
 
 - printer setup wizard
+- local print bridge as target production architecture
+- QZ Tray as fast beta candidate
 - generic thermal printer support
 - Brother TD-4000 reference implementation
-- Epson reference profiles
-- browser print optimization
+- Epson and Star reference paths
+- ESC/POS renderer path for Epson and Star
+- Brother label/raster or Brother SDK path through the bridge
+- browser/CSS print as setup, test, and fallback
 - print testing
 - print documentation
 
@@ -91,6 +95,20 @@ Device settings concept:
 - device settings: receipt printer, zoom, device language
 - device settings are local to the terminal and are not stored as event data
 - a future Dieses Gerät area may group receipt printer, zoom, and language settings
+
+Receipt printing architecture:
+
+- eventBon remains a web app
+- Sales Terminal requests printing through PrintService
+- PrintService creates a PrintJob IR
+- Renderer adapters produce Browser CSS, ESC/POS, Raster/PDF label, or later vendor SDK output
+- Output adapters deliver through Browser Print fallback, Local Print Bridge, Epson ePOS, or Star webPRNT
+
+Architecture exclusions:
+
+- WebUSB, WebSerial, and WebHID are not the core printer architecture
+- Electron is not the primary product direction
+- Chrome print preview is not the production cashier workflow
 
 ### RC-3 Pilot Program
 

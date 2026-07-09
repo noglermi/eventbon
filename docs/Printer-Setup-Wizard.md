@@ -28,7 +28,11 @@ The wizard is not a cash register, fiscal printer, or POS hardware layer. It con
 - The first implementation uses browser printing for setup and testing.
 - Browser print preview is not acceptable as the final cashier workflow.
 - Production operation requires direct or near-direct printing.
-- Future direct ESC/POS or native printing may be added later.
+- The target production architecture is a local print bridge.
+- Browser and CSS printing remain setup, test, and fallback paths.
+- QZ Tray is the fast beta candidate for bridge-based printing.
+- WebUSB, WebSerial, and WebHID are not the core printer architecture.
+- Electron is not the primary product direction.
 
 ## Printer Engine Foundation
 
@@ -36,15 +40,25 @@ The Printer Setup Wizard configures the active printer profile used by the print
 
 Architecture:
 
-- Sales Terminal
-- Print Service
-- Printer Profile
-- Renderer
-- Browser Print
+- eventBon Web App
+- PrintService
+- PrintJob IR
+- Renderer Adapters
+- Output Adapters
 
 The Sales Terminal requests Bon printing without knowing printer details.
 
-The Print Service selects the active device-local profile.
+The PrintService selects the active device-local profile and creates a PrintJob IR.
+
+The PrintJob IR contains:
+
+- voucher lines
+- print mode
+- paper profile
+- printer profile
+- cut mode
+- reprint marker
+- helper or terminal context if needed
 
 The Printer Profile defines:
 
@@ -52,15 +66,27 @@ The Printer Profile defines:
 - margins
 - font scaling
 - cutter or tear-off behavior
-- browser print CSS values
+- profile-specific layout values
 
-The Renderer turns sale lines and the event print mode into printable Bons.
+Renderer Adapters turn the PrintJob IR into printable output:
 
-Browser Print opens the normal browser print dialog.
+- Browser CSS renderer
+- ESC/POS renderer
+- Raster/PDF label renderer
+- Vendor SDK renderer later
 
-No printer detection, ESC/POS command, Brother-specific command, Epson-specific command, or Star-specific command is part of the foundation.
+Output Adapters deliver the rendered job:
+
+- Browser Print fallback
+- Local Print Bridge
+- Epson ePOS network adapter
+- Star webPRNT network adapter
+
+Browser Print opens the normal browser print dialog and remains the setup, test, and fallback path.
 
 Real Brother TD-4000 testing showed that Windows and browser printing can reach the printer, but browser preview and browser pagination are not reliable enough as the final cashier workflow. Browser printing remains useful for setup, test prints, and temporary validation. Receipt printing is a beta blocker because the cashier needs a fast print path without a disruptive preview step.
+
+The primary future path is a local print bridge. QZ Tray is the fastest beta candidate because it can connect the web app to installed local printers without turning eventBon into an Electron app. Later printer-specific adapters may use ESC/POS for Epson and Star printers, Brother label/raster output or the Brother SDK through the bridge, Epson ePOS, and Star webPRNT.
 
 ## Supported Printer Profiles
 
@@ -268,45 +294,58 @@ Reason:
 
 One event may have multiple terminals. A drinks terminal and a kitchen terminal may use different devices and printers. Changing the printer on one terminal must not change printing on another terminal.
 
-## Future Direct ESC/POS Support
+## Local Print Bridge Target
 
-Future versions must investigate direct or near-direct printer communication for production use.
+Reliable production receipt printing should use a local print bridge while eventBon remains a web app.
 
-Possible future paths:
+The bridge is responsible for:
 
-- ESC/POS printing
-- WebUSB
-- WebSerial
-- local helper application
-- native desktop bridge
-- printer vendor SDK integration
-- browser kiosk print configuration where available
+- receiving print jobs from the web app
+- selecting the configured local printer
+- sending jobs without a disruptive browser preview
+- supporting ESC/POS where the printer supports it
+- supporting Brother label/raster or Brother SDK output for Brother label printers
+- returning useful success or error diagnostics
+- later exposing printer status where available
 
-Direct or near-direct printing may support:
+Target output paths:
 
-- fewer browser print dialog steps
-- automatic cut commands
-- faster printing
-- printer status feedback
+- Local Print Bridge as the primary production path
+- QZ Tray as the fast beta candidate
+- Browser/CSS print as setup, test, and fallback
+- Epson ePOS network adapter where suitable
+- Star webPRNT network adapter where suitable
 
-This is not part of the current browser-print foundation, but it is required before eventBon can treat receipt printing as production-ready.
+Printer-specific adapter direction:
 
-Before direct printer support is added, eventBon should continue validating browser print behavior with the Brother TD-4000 reference device and document all failure modes.
+- ESC/POS for Epson and Star receipt printers
+- Brother label/raster output or Brother SDK through the local bridge
+- Vendor SDK renderer later if a printer family requires it
+
+Non-decisions:
+
+- WebUSB, WebSerial, and WebHID should not become the core architecture. They can be investigated for special cases but are too platform- and browser-dependent for the default organizer workflow.
+- Electron should not become the primary product. eventBon should stay a web app unless field testing proves the bridge approach cannot meet requirements.
+- Chrome print preview should not remain the production cashier workflow. It is too disruptive and unreliable for active event sales.
 
 ## Beta Strategy
 
-Beta starts with browser printing and guided setup.
+Beta starts with browser printing and guided setup, but the target architecture is bridge-based production printing.
 
 Reference device:
 
 - Brother TD-4000
+
+Fast beta print bridge candidate:
+
+- QZ Tray
 
 Beta goals:
 
 - verify that a non-technical organizer can complete setup
 - verify readable Bons on real thermal paper
 - verify whether browser printing is sufficient only for setup or temporary operation
-- identify the direct or near-direct print path required for active sales
+- validate a local print bridge path for active sales
 - collect driver, browser, and paper setting notes
 - document known-good settings
 
