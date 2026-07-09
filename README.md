@@ -115,6 +115,7 @@ Until RC-4, major architecture refactoring should be avoided unless it is requir
 - [Wireframes](docs/Wireframes.md)
 - [Data Model](docs/Data-Model.md)
 - [Roadmap](docs/Roadmap.md)
+- [Printer Setup Wizard](docs/Printer-Setup-Wizard.md)
 
 ## Contributor Note
 

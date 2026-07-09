@@ -542,7 +542,56 @@ RC-4 focuses on security hardening:
 
 Until RC-4, major architecture refactoring should be avoided unless required for a beta blocker. Allowed work includes bug fixes, UX improvements, printing, and beta workflow improvements. Large security rewrites, large database redesigns, and unnecessary RPC redesigns should be avoided.
 
-## ADR-019 One Terminal = One Printer, One Device = One Local Configuration
+## ADR-019 Guided Printer Setup
+
+### Decision
+
+eventBon provides a guided Printer Setup Wizard as a major product feature.
+
+The wizard helps a non-technical organizer or device operator configure receipt printing without reading a printer manual.
+
+The initial implementation uses browser printing and printer profiles. It guides the user through:
+
+- printer profile selection
+- paper width selection
+- browser print expectations
+- test print
+- confirmation of local device settings
+- troubleshooting
+
+Initial profiles are:
+
+- Generic 58 mm receipt printer
+- Generic 80 mm receipt printer
+- Brother TD-4000
+- Generic A4 test printer
+
+The Brother TD-4000 is the first real thermal printer reference device for beta validation. The Brother QL-720NW is not the main Bon printer reference.
+
+Later versions may certify Epson and Star printers and may add direct ESC/POS, WebUSB, WebSerial, native bridge, or vendor SDK support.
+
+### Reason
+
+Printing is one of the highest-risk event-floor workflows. A Bon printer often has to be configured shortly before an event by people who are not technical.
+
+A guided setup lowers support risk and makes receipt printing testable before active sales start.
+
+Browser printing is the right first step because it works with existing operating system printer drivers and avoids native integration complexity during beta.
+
+### Consequences
+
+- Printer setup becomes an explicit organizer/device workflow.
+- The wizard must include a test print before the device is considered ready.
+- Printer settings remain device-local and are stored in localStorage, not in Supabase.
+- Each terminal keeps its own printer profile and paper settings.
+- The Brother TD-4000 profile is the beta reference for real thermal printing.
+- Epson and Star profiles require later certification with real hardware.
+- Direct ESC/POS or native printer integration remains future scope.
+- The printer feature must stay focused on Bon printing and must not introduce fiscalization, cash drawer control, receipt accounting, or general POS hardware scope.
+
+See `docs/Printer-Setup-Wizard.md` for the full concept.
+
+## ADR-020 One Terminal = One Printer, One Device = One Local Configuration
 
 ### Decision
 
