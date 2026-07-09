@@ -65,10 +65,9 @@ input {
   }
 
   .print-area {
-    position: fixed !important;
-    inset: 0 auto auto 0 !important;
+    position: static !important;
     display: block !important;
-    width: 100% !important;
+    width: var(--printer-printable-width) !important;
     max-width: var(--printer-printable-width) !important;
     margin: 0 !important;
     padding: 0 !important;
@@ -81,24 +80,60 @@ input {
     display: none !important;
   }
 
+  .print-preview-overlay,
+  .print-preview-frame {
+    position: static !important;
+    display: block !important;
+    width: var(--printer-printable-width) !important;
+    max-width: none !important;
+    height: auto !important;
+    max-height: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    background: white !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+  }
+
   .print-preview-scroll {
+    display: block !important;
+    width: var(--printer-printable-width) !important;
+    max-width: none !important;
+    height: auto !important;
+    max-height: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
     background: white !important;
     box-shadow: none !important;
   }
 
   .voucher-ticket {
-    width: 100%;
-    max-width: var(--printer-printable-width);
-    margin: 0 0 var(--printer-ticket-gap);
-    padding: var(--printer-ticket-padding);
+    display: block !important;
+    width: var(--printer-printable-width) !important;
+    max-width: var(--printer-printable-width) !important;
+    margin: 0 !important;
+    padding: var(--printer-ticket-padding) !important;
     font-size: var(--printer-font-size);
     color: black !important;
     background: white !important;
     box-shadow: none !important;
     page-break-inside: avoid;
     break-inside: avoid;
+    page-break-after: always;
+    break-after: page;
     border: 0 !important;
     outline: 0 !important;
+  }
+
+  .voucher-ticket:not(:first-child) {
+    margin-top: var(--printer-ticket-gap) !important;
+  }
+
+  .voucher-ticket:last-child {
+    page-break-after: auto;
+    break-after: auto;
   }
 
   .voucher-line {

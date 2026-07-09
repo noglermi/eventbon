@@ -61,15 +61,15 @@ function Voucher({ eventName, labels, lines, printedAtText, reprintLabel }: { ev
 export function VoucherPrintPreview({ eventName, language, labels, cartItems, lines: providedLines, productsById, printMode, printedAt, reprintLabel = null, printerSettings, onCancel, onPrinted }: VoucherPrintPreviewProps) {
   const lines = providedLines ?? buildLines(cartItems, productsById, language);
   const printedAtText = formatDateTime(printedAt, language);
-  const printJob = printService.createBonPrintJob({ lines, printMode, printerSettings });
+  const printJob = printService.createBonPrintJob({ flow: "cashierDirectPrintCandidate", lines, printMode, printerSettings });
 
   function printVouchers() {
     printService.requestBrowserPrint(onPrinted);
   }
 
   return (
-    <div className="fixed inset-0 z-[400] flex items-center justify-center bg-slate-950/60 p-8 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="print-preview-title">
-      <div className="flex h-[90vh] w-full max-w-3xl flex-col overflow-hidden rounded-[2rem] bg-white shadow-2xl">
+    <div className="print-preview-overlay fixed inset-0 z-[400] flex items-center justify-center bg-slate-950/60 p-8 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="print-preview-title">
+      <div className="print-preview-frame flex h-[90vh] w-full max-w-3xl flex-col overflow-hidden rounded-[2rem] bg-white shadow-2xl">
         <div className="print-preview-chrome shrink-0 border-b border-slate-200 px-7 py-5">
           <p className="text-sm font-bold uppercase tracking-widest text-emerald-600">{labels.voucherPrinting}</p>
           <h2 id="print-preview-title" className="mt-1 text-3xl font-black tracking-normal text-slate-950">{labels.printPreview}</h2>
@@ -77,7 +77,7 @@ export function VoucherPrintPreview({ eventName, language, labels, cartItems, li
         </div>
 
         <div className="print-preview-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain bg-slate-100 p-6">
-          <div className="print-area mx-auto grid max-w-[var(--printer-printable-width)] gap-4" style={printJob.printerStyle}>
+          <div className={`print-area print-flow-${printJob.flow} mx-auto grid max-w-[var(--printer-printable-width)] gap-4`} style={printJob.printerStyle}>
             {printJob.vouchers.map((voucher) => (
               <Voucher key={voucher.id} eventName={eventName} labels={labels} lines={voucher.lines} printedAtText={printedAtText} reprintLabel={reprintLabel} />
             ))}

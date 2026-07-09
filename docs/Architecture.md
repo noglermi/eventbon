@@ -420,11 +420,13 @@ Stripe is never used for Bon sales to visitors. Visitor payments remain outside 
 
 ## Printing
 
-The MVP uses browser Bon printing first. eventBon does not select printers automatically and does not send ESC/POS or native printer commands yet.
+The MVP uses browser Bon printing first for setup, test prints, and temporary validation. eventBon does not select printers automatically and does not send ESC/POS or native printer commands yet.
+
+Real Brother TD-4000 testing confirmed that Windows and browser printing can reach the printer, but browser print preview is not acceptable as the final cashier workflow. Receipt printing is a beta blocker. Production operation requires direct or near-direct printing so the cashier can complete a sale without a disruptive preview step.
 
 The printer engine foundation separates the Sales Terminal from printer details.
 
-Architecture:
+Current browser-print architecture:
 
 - Sales Terminal
 - Print Service
@@ -432,9 +434,16 @@ Architecture:
 - Renderer
 - Browser Print
 
+The internal print flow distinguishes:
+
+- setupPrintPreview
+- cashierDirectPrintCandidate
+
+The current implementation still uses browser printing for both flows, but the distinction keeps the setup/test path separate from the future cashier direct-print path.
+
 The Sales Terminal requests Bon printing. It does not know paper widths, print CSS, cutter spacing, or printer-specific layout values.
 
-The Print Service selects the active device-local printer profile and creates a print job. The Printer Profile defines paper width, margins, font scaling, cutter or tear-off behavior, and browser print CSS values. The Renderer turns the selected profile and sale lines into browser-printable Bons. Browser Print remains the only output mechanism in the foundation.
+The Print Service selects the active device-local printer profile and creates a print job. The Printer Profile defines paper width, margins, font scaling, cutter or tear-off behavior, and browser print CSS values. The Renderer turns the selected profile and sale lines into printable Bons. Browser Print remains the only output mechanism in the foundation, but the service boundary must allow a later native or near-direct output target.
 
 Supported foundation profiles:
 
@@ -444,7 +453,7 @@ Supported foundation profiles:
 - Epson Receipt
 - Star Receipt
 
-The Brother TD Label profile is an abstraction only at this stage. It does not implement Brother-specific commands or direct device support.
+The Brother TD-4000 profile is an abstraction only at this stage. It does not implement Brother-specific commands or direct device support.
 
 The receipt printer setup foundation stores device-local browser print settings in localStorage. These settings are intentionally not event data and are not stored in Supabase.
 
@@ -457,13 +466,19 @@ Initial tested printer profiles:
 - Brother TD-4000
 - Generic A4 test printer
 
-The organizer or device operator must install the printer in Windows first. eventBon then uses the browser print dialog and applies the selected profile to the Bon print CSS for width, density, and tear/cut spacing.
+The organizer or device operator must install the printer in Windows first. eventBon then uses the browser print dialog and applies the selected profile to the Bon print CSS for width, density, and tear/cut spacing. This is acceptable for setup and testing, but it is not the final cashier workflow.
 
 Printing should be generated from recorded sales data so the printed result can be traced back to the order and event.
 
 Bon printing is an event-period capability. Outside the active event period or an explicitly enabled usage window, printing should be inactive even if product setup and read-only statistics access are still available.
 
-Direct printing, ESC/POS support, native printer integration, and automatic printer discovery are later hardening topics and are not part of the browser-print foundation.
+Direct printing, ESC/POS support, native printer integration, local print bridges, kiosk print options, and automatic printer discovery are later hardening topics and are not part of the browser-print foundation. The next receipt-printing work should investigate:
+
+- local print bridge
+- ESC/POS where supported
+- native helper app
+- browser kiosk print options
+- vendor SDK integration
 
 Product-based printer routing, kitchen printer routing, and multiple printers per terminal are not part of the MVP. This keeps event-floor printing simple, predictable, and easier to support.
 

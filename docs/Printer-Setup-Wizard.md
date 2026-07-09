@@ -25,7 +25,9 @@ The wizard is not a cash register, fiscal printer, or POS hardware layer. It con
 - Multiple terminals at one event are supported by configuring each device separately.
 - Product-based printer routing is not part of the MVP.
 - Multiple printers per terminal are not part of the MVP.
-- The first implementation uses browser printing.
+- The first implementation uses browser printing for setup and testing.
+- Browser print preview is not acceptable as the final cashier workflow.
+- Production operation requires direct or near-direct printing.
 - Future direct ESC/POS or native printing may be added later.
 
 ## Printer Engine Foundation
@@ -58,6 +60,8 @@ Browser Print opens the normal browser print dialog.
 
 No printer detection, ESC/POS command, Brother-specific command, Epson-specific command, or Star-specific command is part of the foundation.
 
+Real Brother TD-4000 testing showed that Windows and browser printing can reach the printer, but browser preview and browser pagination are not reliable enough as the final cashier workflow. Browser printing remains useful for setup, test prints, and temporary validation. Receipt printing is a beta blocker because the cashier needs a fast print path without a disruptive preview step.
+
 ## Supported Printer Profiles
 
 Initial profiles:
@@ -70,7 +74,7 @@ Initial profiles:
 
 The Brother TD-4000 is the first real thermal printer reference device for beta validation.
 
-The Brother TD Label profile is intentionally generic in the first engine foundation. Brother-specific driver behavior and commands are not implemented yet.
+The Brother TD-4000 profile is still browser-print based. Brother-specific driver behavior and commands are not implemented yet.
 
 The Brother QL-720NW may be useful for label experiments, but it is not the main Bon printer reference device.
 
@@ -150,6 +154,8 @@ The wizard explains:
 - margins and scaling should match the profile recommendation
 
 The wizard should avoid technical terms where possible and use short, concrete instructions.
+
+Browser print is acceptable for this setup and testing step. It is not the target production cashier flow.
 
 ### Step 4: Test Print
 
@@ -260,7 +266,7 @@ One event may have multiple terminals. A drinks terminal and a kitchen terminal 
 
 ## Future Direct ESC/POS Support
 
-Future versions may add direct printer communication.
+Future versions must investigate direct or near-direct printer communication for production use.
 
 Possible future paths:
 
@@ -270,17 +276,18 @@ Possible future paths:
 - local helper application
 - native desktop bridge
 - printer vendor SDK integration
+- browser kiosk print configuration where available
 
-Direct printing may later support:
+Direct or near-direct printing may support:
 
 - fewer browser print dialog steps
 - automatic cut commands
 - faster printing
 - printer status feedback
 
-This is not part of the browser-print foundation.
+This is not part of the current browser-print foundation, but it is required before eventBon can treat receipt printing as production-ready.
 
-Before direct printer support is added, eventBon should first validate real event printing with browser printing and the Brother TD-4000 reference device.
+Before direct printer support is added, eventBon should continue validating browser print behavior with the Brother TD-4000 reference device and document all failure modes.
 
 ## Beta Strategy
 
@@ -294,7 +301,8 @@ Beta goals:
 
 - verify that a non-technical organizer can complete setup
 - verify readable Bons on real thermal paper
-- verify reliable workflow during active sales
+- verify whether browser printing is sufficient only for setup or temporary operation
+- identify the direct or near-direct print path required for active sales
 - collect driver, browser, and paper setting notes
 - document known-good settings
 

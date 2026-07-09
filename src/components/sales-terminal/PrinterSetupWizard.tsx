@@ -44,6 +44,7 @@ export function PrinterSetupWizard({ labels, language, printerSettings, onPrinte
   const [testResult, setTestResult] = useState<"success" | "problem" | null>(null);
   const previewDate = testPrintDate ?? new Date();
   const testPrintJob = printService.createBonPrintJob({
+    flow: "setupPrintPreview",
     printerSettings,
     printMode: "combined_voucher",
     lines: [{ id: "printer-test", name: selectedProfile.testPrintName, quantity: 1 }],
@@ -160,7 +161,7 @@ export function PrinterSetupWizard({ labels, language, printerSettings, onPrinte
 
         <div className="rounded-2xl bg-slate-50 p-4 ring-1 ring-slate-200/75">
           <p className="text-sm font-black text-slate-700">{labels.testPrintPreview}</p>
-          <div className="mt-3 max-w-[var(--printer-printable-width)]" style={testPrintJob.printerStyle}>
+          <div className={`print-flow-${testPrintJob.flow} mt-3 max-w-[var(--printer-printable-width)]`} style={testPrintJob.printerStyle}>
             <TestVoucher labels={labels} language={language} printerSettings={printerSettings} printedAt={previewDate} />
           </div>
         </div>
@@ -202,14 +203,14 @@ export function PrinterSetupWizard({ labels, language, printerSettings, onPrinte
       </div>
 
       {testPrintDate ? (
-        <div className="fixed inset-0 z-[420] flex items-center justify-center bg-slate-950/60 p-8 backdrop-blur-sm" role="dialog" aria-modal="true" aria-label={labels.testPrintPreview}>
-          <div className="flex max-h-[90vh] w-full max-w-xl flex-col overflow-hidden rounded-[2rem] bg-white shadow-2xl">
+        <div className="print-preview-overlay fixed inset-0 z-[420] flex items-center justify-center bg-slate-950/60 p-8 backdrop-blur-sm" role="dialog" aria-modal="true" aria-label={labels.testPrintPreview}>
+          <div className="print-preview-frame flex max-h-[90vh] w-full max-w-xl flex-col overflow-hidden rounded-[2rem] bg-white shadow-2xl">
             <div className="print-preview-chrome shrink-0 border-b border-slate-200 px-7 py-5">
               <p className="text-sm font-bold uppercase tracking-widest text-emerald-600">{labels.terminalSetup}</p>
               <h2 className="mt-1 text-3xl font-black tracking-normal text-slate-950">{labels.testPrint}</h2>
             </div>
             <div className="print-preview-scroll min-h-0 flex-1 overflow-y-auto bg-slate-100 p-6">
-              <div className="print-area mx-auto grid max-w-[var(--printer-printable-width)]" style={testPrintJob.printerStyle}>
+              <div className={`print-area print-flow-${testPrintJob.flow} mx-auto grid max-w-[var(--printer-printable-width)]`} style={testPrintJob.printerStyle}>
                 <TestVoucher labels={labels} language={language} printerSettings={printerSettings} printedAt={testPrintDate} />
               </div>
             </div>
