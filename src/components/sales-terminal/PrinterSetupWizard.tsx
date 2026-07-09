@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import { formatDateTime } from "@/lib/date-format";
-import { createPrinterStyle } from "@/lib/printing/print-renderer";
 import { printService } from "@/lib/printing/print-service";
 import type { Translation } from "./i18n";
 import type { Language } from "./types";
@@ -20,7 +19,6 @@ function formatPaperWidth(width: number) {
 
 function TestVoucher({ labels, language, printerSettings, printedAt }: { labels: Translation; language: Language; printerSettings: PrinterSettings; printedAt: Date }) {
   const selectedProfile = getPrinterProfile(printerSettings.profileId);
-  const cutModeLabel = printerSettings.cutMode === "cutter" ? labels.cutterMode : labels.tearMode;
 
   return (
     <article className="voucher-ticket bg-white px-4 py-3 font-mono text-slate-950 shadow-sm ring-1 ring-slate-300">
@@ -30,10 +28,9 @@ function TestVoucher({ labels, language, printerSettings, printedAt }: { labels:
       </div>
       <div className="my-2 border-t border-dashed border-slate-500" />
       <div className="space-y-1 text-sm font-black leading-tight">
+        <p>{selectedProfile.testPrintName}</p>
+        <p>{labels.paper}: {formatPaperWidth(printerSettings.paperWidthMm)}</p>
         <p>{labels.testPrintDateTime}: {formatDateTime(printedAt, language)}</p>
-        <p>{labels.printerProfile}: {selectedProfile.label[language]}</p>
-        <p>{labels.paperWidth}: {formatPaperWidth(printerSettings.paperWidthMm)}</p>
-        <p>{labels.cutTearMode}: {cutModeLabel}</p>
       </div>
       <div className="voucher-cut-line mt-3 border-t border-dashed border-slate-700" />
     </article>
@@ -44,7 +41,13 @@ export function PrinterSetupWizard({ labels, language, printerSettings, onPrinte
   const selectedProfile = getPrinterProfile(printerSettings.profileId);
   const pendingPrintRef = useRef(false);
   const [testPrintDate, setTestPrintDate] = useState<Date | null>(null);
+  const [testResult, setTestResult] = useState<"success" | "problem" | null>(null);
   const previewDate = testPrintDate ?? new Date();
+  const testPrintJob = printService.createBonPrintJob({
+    printerSettings,
+    printMode: "combined_voucher",
+    lines: [{ id: "printer-test", name: selectedProfile.testPrintName, quantity: 1 }],
+  });
 
   useEffect(() => {
     if (!testPrintDate || !pendingPrintRef.current) {
@@ -63,6 +66,7 @@ export function PrinterSetupWizard({ labels, language, printerSettings, onPrinte
 
   function selectProfile(profileId: PrinterProfileId) {
     const profile = getPrinterProfile(profileId);
+    setTestResult(null);
     onPrinterSettingsChange({
       profileId: profile.id,
       paperWidthMm: profile.paperWidthMm,
@@ -103,7 +107,7 @@ export function PrinterSetupWizard({ labels, language, printerSettings, onPrinte
         </div>
 
         <label className="grid gap-2 text-sm font-bold uppercase tracking-widest text-slate-500">
-          {labels.printerProfile}
+          {labels.choosePrinterProfile}
           <select
             value={printerSettings.profileId}
             onChange={(event) => selectProfile(event.target.value as PrinterProfileId)}
@@ -156,7 +160,7 @@ export function PrinterSetupWizard({ labels, language, printerSettings, onPrinte
 
         <div className="rounded-2xl bg-slate-50 p-4 ring-1 ring-slate-200/75">
           <p className="text-sm font-black text-slate-700">{labels.testPrintPreview}</p>
-          <div className="mt-3 max-w-[var(--printer-printable-width)]" style={createPrinterStyle(printerSettings)}>
+          <div className="mt-3 max-w-[var(--printer-printable-width)]" style={testPrintJob.printerStyle}>
             <TestVoucher labels={labels} language={language} printerSettings={printerSettings} printedAt={previewDate} />
           </div>
         </div>
@@ -165,12 +169,36 @@ export function PrinterSetupWizard({ labels, language, printerSettings, onPrinte
           type="button"
           onClick={() => {
             pendingPrintRef.current = true;
+            setTestResult(null);
             setTestPrintDate(new Date());
           }}
           className="min-h-14 rounded-2xl bg-slate-950 px-5 text-lg font-black text-white transition active:scale-[0.98] focus:outline-none focus-visible:ring-4 focus-visible:ring-slate-300"
         >
           {labels.testPrintButton}
         </button>
+
+        <div className="grid gap-3 sm:grid-cols-2">
+          <button
+            type="button"
+            onClick={() => setTestResult("success")}
+            className="min-h-12 rounded-2xl bg-emerald-600 px-4 text-base font-black text-white transition active:scale-[0.98] focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200"
+          >
+            {labels.testPrintSuccessful}
+          </button>
+          <button
+            type="button"
+            onClick={() => setTestResult("problem")}
+            className="min-h-12 rounded-2xl bg-amber-50 px-4 text-base font-black text-amber-900 ring-1 ring-amber-200 transition active:scale-[0.98] focus:outline-none focus-visible:ring-4 focus-visible:ring-amber-200"
+          >
+            {labels.reportPrintProblem}
+          </button>
+        </div>
+
+        {testResult ? (
+          <p className={`rounded-2xl px-4 py-3 text-sm font-black leading-6 ${testResult === "success" ? "bg-emerald-50 text-emerald-900 ring-1 ring-emerald-100" : "bg-amber-50 text-amber-950 ring-1 ring-amber-200"}`}>
+            {testResult === "success" ? labels.printerTestSuccessMessage : labels.printerTestProblemMessage}
+          </p>
+        ) : null}
       </div>
 
       {testPrintDate ? (
@@ -181,7 +209,7 @@ export function PrinterSetupWizard({ labels, language, printerSettings, onPrinte
               <h2 className="mt-1 text-3xl font-black tracking-normal text-slate-950">{labels.testPrint}</h2>
             </div>
             <div className="print-preview-scroll min-h-0 flex-1 overflow-y-auto bg-slate-100 p-6">
-              <div className="print-area mx-auto grid max-w-[var(--printer-printable-width)]" style={createPrinterStyle(printerSettings)}>
+              <div className="print-area mx-auto grid max-w-[var(--printer-printable-width)]" style={testPrintJob.printerStyle}>
                 <TestVoucher labels={labels} language={language} printerSettings={printerSettings} printedAt={testPrintDate} />
               </div>
             </div>

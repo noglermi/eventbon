@@ -24,6 +24,7 @@ export type PrinterProfile = {
     de: string;
     en: string;
   };
+  testPrintName: string;
   paperWidthMm: number;
   density: PrinterLayoutDensity;
   cutMode: PrinterCutMode;
@@ -37,6 +38,7 @@ export const printerProfiles: PrinterProfile[] = [
     density: "compact",
     cutMode: "tear",
     label: { de: "Generic 58 mm Receipt", en: "Generic 58 mm Receipt" },
+    testPrintName: "Generic 58 mm Receipt",
     browserPrintCss: {
       horizontalMarginMm: 3,
       ticketPaddingMm: 2,
@@ -52,6 +54,7 @@ export const printerProfiles: PrinterProfile[] = [
     density: "comfortable",
     cutMode: "tear",
     label: { de: "Generic 80 mm Receipt", en: "Generic 80 mm Receipt" },
+    testPrintName: "Generic 80 mm Receipt",
     browserPrintCss: {
       horizontalMarginMm: 4,
       ticketPaddingMm: 3,
@@ -63,16 +66,17 @@ export const printerProfiles: PrinterProfile[] = [
   },
   {
     id: "brother_td_label",
-    paperWidthMm: 102,
+    paperWidthMm: 62,
     density: "comfortable",
     cutMode: "cutter",
-    label: { de: "Brother TD Label", en: "Brother TD Label" },
+    label: { de: "Brother TD-4000 / 62 mm", en: "Brother TD-4000 / 62 mm" },
+    testPrintName: "Brother TD-4000",
     browserPrintCss: {
-      horizontalMarginMm: 5,
-      ticketPaddingMm: 3,
+      horizontalMarginMm: 3,
+      ticketPaddingMm: 2,
       ticketGapMm: 6,
-      fontSizePt: 11,
-      lineGapMm: 1.5,
+      fontSizePt: 10.5,
+      lineGapMm: 1.2,
       cutLineMarginTopMm: 5,
     },
   },
@@ -82,6 +86,7 @@ export const printerProfiles: PrinterProfile[] = [
     density: "comfortable",
     cutMode: "cutter",
     label: { de: "Epson Receipt", en: "Epson Receipt" },
+    testPrintName: "Epson Receipt",
     browserPrintCss: {
       horizontalMarginMm: 4,
       ticketPaddingMm: 3,
@@ -97,6 +102,7 @@ export const printerProfiles: PrinterProfile[] = [
     density: "comfortable",
     cutMode: "cutter",
     label: { de: "Star Receipt", en: "Star Receipt" },
+    testPrintName: "Star Receipt",
     browserPrintCss: {
       horizontalMarginMm: 4,
       ticketPaddingMm: 3,
