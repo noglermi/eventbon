@@ -449,11 +449,11 @@ Supported foundation profiles:
 
 - Generic 58 mm Receipt
 - Generic 80 mm Receipt
-- Brother TD Label
+- Brother TD-4000 58 x 60 mm
 - Epson Receipt
 - Star Receipt
 
-The Brother TD-4000 profile is an abstraction only at this stage. It does not implement Brother-specific commands or direct device support.
+The Brother TD-4000 58 x 60 mm profile targets the current fixed-size beta test medium. It is an abstraction only at this stage and does not implement Brother-specific commands or direct device support.
 
 The receipt printer setup foundation stores device-local browser print settings in localStorage. These settings are intentionally not event data and are not stored in Supabase.
 

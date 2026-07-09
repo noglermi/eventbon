@@ -52,7 +52,7 @@ export function loadPrinterSettings() {
 
     return {
       profileId,
-      paperWidthMm: normalizePrinterPaperWidth(stored.paperWidthMm, profile.paperWidthMm),
+      paperWidthMm: profile.isFixedMedia ? profile.paperWidthMm : normalizePrinterPaperWidth(stored.paperWidthMm, profile.paperWidthMm),
       density: normalizePrinterDensity(stored.density, profile.density),
       cutMode: normalizePrinterCutMode(stored.cutMode, profile.cutMode),
     };

@@ -69,6 +69,7 @@ export function VoucherPrintPreview({ eventName, language, labels, cartItems, li
 
   return (
     <div className="print-preview-overlay fixed inset-0 z-[400] flex items-center justify-center bg-slate-950/60 p-8 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="print-preview-title">
+      <style>{printJob.pageStyle}</style>
       <div className="print-preview-frame flex h-[90vh] w-full max-w-3xl flex-col overflow-hidden rounded-[2rem] bg-white shadow-2xl">
         <div className="print-preview-chrome shrink-0 border-b border-slate-200 px-7 py-5">
           <p className="text-sm font-bold uppercase tracking-widest text-emerald-600">{labels.voucherPrinting}</p>

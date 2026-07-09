@@ -4,7 +4,9 @@
   --background: #f3f4ef;
   --foreground: #0f172a;
   --printer-paper-width: 58mm;
+  --printer-paper-height: auto;
   --printer-printable-width: 52mm;
+  --printer-ticket-height: auto;
   --printer-ticket-padding: 2mm;
   --printer-ticket-gap: 4mm;
   --printer-font-size: 10pt;
@@ -113,12 +115,18 @@ input {
     display: block !important;
     width: var(--printer-printable-width) !important;
     max-width: var(--printer-printable-width) !important;
+    height: var(--printer-ticket-height) !important;
+    min-height: 0 !important;
+    max-height: var(--printer-ticket-height) !important;
     margin: 0 !important;
     padding: var(--printer-ticket-padding) !important;
     font-size: var(--printer-font-size);
+    line-height: 1.12 !important;
     color: black !important;
     background: white !important;
     box-shadow: none !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
     page-break-inside: avoid;
     break-inside: avoid;
     page-break-after: always;

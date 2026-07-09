@@ -68,13 +68,15 @@ Initial profiles:
 
 - Generic 58 mm Receipt
 - Generic 80 mm Receipt
-- Brother TD Label
+- Brother TD-4000 58 x 60 mm
 - Epson Receipt
 - Star Receipt
 
 The Brother TD-4000 is the first real thermal printer reference device for beta validation.
 
-The Brother TD-4000 profile is still browser-print based. Brother-specific driver behavior and commands are not implemented yet.
+The current Brother TD-4000 beta test medium is fixed-size 58 x 60 mm label/Bon media. This is not continuous receipt paper. Each individual Bon must render as one 58 x 60 mm page. A sale with three single vouchers must print three pages or labels. A combined voucher should fit one 58 x 60 mm page where possible.
+
+The Brother TD-4000 58 x 60 mm profile is still browser-print based. Brother-specific driver behavior and commands are not implemented yet.
 
 The Brother QL-720NW may be useful for label experiments, but it is not the main Bon printer reference device.
 
@@ -119,7 +121,7 @@ The user selects:
 
 - Generic 58 mm
 - Generic 80 mm
-- Brother TD-4000
+- Brother TD-4000 58 x 60 mm
 - Generic A4 test printer
 - later Epson profile
 - later Star profile
@@ -140,6 +142,8 @@ For beta, recommended paper sizes should be documented per profile.
 Brother TD-4000 beta profile:
 
 - use as the primary real thermal printer reference
+- current test medium is 58 x 60 mm fixed-size label/Bon media
+- use one printed page per Bon
 - optimize for readable Bons
 - test cut or tear spacing
 - document the exact driver and browser settings used during beta

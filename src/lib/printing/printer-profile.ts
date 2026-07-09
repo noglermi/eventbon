@@ -12,6 +12,10 @@ export type PrinterSettings = {
 export type BrowserPrintCssProfile = {
   horizontalMarginMm: number;
   ticketPaddingMm: number;
+  ticketPaddingBottomMm?: number;
+  ticketPaddingLeftMm?: number;
+  ticketPaddingRightMm?: number;
+  ticketPaddingTopMm?: number;
   ticketGapMm: number;
   fontSizePt: number;
   lineGapMm: number;
@@ -26,6 +30,8 @@ export type PrinterProfile = {
   };
   testPrintName: string;
   paperWidthMm: number;
+  paperHeightMm?: number;
+  isFixedMedia?: boolean;
   density: PrinterLayoutDensity;
   cutMode: PrinterCutMode;
   browserPrintCss: BrowserPrintCssProfile;
@@ -66,18 +72,24 @@ export const printerProfiles: PrinterProfile[] = [
   },
   {
     id: "brother_td_label",
-    paperWidthMm: 62,
-    density: "comfortable",
+    paperWidthMm: 58,
+    paperHeightMm: 60,
+    isFixedMedia: true,
+    density: "compact",
     cutMode: "cutter",
-    label: { de: "Brother TD-4000 / 62 mm", en: "Brother TD-4000 / 62 mm" },
+    label: { de: "Brother TD-4000 - 58 × 60 mm", en: "Brother TD-4000 - 58 × 60 mm" },
     testPrintName: "Brother TD-4000",
     browserPrintCss: {
-      horizontalMarginMm: 3,
-      ticketPaddingMm: 2,
-      ticketGapMm: 6,
-      fontSizePt: 10.5,
-      lineGapMm: 1.2,
-      cutLineMarginTopMm: 5,
+      horizontalMarginMm: 0,
+      ticketPaddingMm: 3,
+      ticketPaddingBottomMm: 4,
+      ticketPaddingLeftMm: 3,
+      ticketPaddingRightMm: 3,
+      ticketPaddingTopMm: 3,
+      ticketGapMm: 0,
+      fontSizePt: 8.8,
+      lineGapMm: 1,
+      cutLineMarginTopMm: 3,
     },
   },
   {

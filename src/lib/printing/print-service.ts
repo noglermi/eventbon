@@ -6,6 +6,7 @@ export type PrintFlowKind = "setupPrintPreview" | "cashierDirectPrintCandidate";
 
 export type BonPrintJob = {
   flow: PrintFlowKind;
+  pageStyle: ReturnType<typeof browserPrintRenderer.createPageStyle>;
   profile: ReturnType<typeof getPrinterProfile>;
   printerStyle: ReturnType<typeof browserPrintRenderer.createPrinterStyle>;
   vouchers: ReturnType<typeof browserPrintRenderer.createVouchers>;
@@ -20,6 +21,7 @@ export const printService: PrintService = {
   createBonPrintJob(input) {
     return {
       flow: input.flow ?? "cashierDirectPrintCandidate",
+      pageStyle: browserPrintRenderer.createPageStyle(input.printerSettings),
       profile: getPrinterProfile(input.printerSettings.profileId),
       printerStyle: browserPrintRenderer.createPrinterStyle(input.printerSettings),
       vouchers: browserPrintRenderer.createVouchers(input.lines, input.printMode),

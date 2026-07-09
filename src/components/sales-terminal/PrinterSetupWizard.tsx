@@ -17,6 +17,10 @@ function formatPaperWidth(width: number) {
   return width + " mm";
 }
 
+function formatProfilePaper(profile: ReturnType<typeof getPrinterProfile>) {
+  return profile.paperHeightMm ? profile.paperWidthMm + " × " + profile.paperHeightMm + " mm" : formatPaperWidth(profile.paperWidthMm);
+}
+
 function TestVoucher({ labels, language, printerSettings, printedAt }: { labels: Translation; language: Language; printerSettings: PrinterSettings; printedAt: Date }) {
   const selectedProfile = getPrinterProfile(printerSettings.profileId);
 
@@ -29,7 +33,7 @@ function TestVoucher({ labels, language, printerSettings, printedAt }: { labels:
       <div className="my-2 border-t border-dashed border-slate-500" />
       <div className="space-y-1 text-sm font-black leading-tight">
         <p>{selectedProfile.testPrintName}</p>
-        <p>{labels.paper}: {formatPaperWidth(printerSettings.paperWidthMm)}</p>
+        <p>{labels.paper}: {formatProfilePaper(selectedProfile)}</p>
         <p>{labels.testPrintDateTime}: {formatDateTime(printedAt, language)}</p>
       </div>
       <div className="voucher-cut-line mt-3 border-t border-dashed border-slate-700" />
@@ -77,6 +81,11 @@ export function PrinterSetupWizard({ labels, language, printerSettings, onPrinte
   }
 
   function updatePaperWidth(value: string) {
+    if (selectedProfile.isFixedMedia) {
+      onPrinterSettingsChange({ ...printerSettings, paperWidthMm: selectedProfile.paperWidthMm });
+      return;
+    }
+
     const paperWidthMm = Number(value);
     if (Number.isFinite(paperWidthMm)) {
       onPrinterSettingsChange({ ...printerSettings, paperWidthMm });
@@ -128,9 +137,10 @@ export function PrinterSetupWizard({ labels, language, printerSettings, onPrinte
               min="40"
               max="220"
               step="1"
-              value={printerSettings.paperWidthMm}
+              value={selectedProfile.isFixedMedia ? selectedProfile.paperWidthMm : printerSettings.paperWidthMm}
+              disabled={selectedProfile.isFixedMedia}
               onChange={(event) => updatePaperWidth(event.target.value)}
-              className="min-h-12 rounded-2xl border border-slate-200 px-4 text-base font-black normal-case tracking-normal text-slate-950 outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
+              className="min-h-12 rounded-2xl border border-slate-200 px-4 text-base font-black normal-case tracking-normal text-slate-950 outline-none disabled:bg-slate-100 disabled:text-slate-500 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
             />
           </label>
 
@@ -204,6 +214,7 @@ export function PrinterSetupWizard({ labels, language, printerSettings, onPrinte
 
       {testPrintDate ? (
         <div className="print-preview-overlay fixed inset-0 z-[420] flex items-center justify-center bg-slate-950/60 p-8 backdrop-blur-sm" role="dialog" aria-modal="true" aria-label={labels.testPrintPreview}>
+          <style>{testPrintJob.pageStyle}</style>
           <div className="print-preview-frame flex max-h-[90vh] w-full max-w-xl flex-col overflow-hidden rounded-[2rem] bg-white shadow-2xl">
             <div className="print-preview-chrome shrink-0 border-b border-slate-200 px-7 py-5">
               <p className="text-sm font-bold uppercase tracking-widest text-emerald-600">{labels.terminalSetup}</p>
