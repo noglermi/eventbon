@@ -8,6 +8,8 @@ Goal:
 
 A non-technical organizer or device operator can configure a receipt printer without reading a manual.
 
+The production wizard runs inside `https://eventbons.com`. Local development may use localhost, but production printer setup, QZ Tray validation, and helper-facing workflows should be tested from the public production domain where possible.
+
 The wizard supports the event-floor reality:
 
 - printers are often installed shortly before an event

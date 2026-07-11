@@ -10,6 +10,7 @@ import { formatDate, formatDateRange } from "@/lib/date-format";
 import { getEventLifecycle, type EventLifecycle } from "@/lib/event-lifecycle";
 import { getSupabaseErrorCategory, logSupabaseError } from "@/lib/supabase/diagnostics";
 import { supabase, supabaseConfigIssue, supabaseConfigWarning } from "@/lib/supabase/client";
+import { getPublicAppUrl } from "@/lib/app-url";
 import { SalesTerminal } from "@/components/sales-terminal/SalesTerminal";
 import { PrinterSetupWizard } from "@/components/sales-terminal/PrinterSetupWizard";
 import { LanguageSwitch } from "@/components/organizer-workspace/LanguageSwitch";
@@ -569,9 +570,9 @@ export function OrganizerEventWorkspace() {
     setIsAuthSubmitting(true);
 
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: window.location.origin + "/reset-password",
-      });
+      const appUrl = getPublicAppUrl();
+      const redirectTo = appUrl ? appUrl + "/reset-password" : window.location.origin + "/reset-password";
+      const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
 
       if (error) {
         throw error;

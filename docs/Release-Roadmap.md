@@ -6,6 +6,8 @@ eventBon follows a beta-first release strategy.
 
 The project intentionally postpones full production security hardening until after the first successful field beta.
 
+The canonical production domain is `https://eventbons.com`. Release validation must ensure that public app URLs, helper invitations, QR codes, and password reset links use this domain through `NEXT_PUBLIC_APP_URL`. Developers may override the value locally for localhost development.
+
 Reason:
 
 During beta the application is still evolving:
@@ -108,6 +110,8 @@ Focus:
 - security testing
 - DSGVO review
 - production hardening
+
+Production hardening includes verifying the `eventbons.com` deployment, Supabase Auth redirect URLs, helper invitation URLs, password recovery redirects, and public environment variable configuration.
 
 ## Development Rule
 

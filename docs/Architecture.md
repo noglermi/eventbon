@@ -284,6 +284,12 @@ Deployment should remain simple:
 - production deployment on Vercel
 - preview deployments for validation
 
+The canonical production domain is `https://eventbons.com`. The same domain will host the public landing page, organizer login, and sales application.
+
+Public application URLs must be generated from `NEXT_PUBLIC_APP_URL` where appropriate. In production this value is `https://eventbons.com`; local development may override it with a localhost URL in `.env.local`.
+
+Helper invitation links, helper QR codes, and organizer password recovery redirects must use `NEXT_PUBLIC_APP_URL` so production links do not point to protected Vercel preview URLs.
+
 ## Event Booking As Core Object
 
 eventBon is built around booked events, not generic permanent software workspaces.
@@ -365,7 +371,7 @@ Version 1 helper access should use the simplest possible invitation model:
 
 The helper opens the invitation, enters only a name, and is immediately assigned to the event. No email and no password are required in Version 1.
 
-Helper invitation links and QR codes must use the public application URL. The app resolves this from `NEXT_PUBLIC_APP_URL` first and falls back to the current browser origin for local development. For beta and production, `NEXT_PUBLIC_APP_URL` must be the public Vercel production URL, not a protected preview URL that requires Vercel login.
+Helper invitation links and QR codes must use the public application URL. The app resolves this from `NEXT_PUBLIC_APP_URL` first and falls back to the current browser origin for local development. For production, `NEXT_PUBLIC_APP_URL` must be `https://eventbons.com`, not a protected Vercel preview URL that requires Vercel login.
 
 Helpers can open the assigned event, sell Bons, and print Bons. Helpers cannot manage subscriptions, change organizer information, access other events, or manage billing.
 

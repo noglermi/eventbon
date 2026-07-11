@@ -46,7 +46,9 @@ Helpers and volunteers are invited per event. They can access only the booked ev
 
 Version 1 helper access should be as simple as possible. The organizer books an event, invites helpers, and helpers work only for that one event. A helper invitation may use a QR code, invitation link, or event access code. The helper enters only a name, without email or password, and can then open the assigned event, sell Bons, and print Bons.
 
-Helper invitation links must point to the public application URL. For production or beta, `NEXT_PUBLIC_APP_URL` must be set to the public Vercel production URL, not to a protected preview URL that requires Vercel login.
+Helper invitation links must point to the public application URL. For production, `NEXT_PUBLIC_APP_URL` must be set to `https://eventbons.com`. Developers can override this locally, for example with `http://localhost:3000`.
+
+The production domain `https://eventbons.com` is the canonical public home for eventBon. It will host the landing page, organizer login, and sales application.
 
 Helpers cannot manage billing, organizer information, subscriptions, bookings, or other events. A permanent helper account may be added later, but it must remain optional and must never be required for the simple event workflow.
 
@@ -86,6 +88,8 @@ eventBon is built around:
 - Supabase
 - Vercel
 
+Production runs at `https://eventbons.com`. Public helper invitation links, QR codes, and password reset redirects use `NEXT_PUBLIC_APP_URL` so they point to the production domain outside local development.
+
 The architecture is multi-tenant by design. All application data is stored in Supabase. The system should be structured so Stripe and SumUp integrations can be added later without reworking the product model.
 
 Event settings and device settings are intentionally separate. Event settings include products, helpers, menu, and dashboard/statistics. Device settings include the receipt printer, zoom, and device language. One event may be used from multiple terminals, and each terminal stores its own local device configuration.
@@ -118,6 +122,7 @@ Until RC-4, major architecture refactoring should be avoided unless it is requir
 - [Data Model](docs/Data-Model.md)
 - [Roadmap](docs/Roadmap.md)
 - [Printer Setup Wizard](docs/Printer-Setup-Wizard.md)
+- [Deployment](docs/Deployment.md)
 
 ## Contributor Note
 
