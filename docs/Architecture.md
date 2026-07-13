@@ -519,11 +519,39 @@ The Brother TD-4000 is shown as Getestetes Bestandsgerät. The MUNBYN profile re
 The normal Bon printer assistant is intentionally short:
 
 1. Bondruckermodell auswählen.
-2. QZ Tray bestätigen or download.
-3. Bondrucker from the QZ Tray printer list auswählen.
+2. QZ Tray bestätigen oder herunterladen.
+3. Bondrucker aus der QZ Tray Druckerliste auswählen.
 4. Testbon drucken.
 
 Browser test print, Windows printer explanation, ESC/POS explanation, and Drucker Testlabor do not belong in the normal setup wizard. Advanced diagnostics may later live under Einstellungen -> Erweiterte Druckereinstellungen.
+
+### QZ Tray Trust And Signing
+
+QZ Tray must never be used in anonymous or untrusted mode for product operation.
+
+Anonymous requests appear when the browser client connects to QZ Tray without configuring the official QZ security hooks:
+
+- certificate promise
+- signature promise
+- signing algorithm
+
+EventBon uses the official QZ trust workflow:
+
+- the browser configures QZ Tray with `setCertificatePromise`
+- the browser configures QZ Tray with `setSignaturePromise`
+- EventBon uses SHA512 signatures
+- the public EventBon QZ certificate is served by `/api/qz/certificate`
+- each QZ signing request is sent to `/api/qz/sign`
+- the private signing key stays server-side only in `QZ_TRAY_PRIVATE_KEY`
+
+Required environment values:
+
+- `QZ_TRAY_DIGITAL_CERTIFICATE`: public PEM certificate shown to QZ Tray
+- `QZ_TRAY_PRIVATE_KEY`: private PEM key used only by the server-side signing endpoint
+
+The private key must never be exposed as a `NEXT_PUBLIC_` variable, stored in browser localStorage, committed to Git, or sent to the client. It belongs in the production hosting secret store.
+
+On the first print or connection, QZ Tray presents the EventBon certificate to the user. The user can grant trust and choose QZ Tray's persistent trust option. After that trust decision is stored by QZ Tray on the device, EventBon print requests from the same trusted certificate should no longer trigger repeated security prompts.
 
 Bon printing is an event-period capability. Outside the active event period or an explicitly enabled usage window, printing should be inactive even if product setup and read-only statistics access are still available.
 

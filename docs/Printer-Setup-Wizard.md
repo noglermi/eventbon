@@ -63,6 +63,53 @@ QZ Tray should be explained positively and briefly:
 
 The user does not need to understand printer protocols, browser printing, ESC/POS, drivers, or print bridge architecture during normal setup.
 
+## QZ Trust And Signing
+
+EventBon must use QZ Tray's official trust architecture.
+
+The product must not:
+
+- send anonymous QZ requests
+- disable QZ security
+- bypass the QZ trust dialog with unsafe workarounds
+- expose the private signing key in the browser
+
+Current cause of `Anonymous request`:
+
+QZ Tray shows anonymous/untrusted requests when the application connects or prints without a configured certificate promise and signature promise. A plain `qz.websocket.connect()` plus `qz.print()` is not enough for product operation.
+
+Required pieces:
+
+- EventBon QZ public certificate
+- matching private signing key
+- client-side `setCertificatePromise`
+- client-side `setSignaturePromise`
+- server-side signing endpoint
+- secure environment variable storage
+
+EventBon signing flow:
+
+1. Browser loads the QZ Tray library.
+2. EventBon configures QZ security before connecting.
+3. QZ Tray requests the EventBon certificate.
+4. Browser fetches the public certificate from `/api/qz/certificate`.
+5. QZ Tray asks EventBon to sign each QZ message.
+6. Browser sends the message to `/api/qz/sign`.
+7. The server signs with `QZ_TRAY_PRIVATE_KEY`.
+8. Browser returns the base64 signature to QZ Tray.
+9. QZ Tray validates the request against the trusted certificate.
+
+Required environment variables:
+
+- `QZ_TRAY_DIGITAL_CERTIFICATE`
+- `QZ_TRAY_PRIVATE_KEY`
+
+The public certificate may be delivered to the browser. The private key must stay server-side and must never be exposed with `NEXT_PUBLIC_`, localStorage, source code, or client bundles.
+
+First trust decision:
+
+On first use, QZ Tray shows the EventBon certificate and asks the user to trust it. The user can allow and remember this trust decision. QZ Tray stores that decision locally. Future print jobs from the same trusted EventBon certificate should not show repeated security dialogs.
+
 ## Supported Bon Printer Model Status
 
 Visible status terms:

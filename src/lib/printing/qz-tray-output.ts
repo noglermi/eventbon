@@ -4,6 +4,7 @@ import { formatDateTime } from "@/lib/date-format";
 import type { BonPrintJob } from "./print-service";
 import type { PrinterSettings } from "./printer-profile";
 import type { PrintVoucher } from "./print-renderer";
+import { configureQzSecurity } from "./qz-security";
 
 type QzTray = typeof import("qz-tray").default;
 
@@ -30,6 +31,7 @@ export class QzTrayPrintJobError extends Error {
 
 async function loadQzTray() {
   const qzModule = (await import("qz-tray")).default;
+  configureQzSecurity(qzModule);
   return qzModule;
 }
 

@@ -21,6 +21,11 @@ declare module "qz-tray" {
       create: (printer: string, options?: Record<string, unknown>) => QzConfig;
     };
     print: (config: QzConfig, data: QzData[]) => Promise<void>;
+    security: {
+      setCertificatePromise: (resolver: (resolve: (certificate: string) => void, reject: (reason?: unknown) => void) => void) => void;
+      setSignatureAlgorithm: (algorithm: "SHA512" | "SHA1") => void;
+      setSignaturePromise: (resolver: (toSign: string) => (resolve: (signature: string) => void, reject: (reason?: unknown) => void) => void) => void;
+    };
   };
 
   export default qz;

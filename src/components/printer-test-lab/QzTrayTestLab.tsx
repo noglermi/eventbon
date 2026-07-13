@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { loadPrinterSettings, savePrinterSettings } from "@/components/sales-terminal/printer-settings-storage";
+import { configureQzSecurity } from "@/lib/printing/qz-security";
 
 type QzTray = typeof import("qz-tray").default;
 
@@ -66,6 +67,7 @@ export function QzTrayTestLab() {
     }
 
     const qzModule = (await import("qz-tray")).default;
+    configureQzSecurity(qzModule);
     setQz(qzModule);
     setConnectionState(qzModule.websocket.isActive() ? "connected" : "library_loaded");
     return qzModule;

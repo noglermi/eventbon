@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { formatDateTime } from "@/lib/date-format";
+import { configureQzSecurity } from "@/lib/printing/qz-security";
 import type { Translation } from "./i18n";
 import type { Language } from "./types";
 import { getPrinterProfile, printerProfiles } from "./printer-settings-storage";
@@ -24,6 +25,11 @@ type QzTrayApi = {
     find: () => Promise<string[] | string>;
   };
   print: (config: unknown, data: unknown[]) => Promise<void>;
+  security: {
+    setCertificatePromise: (resolver: (resolve: (certificate: string) => void, reject: (reason?: unknown) => void) => void) => void;
+    setSignatureAlgorithm: (algorithm: "SHA512" | "SHA1") => void;
+    setSignaturePromise: (resolver: (toSign: string) => (resolve: (signature: string) => void, reject: (reason?: unknown) => void) => void) => void;
+  };
   websocket: {
     connect: () => Promise<void>;
     isActive: () => boolean;
@@ -72,6 +78,7 @@ async function loadQzTray() {
   if (!isQzLike(qzApi)) {
     throw new Error("QZ Tray API konnte nicht geladen werden.");
   }
+  configureQzSecurity(qzApi);
   return qzApi;
 }
 
