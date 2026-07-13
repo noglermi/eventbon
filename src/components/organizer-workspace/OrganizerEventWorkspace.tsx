@@ -988,7 +988,7 @@ export function OrganizerEventWorkspace() {
           ) : null}
 
           {workspaceSection === "printer" ? (
-            <PrinterSetupWizard labels={labels} language={language} printerSettings={printerSettings} onPrinterSettingsChange={setPrinterSettings} />
+            <PrinterSetupWizard labels={labels} language={language} printerSettings={printerSettings} onComplete={() => setWorkspaceSection("overview")} onPrinterSettingsChange={setPrinterSettings} />
           ) : null}
 
           {workspaceSection === "settings" ? (

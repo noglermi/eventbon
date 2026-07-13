@@ -1052,19 +1052,21 @@ export function SalesTerminal({
                 <h2 className="mt-1 text-3xl font-black tracking-normal text-slate-950">{labels.terminalSetup}</h2>
                 <p className="mt-2 text-base font-semibold text-slate-500">{labels.receiptPrinterSetupSubtitle}</p>
               </div>
-              <button
-                type="button"
-                onClick={() => setIsTerminalSetupOpen(false)}
-                className="min-h-12 rounded-2xl bg-slate-100 px-5 text-lg font-black text-slate-700 transition active:scale-[0.98] focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200"
-              >
-                {labels.cancel}
-              </button>
+              {!printerSettings.setupCompleted ? (
+                <button
+                  type="button"
+                  onClick={() => setIsTerminalSetupOpen(false)}
+                  className="min-h-12 rounded-2xl bg-slate-100 px-5 text-lg font-black text-slate-700 transition active:scale-[0.98] focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200"
+                >
+                  {labels.cancel}
+                </button>
+              ) : null}
             </div>
             <div className="min-h-0 flex-1 overflow-y-auto p-6">
               <div className="mb-4 rounded-2xl bg-white px-5 py-4 text-sm font-bold leading-6 text-slate-600 ring-1 ring-slate-200">
                 {labels.futureDeviceSettingsNote}
               </div>
-              <PrinterSetupWizard labels={labels} language={language} printerSettings={printerSettings} onPrinterSettingsChange={setPrinterSettings} />
+              <PrinterSetupWizard labels={labels} language={language} printerSettings={printerSettings} onComplete={() => setIsTerminalSetupOpen(false)} onPrinterSettingsChange={setPrinterSettings} />
             </div>
           </div>
         </div>

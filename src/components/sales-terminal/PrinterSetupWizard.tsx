@@ -8,6 +8,7 @@ import type { PrinterProfile, PrinterProfileId, PrinterSettings } from "./printe
 type PrinterSetupWizardProps = {
   labels: Translation;
   language: Language;
+  onComplete?: () => void;
   printerSettings: PrinterSettings;
   onPrinterSettingsChange: (settings: PrinterSettings) => void;
 };
@@ -147,7 +148,7 @@ function getModelLabel(profile: PrinterProfile, language: Language) {
   return profile.label[language];
 }
 
-export function PrinterSetupWizard({ labels, language, printerSettings, onPrinterSettingsChange }: PrinterSetupWizardProps) {
+export function PrinterSetupWizard({ labels, language, onComplete, printerSettings, onPrinterSettingsChange }: PrinterSetupWizardProps) {
   const selectedProfile = getPrinterProfile(printerSettings.profileId);
   const activeProfiles = useMemo(() => printerProfiles.filter((profile) => profile.active), []);
   const [step, setStep] = useState<WizardStep>(0);
@@ -179,6 +180,8 @@ export function PrinterSetupWizard({ labels, language, printerSettings, onPrinte
     testPrint: language === "de" ? "Testbon drucken" : "Print test voucher",
     done: language === "de" ? "Einrichtung abgeschlossen." : "Setup complete.",
     retry: language === "de" ? "Erneut testen" : "Test again",
+    retest: language === "de" ? "Testbon erneut drucken" : "Print test voucher again",
+    finish: language === "de" ? "Fertig" : "Done",
     back: language === "de" ? "Zurück" : "Back",
     next: language === "de" ? "Weiter" : "Next",
     pendingWarning: language === "de" ? "Test ausstehend - dieses Modell wurde noch nicht vollständig mit EventBon geprüft." : "Testing pending - this model has not yet been fully verified with EventBon.",
@@ -267,6 +270,7 @@ export function PrinterSetupWizard({ labels, language, printerSettings, onPrinte
 
   const canGoBack = step > 0;
   const canGoNext = step < 3;
+  const isSetupComplete = testResult === "success" || printerSettings.setupCompleted === true;
 
   return (
     <section className="rounded-[2.25rem] bg-white/95 p-5 shadow-[0_18px_50px_rgba(15,23,42,0.06)] ring-1 ring-slate-200/75">
@@ -422,13 +426,26 @@ export function PrinterSetupWizard({ labels, language, printerSettings, onPrinte
           </div>
         ) : null}
 
-        <div className="mt-5 flex flex-wrap justify-between gap-3 border-t border-slate-200 pt-4">
-          <button type="button" onClick={() => (canGoBack ? setStep((step - 1) as WizardStep) : setStep(0))} className="min-h-12 rounded-2xl bg-white px-5 text-base font-black text-slate-800 ring-1 ring-slate-300 transition active:scale-[0.98]">
-            {t.back}
-          </button>
-          <button type="button" onClick={() => (canGoNext ? setStep((step + 1) as WizardStep) : printQzTestVoucher())} className="min-h-12 rounded-2xl bg-slate-950 px-5 text-base font-black text-white transition active:scale-[0.98]">
-            {canGoNext ? t.next : t.testPrint}
-          </button>
+        <div className="sticky bottom-0 z-10 mt-5 flex flex-wrap justify-between gap-3 border-t border-slate-200 bg-white/95 pt-4 backdrop-blur">
+          {isSetupComplete ? (
+            <>
+              <button type="button" onClick={printQzTestVoucher} disabled={isPrinting} className="min-h-12 rounded-2xl bg-white px-5 text-base font-black text-slate-800 ring-1 ring-slate-300 transition active:scale-[0.98] disabled:opacity-60">
+                {isPrinting ? labels.saving : t.retest}
+              </button>
+              <button type="button" onClick={onComplete} className="min-h-12 rounded-2xl bg-emerald-600 px-7 text-base font-black text-white shadow-lg shadow-emerald-900/10 transition active:scale-[0.98] focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200">
+                {t.finish}
+              </button>
+            </>
+          ) : (
+            <>
+              <button type="button" onClick={() => (canGoBack ? setStep((step - 1) as WizardStep) : setStep(0))} className="min-h-12 rounded-2xl bg-white px-5 text-base font-black text-slate-800 ring-1 ring-slate-300 transition active:scale-[0.98]">
+                {t.back}
+              </button>
+              <button type="button" onClick={() => (canGoNext ? setStep((step + 1) as WizardStep) : printQzTestVoucher())} className="min-h-12 rounded-2xl bg-slate-950 px-5 text-base font-black text-white transition active:scale-[0.98]">
+                {canGoNext ? t.next : t.testPrint}
+              </button>
+            </>
+          )}
         </div>
       </div>
     </section>
