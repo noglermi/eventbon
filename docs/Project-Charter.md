@@ -127,7 +127,7 @@ Operational sales history and business analytics should remain separated. The ca
 
 ### Scalable in the Architecture
 
-The system should remain small in the interface while being prepared for multi-tenant operation, hosted deployment, and future payment integrations.
+The system should remain small in the interface while being prepared for multi-tenant operation, hosted deployment, and commercial payment integrations.
 
 ### Invisible Complexity
 
@@ -156,9 +156,9 @@ If the answer is no, the feature is outside the product scope.
 
 ## Release Strategy
 
-eventBon follows a beta-first release strategy.
+eventBon follows a product-first release strategy.
 
-The current external validation target is eventBon Windows Pilot.
+The current supported operating scope is Windows production use.
 
 Officially supported:
 
@@ -175,13 +175,13 @@ Planned later:
 - Android
 - additional certified printers
 
-Receipt printing remains the P0 release blocker for the pilot. Stripe, iPad, Android, and additional certified printers are not part of this release-hardening step.
+Receipt printing remains the P0 release blocker for the production. Stripe belongs to the productive commercial model. iPad, Android, and additional certified printers remain separate platform and hardware roadmap items.
 
-The project intentionally postpones full production security hardening until after the first successful field beta. During beta, the application is still evolving across database schema, RPC signatures, helper workflow, printing, dashboard, and organizer workflow. Implementing production-grade RLS too early would create unnecessary rework and increase regression risk.
+The project continues production security hardening while validating the event workflow in real field operation. While the product is evolving, the application is still evolving across database schema, RPC signatures, helper workflow, printing, dashboard, and organizer workflow. Implementing production-grade RLS too early would create unnecessary rework and increase regression risk.
 
-Security remains mandatory before production release. Full Row Level Security, RPC security review, storage policies, server-side validation, token review, permission review, security testing, DSGVO review, and production hardening are scheduled for RC-4 after successful pilot operation.
+Security remains mandatory for the public product. Full Row Level Security, RPC security review, storage policies, server-side validation, token review, permission review, security testing, DSGVO review, and production hardening are scheduled for RC-4 after successful production operation.
 
-### RC-1 Beta Completion
+### RC-1 Product completion
 
 Focus:
 
@@ -206,19 +206,19 @@ Focus:
 - print testing
 - print documentation
 
-### RC-3 Pilot Program
+### RC-3 Production Rollout
 
 Focus:
 
-- five real pilot events
-- typical pilots: Reitturnier, Feuerwehrfest, Musikverein, Sportveranstaltung, Weihnachtsmarkt
+- five real live events
+- Typical live events: Reitturnier, Feuerwehrfest, Musikverein, Sportveranstaltung, Weihnachtsmarkt
 - collect feedback
 - fix UX issues
 - no major architecture changes
 
 ### RC-4 Security Hardening
 
-Only after successful pilot operation.
+Only after successful production operation.
 
 Focus:
 
@@ -234,14 +234,14 @@ Focus:
 
 ### Development Rule
 
-Until RC-4, do not make major architecture refactors unless required for a beta blocker.
+Until RC-4, do not make major architecture refactors unless required for a release blocker.
 
 Allowed:
 
 - bug fixes
 - UX improvements
 - printing
-- beta workflow improvements
+- product workflow improvements
 
 Avoid:
 

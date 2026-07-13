@@ -12,9 +12,9 @@ The production site will host:
 - organizer login
 - sales application
 
-The closed pilot release is eventBon Windows Pilot.
+The public production release is eventBon production release.
 
-Officially supported during the pilot:
+Officially supported during the production:
 
 - Windows 10
 - Windows 11
@@ -41,7 +41,7 @@ Developers can override the value locally in `.env.local`, for example:
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
 
-Localhost examples are only for development and should not be used for production or beta invitation links.
+Localhost examples are only for development and should not be used for production or production invitation links.
 
 ## Supabase Auth Redirects
 
@@ -73,7 +73,7 @@ Production documentation, setup instructions, invitation URLs, and password reco
 
 ## Legal And Support Pages
 
-The production app must expose organizer-accessible placeholder pages during pilot preparation:
+The production app must expose organizer-accessible placeholder pages during production preparation:
 
 - `/impressum`
 - `/datenschutz`
@@ -82,6 +82,6 @@ The production app must expose organizer-accessible placeholder pages during pil
 
 The legacy `/support` route may redirect to `/problem-melden` for compatibility.
 
-The pages use pilot-phase legal and support text. Final legal review is required before public production.
+The pages use production legal and support text. Final legal review is required and must stay current as the product evolves.
 
 Organizers are responsible for uploaded images, product information, prices, and allergen information.

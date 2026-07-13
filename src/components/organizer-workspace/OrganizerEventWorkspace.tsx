@@ -18,7 +18,7 @@ import { HelperAccessPanel } from "@/components/organizer-workspace/HelperAccess
 import { MenuDesigner } from "@/components/organizer-workspace/MenuDesigner";
 import { OrganizerSalesDashboard } from "@/components/organizer-workspace/OrganizerSalesDashboard";
 import { PasswordRecoveryForm } from "@/components/organizer-workspace/PasswordRecoveryForm";
-import { PilotFooter } from "@/components/organizer-workspace/PilotFooter";
+import { ProductFooter } from "@/components/organizer-workspace/ProductFooter";
 import { hasPasswordRecoveryParameters } from "@/lib/supabase/recovery-url";
 import { defaultLanguage, translations } from "@/components/sales-terminal/i18n";
 import { productTiles } from "@/components/sales-terminal/mock-data";
@@ -787,7 +787,7 @@ export function OrganizerEventWorkspace() {
             {authMode === "login" ? labels.switchToRegistration : authMode === "reset" ? labels.backToLogin : labels.alreadyRegistered}
           </button>
         </section>
-        <PilotFooter language={language} />
+        <ProductFooter language={language} />
         </div>
       </main>
     );
@@ -1015,7 +1015,7 @@ export function OrganizerEventWorkspace() {
             </section>
           ) : null}
 
-          <PilotFooter language={language} />
+          <ProductFooter language={language} />
         </div>
 
         {workspaceSection === "helpers" ? (
@@ -1143,7 +1143,7 @@ export function OrganizerEventWorkspace() {
           </section>
         ) : null)}
 
-        <PilotFooter language={language} />
+        <ProductFooter language={language} />
       </div>
 
       {helperEvent ? (

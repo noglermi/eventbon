@@ -58,8 +58,8 @@ export default function DatenschutzPage() {
       </InfoSection>
 
       <NoticeBox>
-        Diese Datenschutzerkl&auml;rung ist eine vorl&auml;ufige Fassung f&uuml;r die Pilotphase und wird vor dem
-        &ouml;ffentlichen Produktstart rechtlich gepr&uuml;ft und erg&auml;nzt.
+        Diese Datenschutzerkl&auml;rung enth&auml;lt produktive Grundinformationen und muss rechtlich final gepr&uuml;ft
+        und bei Bedarf erg&auml;nzt werden.
       </NoticeBox>
     </LegalPage>
   );

@@ -72,7 +72,7 @@ The product is rented for temporary events. This supports Stripe rental logic, o
 
 ### Implications
 
-- Stripe later handles event booking, organizer payment, paid extension, and invoice/payment handling outside the Bon sales workflow.
+- Stripe handles event booking, organizer payment, paid extension, and invoice/payment handling outside the Bon sales workflow.
 - Bon printing is allowed only during the active event period or another explicitly activated usage window.
 - Before the event, the organizer may configure products and settings without active Bon printing unless explicitly enabled.
 - After the event, the sales terminal becomes inactive while statistics and export remain available during the post-event access period.
@@ -315,7 +315,7 @@ Standard product icons must come only from commercially usable open-source icon 
 - Heroicons
 - Material Symbols
 
-The exact icon library and license must be documented before production release.
+The exact icon library and license must be documented for production use.
 
 Unicode emojis may be used as fallback or simple symbols. They are rendered by the operating system or browser.
 
@@ -426,7 +426,7 @@ P1:
 - Allergen management.
 - Printable menu PDF.
 
-P2:
+Commercial model:
 
 - Stripe pay-per-event.
 - Booking activation.
@@ -434,13 +434,13 @@ P2:
 
 ### Reason
 
-Beta readiness depends first on a consistent event-floor experience. Organizers, helpers, cashiers, dashboards, and exports must speak one selected language without mixed UI text. Physical voucher printing is the next operational risk. Menu Designer, allergen, and printable menu PDF support are useful organizer features, but they should follow the core selling flow. Stripe pay-per-event and booking activation are commercial automation and should not block operational validation.
+product readiness depends first on a consistent event-floor experience. Organizers, helpers, cashiers, dashboards, and exports must speak one selected language without mixed UI text. Physical voucher printing is the next operational risk. Menu Designer, allergen, and printable menu PDF support are useful organizer features, but they should follow the core selling flow. Stripe pay-per-event and booking activation are commercial automation and should not block operational validation.
 
 ### Implications
 
 - The first P0 implementation step is a full internationalization audit and cleanup.
 - Receipt printer integration and the printer setup wizard are P0 priorities, but are not implemented until after the i18n pass.
-- Stripe remains separate from Bon sales and stays in P2 for the Release Candidate phase.
+- Stripe remains separate from Bon sales and belongs to the productive pay-per-event business model.
 - P1 Menu Designer and allergen work must not turn eventBon into inventory, accounting, or restaurant management software.
 
 ## ADR-017 Data Access vs Active Sales Access
@@ -473,21 +473,21 @@ Organizers need long-term access to event information and results, but eventBon 
 - Dashboard, Excel export, helper history, and menu access remain organizer-facing review tools.
 - The Sales Terminal blocks new sales and Bon printing outside paid active event days.
 - Upcoming events can be prepared before the event, but sales are inactive until the paid event window.
-- Stripe later handles paid event activation and extensions, but Stripe is still separate from Bon sales.
+- Stripe handles paid event activation and extensions, but Stripe is still separate from Bon sales.
 
-## ADR-018 Beta First - Security Hardening After Pilot
+## ADR-018 Product First - Security Hardening After production
 
 ### Decision
 
 eventBon prioritizes a complete, testable event workflow before production security hardening.
 
-Full production security hardening is intentionally scheduled after the first successful field beta and pilot operation.
+Production security hardening is an ongoing required workstream alongside real field operation.
 
-Security remains mandatory before production release.
+Security remains mandatory for the public product.
 
 ### Reason
 
-During beta, the application is still evolving:
+While the product is evolving, the application is still evolving:
 
 - database schema
 - RPC signatures
@@ -500,7 +500,7 @@ Implementing production-grade Row Level Security too early would create unnecess
 
 ### Implications
 
-RC-1 focuses on beta completion:
+RC-1 focuses on Product completion:
 
 - UX
 - bug fixes
@@ -521,9 +521,9 @@ RC-2 focuses on receipt printing:
 - print testing
 - print documentation
 
-RC-3 focuses on pilot operation:
+RC-3 focuses on production operation:
 
-- five real pilot events
+- five real live events
 - feedback collection
 - UX fixes
 - no major architecture changes
@@ -540,7 +540,7 @@ RC-4 focuses on security hardening:
 - DSGVO review
 - production hardening
 
-Until RC-4, major architecture refactoring should be avoided unless required for a beta blocker. Allowed work includes bug fixes, UX improvements, printing, and beta workflow improvements. Large security rewrites, large database redesigns, and unnecessary RPC redesigns should be avoided.
+Until RC-4, major architecture refactoring should be avoided unless required for a release blocker. Allowed work includes bug fixes, UX improvements, printing, and product workflow improvements. Large security rewrites, large database redesigns, and unnecessary RPC redesigns should be avoided.
 
 ## ADR-019 Guided Printer Setup
 
@@ -566,7 +566,7 @@ Initial profiles are:
 - Brother TD-4000
 - Generic A4 test printer
 
-The Brother TD-4000 is the first real thermal printer reference device for beta validation. The Brother QL-720NW is not the main Bon printer reference.
+The Brother TD-4000 is the first real thermal printer reference device for hardware validation. The Brother QL-720NW is not the main Bon printer reference.
 
 Later versions may certify Epson and Star printers and may add direct ESC/POS, WebUSB, WebSerial, native bridge, or vendor SDK support.
 
@@ -576,7 +576,7 @@ Printing is one of the highest-risk event-floor workflows. A Bon printer often h
 
 A guided setup lowers support risk and makes receipt printing testable before active sales start.
 
-Browser printing is the right first step because it works with existing operating system printer drivers and avoids native integration complexity during beta.
+Browser printing is the right first step because it works with existing operating system printer drivers and avoids native integration complexity While the product is evolving.
 
 ### Consequences
 
@@ -584,7 +584,7 @@ Browser printing is the right first step because it works with existing operatin
 - The wizard must include a test print before the device is considered ready.
 - Printer settings remain device-local and are stored in localStorage, not in Supabase.
 - Each terminal keeps its own printer profile and paper settings.
-- The Brother TD-4000 profile is the beta reference for real thermal printing.
+- The Brother TD-4000 profile is the hardware reference for real thermal printing.
 - Epson and Star profiles require later certification with real hardware.
 - Direct ESC/POS or native printer integration remains future scope.
 - The printer feature must stay focused on Bon printing and must not introduce fiscalization, cash drawer control, receipt accounting, or general POS hardware scope.
@@ -673,7 +673,7 @@ Output Adapters:
 Technology direction:
 
 - Primary future path: local print bridge
-- Fast beta candidate: QZ Tray
+- Fast current candidate: QZ Tray
 - Fallback: browser/CSS print
 - Printer-specific adapters: ESC/POS for Epson and Star, Brother label/raster or Brother SDK through the bridge, Epson ePOS, and Star webPRNT
 
@@ -692,7 +692,7 @@ A local print bridge keeps eventBon as a web app while allowing direct or near-d
 - PrintService must work with a printer-independent PrintJob IR.
 - Epson and Star can be supported through ESC/POS and vendor network protocols where suitable.
 - Brother TD printers can be supported through label/raster output or Brother SDK integration through the bridge.
-- QZ Tray is the fastest beta candidate for validating bridge-based printing.
+- QZ Tray is the fastest current candidate for validating bridge-based printing.
 
 ### Explicit Non-Decisions
 
@@ -700,11 +700,11 @@ A local print bridge keeps eventBon as a web app while allowing direct or near-d
 - Electron is not the primary product. eventBon should remain a web app.
 - Chrome print preview must not remain the production cashier workflow.
 
-## ADR-022 Closed Windows Pilot Scope
+## ADR-022 Windows production scope
 
 ### Decision
 
-The current external validation release is eventBon Windows Pilot.
+The current external validation release is eventBon production release.
 
 Officially supported:
 
@@ -721,16 +721,16 @@ Planned later:
 - Android
 - additional certified printers
 
-The pilot must include organizer-accessible pages for Impressum, Datenschutz, Nutzungsbedingungen, and Problem melden. These pages use pilot-phase legal and support text and must receive final legal review before public production.
+The production must include organizer-accessible pages for Impressum, Datenschutz, Nutzungsbedingungen, and Problem melden. These pages use production legal and support text and must stay legally reviewed as the product evolves.
 
 ### Reason
 
-Receipt printing is the highest-risk beta workflow. A narrow Windows pilot reduces variables while validating the real event workflow with QZ Tray and the Brother TD-4000 reference printer.
+Receipt printing is the highest-risk product workflow. A narrow Windows production release reduces variables while validating the real event workflow with QZ Tray and the Brother TD-4000 reference printer.
 
 ### Consequences
 
-- iPad and Android are not implemented for this pilot.
-- Stripe pay-per-event activation is not part of this release-hardening step.
+- iPad and Android are not implemented for this production.
+- Stripe pay-per-event activation belongs to the productive commercial model and remains separate from Bon sales.
 - The printer test lab remains available for diagnostics but should not be prominent to ordinary organizers.
 - Receipt printing remains the P0 release blocker until QZ direct cashier printing reliably produces one print job per voucher, cuts after every voucher where supported, and uses readable Brother TD-4000 layout.
 - Production RLS/security review remains P0 before broader production release.

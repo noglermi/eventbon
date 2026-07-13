@@ -1,12 +1,12 @@
-# Pilot Release Checklist
+# Production Release Checklist
 
 ## Release Definition
 
-Current release name:
+Current product status:
 
-- eventBon Windows Pilot
+- Public paid product
 
-Officially supported for the closed pilot:
+Officially supported for the public production release:
 
 - Windows 10
 - Windows 11
@@ -36,12 +36,12 @@ Repository audit status:
 - Mock data remains only as developer fallback when Supabase environment variables are missing.
 - The printer test lab remains available but must not be prominent for ordinary organizer workflows.
 
-Open production assumptions to verify before pilot:
+Open production assumptions to verify before production:
 
 - Vercel production environment variables match `.env.example`.
 - Supabase Auth redirect URLs include `https://eventbons.com/reset-password`.
 - Supabase production schema migrations are executed in order.
-- QZ Tray is installed and trusted on pilot Windows devices.
+- QZ Tray is installed and trusted on Windows devices.
 
 ## Vercel Production Configuration
 
@@ -55,9 +55,9 @@ Open production assumptions to verify before pilot:
 
 - All SQL migrations are applied.
 - `save_completed_sale` RPC signature matches the frontend payload.
-- Storage bucket `product-images` exists and is configured for the intended pilot access model.
-- RLS/security posture is reviewed for closed pilot use.
-- Full production RLS/security review remains required before public production.
+- Storage bucket `product-images` exists and is configured for the intended production access model.
+- RLS/security posture is reviewed for public production release use.
+- Full production RLS/security review remains required for the public product.
 
 ## Authentication And Password Reset
 
@@ -76,7 +76,7 @@ Open production assumptions to verify before pilot:
 - Organizer can create an event.
 - Organizer can open event workspace.
 - Organizer can reach Verkauf, Dashboard, Produkte, Helfer, Speisekarte, Bondrucker, and Einstellungen.
-- Footer shows Windows Pilot label, system requirements, support through Problem melden, and legal/support links.
+- Footer shows product name, system requirements, support through Problem melden, and legal/support links.
 
 ## Helper Flow
 
@@ -112,7 +112,11 @@ Open production assumptions to verify before pilot:
 
 ## QZ Tray Installation
 
-- QZ Tray is installed on each Windows pilot device.
+- Device-local printer settings are stored in browser localStorage.
+- Selected profile ID, Windows/QZ printer name, output mode, test confirmation, and last test date survive reloads on the same device.
+- The modular printer setup wizard can be cancelled, restarted, and completed.
+- The selected printer profile status is visible to the organizer/device operator.
+- QZ Tray is installed on each Windows device.
 - Browser can connect to QZ Tray.
 - Selected printer name matches the installed Brother TD-4000 printer name.
 - QZ connection error messages are understandable.
@@ -133,7 +137,24 @@ Open production assumptions to verify before pilot:
 - 2 x Bier plus 1 x Gulaschsuppe in Sammelbon mode prints 1 job, 1 label, and 1 cut where possible.
 - Reprint from Recent Sales prints the existing sale, marks the output as Nachdruck, and does not create a new sale.
 - Cut behavior is verified as Windows/Brother driver behavior at job boundaries.
-- This checklist item is complete only after real Brother TD-4000 hardware testing with the 58 x 60 mm pilot medium.
+- This checklist item is complete only after real Brother TD-4000 hardware testing with the 58 x 60 mm configured medium.
+
+## MUNBYN 80 mm Pending Test
+
+- Profile is visible as Test ausstehend.
+- UI does not claim official support.
+- Exact MUNBYN model is recorded after delivery.
+- Windows driver installation is documented.
+- QZ Tray discovers the printer or the exact Windows printer name is documented.
+- EventBon test Bon prints with readable typography.
+- German special characters and euro sign print correctly.
+- Cutter behavior is verified.
+- 1 x product in Einzelbons mode prints one job and one Bon.
+- 3 x product in Einzelbons mode prints three jobs and three Bons.
+- Sammelbon prints one combined Bon where possible.
+- Reprint from Letzte Verkaeufe does not create a new sale.
+- Browser fallback is tested.
+- Only after all checks pass may the status move from Test ausstehend to Getestet.
 
 ## Legal Pages
 
@@ -141,28 +162,28 @@ Open production assumptions to verify before pilot:
 - Datenschutz route exists.
 - Nutzungsbedingungen route exists.
 - Problem melden route exists.
-- Legal pilot texts are present.
-- Final legal review remains required before public production.
+- Legal production texts are present.
+- Final legal review remains required as the product evolves.
 - Organizer responsibility notice is visible.
 
 ## Support Process
 
-- Support contact for pilot problem reports is present.
-- Pilot issue report format is defined.
-- Emergency contact is defined for live pilot events.
+- Support contact for support problem reports is present.
+- Support issue report format is defined.
+- Emergency contact is defined for live events.
 - Printer setup problems have a triage path.
 
 ## Backup And Recovery
 
 - Supabase backup process is confirmed.
-- Recovery process is documented for pilot operators.
+- Recovery process is documented for operators.
 - Export fallback is verified.
 - Incident notes capture event, time, terminal, and helper context.
 
-## Pilot Feedback Procedure
+## Production Feedback Procedure
 
-- Each pilot event records device, browser, printer, QZ Tray, paper, and print result.
+- Each live event records device, browser, printer, QZ Tray, paper, and print result.
 - Organizer feedback is collected after setup and after event completion.
 - Helper/cashier feedback is collected during or immediately after the event.
 - Printing issues are tagged separately from UX and data issues.
-- Beta backlog is updated after each pilot.
+- Product Backlog is updated after each live event.

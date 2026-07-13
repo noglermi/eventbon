@@ -50,7 +50,7 @@ Helper invitation links must point to the public application URL. For production
 
 The production domain `https://eventbons.com` is the canonical public home for eventBon. It will host the landing page, organizer login, and sales application.
 
-The Windows Pilot includes organizer-accessible legal and support pages:
+The production application includes organizer-accessible legal and support pages:
 
 - `/problem-melden`
 - `/impressum`
@@ -75,7 +75,7 @@ The organizer needs business information, not a list of individual sales. eventB
 
 The product deliberately avoids back-office complexity. There is no dashboard in the MVP, no separate article management, no invoices, no receipts, no taxes, and no accounting.
 
-Stripe later handles event booking payment, event activation, paid extensions, and invoice/payment handling for the organizer. This remains separate from visitor payments and Bon sales. Stripe is never used for Bon sales to visitors. Visitor payments remain outside Stripe unless a future SumUp integration confirms an external payment. eventBon remains not a cash register.
+Stripe handles event booking payment, event activation, paid extensions, and invoice/payment handling for the organizer. This remains separate from visitor payments and Bon sales. Stripe is never used for Bon sales to visitors. Visitor payments remain outside Stripe unless a future SumUp integration confirms an external payment. eventBon remains not a cash register.
 
 ## Design Principles
 
@@ -83,7 +83,7 @@ Stripe later handles event booking payment, event activation, paid extensions, a
 - Scalable in the architecture.
 - Invisible complexity.
 
-The interface should feel immediate and obvious. The architecture should still be ready for multiple tenants, hosted deployment, and future payment integrations without exposing that complexity to event staff.
+The interface should feel immediate and obvious. The architecture should still be ready for multiple tenants, hosted deployment, and commercial payment integrations without exposing that complexity to event staff.
 
 Product icons and images must follow clear commercial usage rights. Default product symbols should use safe open-source icon libraries, while optional product images are uploaded by the organizer. eventBon must not ship copied product photos or assets from unclear internet sources. See ADR-013 for the licensing rules.
 
@@ -97,19 +97,19 @@ eventBon is built around:
 
 Production runs at `https://eventbons.com`. Public helper invitation links, QR codes, and password reset redirects use `NEXT_PUBLIC_APP_URL` so they point to the production domain outside local development.
 
-The architecture is multi-tenant by design. All application data is stored in Supabase. The system should be structured so Stripe and SumUp integrations can be added later without reworking the product model.
+The architecture is multi-tenant by design. All application data is stored in Supabase. Stripe belongs to the productive pay-per-event business model. SumUp may be added later without reworking the product model.
 
 Event settings and device settings are intentionally separate. Event settings include products, helpers, menu, and dashboard/statistics. Device settings include the receipt printer, zoom, and device language. One event may be used from multiple terminals, and each terminal stores its own local device configuration.
 
-Reliable production receipt printing targets a local print bridge while eventBon remains a web app. Browser and CSS printing remain useful for setup, test prints, and fallback, but Chrome print preview must not be the final cashier workflow. A fast beta candidate is QZ Tray; later printer-specific adapters may use ESC/POS for Epson and Star devices, Brother label/raster output or Brother SDK support through the bridge, Epson ePOS, and Star webPRNT.
+Reliable production receipt printing targets a local print bridge while eventBon remains a web app. Browser and CSS printing remain useful for setup, test prints, and fallback, but Chrome print preview must not be the final cashier workflow. A fast current candidate is QZ Tray; later printer-specific adapters may use ESC/POS for Epson and Star devices, Brother label/raster output or Brother SDK support through the bridge, Epson ePOS, and Star webPRNT.
 
 ## Release Strategy
 
-eventBon follows a beta-first release strategy.
+eventBon follows a product-first release strategy.
 
-The current closed pilot release is eventBon Windows Pilot.
+EventBon is publicly available as a paid product.
 
-Officially supported for the pilot:
+Officially supported:
 
 - Windows 10
 - Windows 11
@@ -126,18 +126,18 @@ Planned later:
 
 Receipt printing remains the P0 release blocker until direct QZ cashier printing is reliable for one print job per voucher, with correct cutting and readable Brother TD-4000 output.
 
-The project intentionally prioritizes a complete, testable event workflow before full production security hardening. During beta, the database schema, RPC signatures, helper workflow, printing, dashboard, and organizer workflow are still evolving. Implementing production-grade RLS too early would create unnecessary rework and increase regression risk.
+The project intentionally prioritizes a complete, reliable event workflow while production security hardening continues. While the product is evolving, the database schema, RPC signatures, helper workflow, printing, dashboard, and organizer workflow may still change. Implementing production-grade RLS too early would create unnecessary rework and increase regression risk.
 
-Security remains mandatory before production release. Full RLS, RPC security review, storage policies, server-side validation, token review, permission review, security testing, DSGVO review, and production hardening are scheduled for RC-4 after successful field beta and pilot operation.
+Security remains mandatory for the public product. Full RLS, RPC security review, storage policies, server-side validation, token review, permission review, security testing, DSGVO review, and production hardening are scheduled for RC-4 after successful field operation and production operation.
 
 Release candidates:
 
-- RC-1 Beta Completion: UX, bug fixes, tablet optimization, sales workflow, password reset, Menu Designer, printer support, and complete event workflow.
+- RC-1 Product completion: UX, bug fixes, tablet optimization, sales workflow, password reset, Menu Designer, printer support, and complete event workflow.
 - RC-2 Receipt Printing: printer setup wizard, local print bridge architecture, generic thermal printer support, Brother TD-4000 reference implementation, Epson and Star reference paths, browser print fallback, print testing, and print documentation.
-- RC-3 Pilot Program: five real pilot events, feedback collection, UX fixes, and no major architecture changes.
-- RC-4 Security Hardening: production security hardening after successful pilot operation.
+- RC-3 Production Rollout: five real live events, feedback collection, UX fixes, and no major architecture changes.
+- RC-4 Security Hardening: production security hardening as an ongoing product workstream.
 
-Until RC-4, major architecture refactoring should be avoided unless it is required for a beta blocker. Allowed work includes bug fixes, UX improvements, printing, and beta workflow improvements.
+Until RC-4, major architecture refactoring should be avoided unless it is required for a release blocker. Allowed work includes bug fixes, UX improvements, printing, and product workflow improvements.
 
 ## Documentation
 
@@ -149,8 +149,8 @@ Until RC-4, major architecture refactoring should be avoided unless it is requir
 - [Roadmap](docs/Roadmap.md)
 - [Printer Setup Wizard](docs/Printer-Setup-Wizard.md)
 - [Deployment](docs/Deployment.md)
-- [Pilot Release Checklist](docs/Pilot-Release-Checklist.md)
-- [Beta Backlog](docs/Beta-Backlog.md)
+- [Production Release Checklist](docs/Production-Release-Checklist.md)
+- [Product Backlog](docs/Product-Backlog.md)
 
 ## Contributor Note
 

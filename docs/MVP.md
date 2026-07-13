@@ -127,7 +127,7 @@ It is a helper only. eventBon is not a cash register and does not manage cash dr
 
 The MVP allows staff to manually confirm that a card payment was completed outside eventBon.
 
-This keeps the MVP ready for future Stripe and SumUp integrations without requiring payment provider implementation now.
+This keeps the MVP ready for Stripe commercial billing and possible future SumUp integration while keeping visitor payments outside EventBon.
 
 ## Browser Voucher Printing
 

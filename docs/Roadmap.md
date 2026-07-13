@@ -37,15 +37,15 @@ Booking lifecycle:
 
 ## Release Candidate Roadmap
 
-The Release Candidate phase prioritizes beta readiness, field learning, and then production hardening.
+The Release Candidate phase prioritizes product readiness, field learning, and then production hardening.
 
-Full production security hardening is intentionally postponed until after the first successful field beta. During beta, the database schema, RPC signatures, helper workflow, printing, dashboard, and organizer workflow are still evolving. Implementing production-grade RLS now would create unnecessary rework and increase regression risk.
+Production security hardening continues alongside real field operation. While the product is evolving, the database schema, RPC signatures, helper workflow, printing, dashboard, and organizer workflow may still change. Implementing production-grade RLS now would create unnecessary rework and increase regression risk.
 
-Security remains mandatory before production release.
+Security remains mandatory for the public product.
 
-### Closed Windows Pilot
+### Windows Production Scope
 
-The current release target is eventBon Windows Pilot.
+The current supported operating scope is Windows production use.
 
 Officially supported:
 
@@ -62,11 +62,11 @@ Planned later:
 - Android
 - additional certified printers
 
-P0 release blockers are tracked in `docs/Beta-Backlog.md`. Receipt printing remains the primary P0 blocker until QZ direct cashier printing reliably produces one print job per voucher, cuts after every voucher where supported, and uses readable Brother TD-4000 typography/layout.
+P0 release blockers are tracked in `docs/Product-Backlog.md`. Receipt printing remains the primary P0 blocker until QZ direct cashier printing reliably produces one print job per voucher, cuts after every voucher where supported, and uses readable Brother TD-4000 typography/layout.
 
-Stripe pay-per-event activation, iPad, and Android are outside the closed Windows pilot scope.
+Stripe pay-per-event activation belongs to the productive commercial model. iPad and Android are outside the current Windows production scope.
 
-### RC-1 Beta Completion
+### RC-1 Product completion
 
 Focus:
 
@@ -94,7 +94,7 @@ Focus:
 
 - printer setup wizard
 - local print bridge as target production architecture
-- QZ Tray as fast beta candidate
+- QZ Tray as fast current candidate
 - generic thermal printer support
 - Brother TD-4000 reference implementation
 - Epson and Star reference paths
@@ -133,19 +133,19 @@ Architecture exclusions:
 - Electron is not the primary product direction
 - Chrome print preview is not the production cashier workflow
 
-### RC-3 Pilot Program
+### RC-3 Production Rollout
 
 Focus:
 
-- five real pilot events
-- typical pilots: Reitturnier, Feuerwehrfest, Musikverein, Sportveranstaltung, Weihnachtsmarkt
+- five real live events
+- Typical live events: Reitturnier, Feuerwehrfest, Musikverein, Sportveranstaltung, Weihnachtsmarkt
 - collect feedback
 - fix UX issues
 - no major architecture changes
 
 ### RC-4 Security Hardening
 
-Only after successful pilot operation.
+Only after successful production operation.
 
 Focus:
 
@@ -161,14 +161,14 @@ Focus:
 
 ### Development Rule
 
-Until RC-4, do not make major architecture refactors unless required for a beta blocker.
+Until RC-4, do not make major architecture refactors unless required for a release blocker.
 
 Allowed:
 
 - bug fixes
 - UX improvements
 - printing
-- beta workflow improvements
+- product workflow improvements
 
 Avoid:
 
@@ -180,11 +180,11 @@ Avoid:
 
 | Sprint | Name |
 | --- | --- |
-| RC1-01 | Beta Workflow |
+| RC1-01 | product workflow |
 | RC1-02 | Menu Designer |
 | RC1-03 | Receipt Printing |
-| RC1-04 | Beta Polish |
-| RC2-01 | Pilot Events |
+| RC1-04 | Product Polish |
+| RC2-01 | Live Events |
 | RC3-01 | Security Hardening |
 
 Release Candidate quality gate:
@@ -355,7 +355,7 @@ Scope:
 - event repository prepared to query by organizer
 - no Supabase Auth UI
 - no helper invitation implementation
-- no Stripe
+- Stripe booking/billing remains outside this implementation step
 
 Future architecture:
 
@@ -391,7 +391,7 @@ Scope:
 - authenticated organizer workspace
 - organizer-owned events
 - no helper invitation implementation
-- no Stripe
+- Stripe booking/billing remains outside this implementation step
 - no SumUp
 - no sales analytics dashboard
 
@@ -480,7 +480,7 @@ Stripe-ready architecture must also support eventBon event booking purchases sep
 - post-event access period
 - optional paid extension
 
-Stripe must later be able to support event booking payment, event activation, organizer payment handling, duration-based access, paid extensions, renewal/extension flow, invoice/payment handling outside the Bon sales workflow, and a license activation token for future offline use.
+Stripe must support event booking payment, event activation, organizer payment handling, duration-based access, paid extensions, renewal/extension flow, invoice/payment handling outside the Bon sales workflow, and a license activation token for future offline use.
 
 Stripe is never used for Bon sales to visitors. Visitor payments remain outside Stripe unless a future SumUp integration confirms payment externally. eventBon must not process event visitor payments as a cash register.
 

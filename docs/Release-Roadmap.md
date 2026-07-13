@@ -2,15 +2,15 @@
 
 ## Strategy
 
-eventBon follows a beta-first release strategy.
+eventBon follows a product-first release strategy.
 
-The project intentionally postpones full production security hardening until after the first successful field beta.
+The project continues production security hardening while validating the event workflow in real field operation.
 
 The canonical production domain is `https://eventbons.com`. Release validation must ensure that public app URLs, helper invitations, QR codes, and password reset links use this domain through `NEXT_PUBLIC_APP_URL`. Developers may override the value locally for localhost development.
 
 Reason:
 
-During beta the application is still evolving:
+While the product is evolving, the application is still changing in these areas:
 
 - database schema
 - RPC signatures
@@ -21,15 +21,15 @@ During beta the application is still evolving:
 
 Implementing production-grade RLS now would create unnecessary rework and increase regression risk.
 
-Security remains mandatory before production release. Full production hardening is scheduled for RC-4 after successful pilot operation.
+Security remains mandatory for the public product. Full production hardening is scheduled for RC-4 after successful production operation.
 
 ## Release Candidates
 
-## Closed Windows Pilot
+## Windows Production Scope
 
-Current release name:
+Current product status:
 
-- eventBon Windows Pilot
+- Public paid product
 
 Officially supported:
 
@@ -55,7 +55,7 @@ P0 release blocker:
 - QZ installation wizard
 - production RLS/security review
 
-P1 after pilot blocker resolution:
+Commercial P0:
 
 - Stripe pay-per-event activation
 - event title correction
@@ -70,7 +70,7 @@ P2:
 - station-level analytics
 - additional printer certification
 
-### RC-1 Beta Completion
+### RC-1 Product completion
 
 Focus:
 
@@ -89,7 +89,7 @@ Focus:
 
 - printer setup wizard
 - local print bridge as target production architecture
-- QZ Tray as fast beta candidate
+- QZ Tray as fast current candidate
 - generic thermal printer support
 - Brother TD-4000 reference implementation
 - Epson and Star reference paths
@@ -123,16 +123,16 @@ Receipt printing architecture:
 - Output adapters support Browser Print fallback, Local Print Bridge, Epson ePOS, and Star webPRNT
 - Chrome print preview is not the production cashier workflow
 
-### RC-3 Pilot Program
+### RC-3 Production Rollout
 
 Focus:
 
-- five real pilot events
+- five real live events
 - collect feedback
 - fix UX issues
 - no major architecture changes
 
-Typical pilots:
+Typical live events:
 
 - Reitturnier
 - Feuerwehrfest
@@ -142,7 +142,7 @@ Typical pilots:
 
 ### RC-4 Security Hardening
 
-Only after successful pilot operation.
+Only after successful production operation.
 
 Focus:
 
@@ -160,14 +160,14 @@ Production hardening includes verifying the `eventbons.com` deployment, Supabase
 
 ## Development Rule
 
-Until RC-4, no major architecture refactoring unless required for a beta blocker.
+Until RC-4, no major architecture refactoring unless required for a release blocker.
 
 Allowed:
 
 - bug fixes
 - UX improvements
 - printing
-- beta workflow improvements
+- product workflow improvements
 
 Avoid:
 
@@ -179,11 +179,11 @@ Avoid:
 
 | Sprint | Name |
 | --- | --- |
-| RC1-01 | Beta Workflow |
+| RC1-01 | product workflow |
 | RC1-02 | Menu Designer |
 | RC1-03 | Receipt Printing |
-| RC1-04 | Beta Polish |
-| RC2-01 | Pilot Events |
+| RC1-04 | Product Polish |
+| RC2-01 | Live Events |
 | RC3-01 | Security Hardening |
 
 ## Release Candidate Lifecycle UX

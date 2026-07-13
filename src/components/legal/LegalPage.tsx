@@ -15,7 +15,6 @@ export function LegalPage({ children, intro, title }: LegalPageProps) {
           <Link href="/" className="text-2xl font-black tracking-normal text-emerald-600">
             eventBon
           </Link>
-          <p className="mt-4 text-sm font-black uppercase tracking-widest text-amber-700">Windows Pilot</p>
           <h1 className="mt-3 text-4xl font-black tracking-tight text-slate-950 sm:text-5xl">{title}</h1>
           {intro ? <p className="mt-4 max-w-3xl text-base font-semibold leading-7 text-slate-600">{intro}</p> : null}
         </header>

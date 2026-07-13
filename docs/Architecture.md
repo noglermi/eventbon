@@ -137,7 +137,7 @@ eventBon must support multiple tenants even if the MVP interface exposes only a 
 
 Tenant-aware records should include a tenant reference. Booked event, product, sale, payment, voucher, helper access, and summary data should be scoped to the owning tenant.
 
-Tenant separation should be enforced at the data access layer and, where applicable, by Supabase row-level security. Full production-grade RLS hardening is intentionally scheduled for RC-4 after successful field beta and pilot operation, because the beta database schema, RPC signatures, helper workflow, printing, dashboard, and organizer workflow are still evolving.
+Tenant separation should be enforced at the data access layer and, where applicable, by Supabase row-level security. Full production-grade RLS hardening is intentionally scheduled for RC-4 after successful field operation and production operation, because the production database schema, RPC signatures, helper workflow, printing, dashboard, and organizer workflow are still evolving.
 
 The organizer account may own multiple booked events over time. Helpers and volunteers are invited into specific booked events and should not automatically gain access to other events owned by the same organizer. Helpers are not global users in the product concept.
 
@@ -290,9 +290,9 @@ Public application URLs must be generated from `NEXT_PUBLIC_APP_URL` where appro
 
 Helper invitation links, helper QR codes, and organizer password recovery redirects must use `NEXT_PUBLIC_APP_URL` so production links do not point to protected Vercel preview URLs.
 
-## Windows Pilot Release Scope
+## Windows Production Scope
 
-The current release target is eventBon Windows Pilot.
+The current supported operating scope is Windows production use.
 
 Officially supported:
 
@@ -309,13 +309,13 @@ Planned later:
 - Android
 - additional certified printers
 
-This pilot scope is intentionally narrow. It avoids spreading support across mobile operating systems before the Windows receipt-printing path is stable.
+This Windows production scope is intentionally narrow. It avoids spreading support across mobile operating systems before the Windows receipt-printing path is stable.
 
-Receipt printing remains the P0 release blocker. The target pilot behavior is direct QZ cashier printing, one print job per voucher, cutting after every voucher where supported, and an optimized Brother TD-4000 typography/layout profile.
+Receipt printing remains the P0 release blocker. The target production behavior is direct QZ cashier printing, one print job per voucher, cutting after every voucher where supported, and an optimized Brother TD-4000 typography/layout profile.
 
-The printer test lab is a diagnostic tool for the pilot and should not be prominent in ordinary organizer workflows.
+The printer test lab is a diagnostic tool for setup and support and should not be prominent in ordinary organizer workflows.
 
-Legal and support surfaces must exist before external pilot users are invited. Impressum, Datenschutz, Nutzungsbedingungen, and Problem melden use pilot-phase text and must receive final legal review before public production.
+Legal and support surfaces are part of the public product. Impressum, Datenschutz, Nutzungsbedingungen, and Problem melden use product text and must remain legally reviewed as the product evolves.
 
 ## Event Booking As Core Object
 
@@ -439,7 +439,7 @@ The architecture must remain ready for:
 
 Payment providers should be modeled as replaceable adapters. The sales terminal should not depend directly on provider-specific logic.
 
-Stripe readiness is for eventBon event booking, organizer payment, paid extension, and account access, separate from Bon sales. Stripe rental and payment handling must remain outside the Bon sales workflow. Stripe must later support:
+Stripe readiness is for eventBon event booking, organizer payment, paid extension, and account access, separate from Bon sales. Stripe rental and payment handling must remain outside the Bon sales workflow. Stripe must support:
 
 - event booking payment
 - event activation after successful payment
@@ -455,7 +455,7 @@ Stripe is never used for Bon sales to visitors. Visitor payments remain outside 
 
 eventBon remains a web app. Reliable production receipt printing targets a local print bridge. Browser and CSS printing are acceptable for setup, test prints, and fallback, but they are not the final cashier workflow.
 
-Real Brother TD-4000 testing confirmed that Windows and browser printing can reach the printer, but browser print preview caused repeated labels, incomplete single-voucher output, and too much cashier friction. Receipt printing is therefore a beta blocker. Production operation requires direct or near-direct printing so the cashier can complete a sale without a disruptive preview step.
+Real Brother TD-4000 testing confirmed that Windows and browser printing can reach the printer, but browser print preview caused repeated labels, incomplete single-voucher output, and too much cashier friction. Receipt printing is therefore a release blocker. Production operation requires direct or near-direct printing so the cashier can complete a sale without a disruptive preview step.
 
 The printer engine foundation separates the Sales Terminal from printer details.
 
@@ -496,7 +496,7 @@ Output Adapters deliver the rendered job:
 Technology decision:
 
 - Primary future path: local print bridge
-- Fast beta candidate: QZ Tray
+- Fast current candidate: QZ Tray
 - Fallback: browser/CSS print
 - Printer-specific adapters: ESC/POS for Epson and Star, Brother label/raster or Brother SDK through the bridge, Epson ePOS, and Star webPRNT
 
@@ -505,7 +505,7 @@ The internal print flow distinguishes:
 - setupPrintPreview
 - cashierDirectPrintCandidate
 
-Browser printing remains the setup, test, and explicit fallback path. The normal Windows pilot cashier path uses QZ Tray when the device-local output adapter is set to QZ Tray direct print. In QZ mode the Sales Terminal must not call `window.print()`, must not open the browser print preview, and must not show the legacy browser print modal unless the user explicitly chooses the browser fallback after a QZ failure.
+Browser printing remains the setup, test, and explicit fallback path. The normal Windows production release cashier path uses QZ Tray when the device-local output adapter is set to QZ Tray direct print. In QZ mode the Sales Terminal must not call `window.print()`, must not open the browser print preview, and must not show the legacy browser print modal unless the user explicitly chooses the browser fallback after a QZ failure.
 
 The PrintService selects the active device-local printer profile, creates the PrintJob IR, chooses a renderer adapter, and sends the rendered result to an output adapter. The Printer Profile defines paper width, margins, font scaling, cutter or tear-off behavior, and profile-specific layout values.
 
@@ -514,20 +514,25 @@ Supported foundation profiles:
 - Generic 58 mm Receipt
 - Generic 80 mm Receipt
 - Brother TD-4000 58 x 60 mm
+- MUNBYN 80 mm thermal receipt printer
 - Epson Receipt
 - Star Receipt
 
-The Brother TD-4000 58 x 60 mm profile targets the current fixed-size beta test medium. It is an abstraction only at this stage and does not implement Brother-specific commands or direct device support.
+The Brother TD-4000 58 x 60 mm profile targets the current fixed-size configured test medium. It is an abstraction only at this stage and does not implement Brother-specific commands or direct device support.
+
+Printer profiles are central typed configuration, not database records during the production. A profile contains manufacturer, model, display name, support status, description, paper dimensions, printer type, connection options, cutter behavior, supported platforms, required software, driver hint, installation guide, test status, last tested date, tested eventBon version, notes, recommended settings, QZ printer hints, and active/inactive availability.
+
+Support states are explicit: supported, production, testing_pending, legacy, and not_recommended. The Brother TD-4000 is a legacy/tested existing device. The MUNBYN 80 mm profile is testing_pending until the physical printer is tested and documented. eventBon must not claim MUNBYN support before that practical test.
 
 For QZ Tray cashier printing, eventBon uses a dedicated QZ-compatible HTML/pixel renderer instead of the browser CSS renderer. Single-voucher mode sends one voucher as one separate QZ print job. A sale with `3 x Bier` in Einzelbons mode therefore produces three sequential QZ jobs, each containing one `1 x Bier` voucher. Combined-voucher mode sends exactly one QZ job containing all sale items and quantities.
 
-For the Brother TD-4000 pilot profile, cutting is handled by the Windows/Brother printer driver at print-job boundaries. eventBon deliberately does not send raw Brother cutter commands in this phase. This means individual vouchers must not be bundled into one multi-page QZ job, because the driver cut behavior depends on separate job boundaries.
+For the Brother TD-4000 configured profile, cutting is handled by the Windows/Brother printer driver at print-job boundaries. eventBon deliberately does not send raw Brother cutter commands in this phase. This means individual vouchers must not be bundled into one multi-page QZ job, because the driver cut behavior depends on separate job boundaries.
 
 Sales completion in QZ mode happens only after all required QZ jobs have been submitted successfully. If a later voucher fails, the sale remains stored once, the cart is not silently cleared, the failed voucher number is shown, and the same completed sale can be retried or printed through the explicit browser fallback without creating another sale or changing statistics.
 
-This implementation is not marked fully complete until it has been verified on real Brother TD-4000 hardware with the 58 x 60 mm pilot medium.
+This implementation is not marked fully complete until it has been verified on real Brother TD-4000 hardware with the 58 x 60 mm configured medium.
 
-The receipt printer setup foundation stores device-local browser print settings in localStorage. These settings are intentionally not event data and are not stored in Supabase.
+The receipt printer setup foundation stores device-local printer settings in localStorage. These include profile ID, output mode, Windows/QZ printer name, paper/profile options, test confirmation, and last test date. These settings are intentionally not event data and are not stored in Supabase.
 
 Each sales terminal or device uses exactly one configured printer. There is no multi-printer routing per terminal. Multiple terminals at one event are supported by configuring each terminal/device with its own local printer settings.
 
@@ -554,9 +559,9 @@ Product-based printer routing, kitchen printer routing, and multiple printers pe
 
 ## Release Candidate Architecture Priorities
 
-The Release Candidate roadmap is ordered around beta learning first and production hardening later.
+The Release Candidate roadmap is ordered around production learning first and production hardening later.
 
-### RC-1 Beta Completion
+### RC-1 Product completion
 
 Focus:
 
@@ -575,7 +580,7 @@ Focus:
 
 - printer setup wizard
 - local print bridge as target production architecture
-- QZ Tray as fast beta candidate
+- QZ Tray as fast current candidate
 - generic thermal printer support
 - Brother TD-4000 reference implementation
 - Epson and Star reference paths
@@ -585,16 +590,16 @@ Focus:
 - print testing
 - print documentation
 
-### RC-3 Pilot Program
+### RC-3 Production Rollout
 
 Focus:
 
-- five real pilot events
+- five real live events
 - feedback collection
 - UX fixes
 - no major architecture changes
 
-Typical pilots:
+Typical live events:
 
 - Reitturnier
 - Feuerwehrfest
@@ -604,7 +609,7 @@ Typical pilots:
 
 ### RC-4 Security Hardening
 
-Full production security hardening happens only after successful pilot operation.
+Full production security hardening happens only after successful production operation.
 
 Focus:
 
@@ -618,13 +623,13 @@ Focus:
 - DSGVO review
 - production hardening
 
-Until RC-4, avoid major architecture refactoring unless required for a beta blocker. Allowed work includes bug fixes, UX improvements, printing, and beta workflow improvements. Avoid large security rewrites, large database redesigns, and unnecessary RPC redesigns.
+Until RC-4, avoid major architecture refactoring unless required for a release blocker. Allowed work includes bug fixes, UX improvements, printing, and product workflow improvements. Avoid large security rewrites, large database redesigns, and unnecessary RPC redesigns.
 
 ## Icon And Image Assets
 
 Product icons and images must have clear commercial usage rights.
 
-Default product symbols should use commercially usable open-source icon libraries. Preferred examples are Lucide, Tabler Icons, Heroicons, and Material Symbols. The exact library and license must be verified and documented before production release.
+Default product symbols should use commercially usable open-source icon libraries. Preferred examples are Lucide, Tabler Icons, Heroicons, and Material Symbols. The exact library and license must be verified and documented for production use.
 
 Unicode emojis may be used as fallback or simple symbols because they are rendered by the operating system or browser.
 

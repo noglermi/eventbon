@@ -22,18 +22,18 @@ Whenever a database table, SQL migration, PostgreSQL RPC function, repository me
 - New columns are covered by inserts, reads, dashboards, exports, and RPCs where applicable.
 - The migration has been executed before frontend validation.
 
-## Release Strategy And Beta-First Development
+## Release Strategy And Product-First Development
 
-The project intentionally prioritizes a complete, testable event workflow before full production security hardening.
+The project intentionally prioritizes a complete, reliable event workflow while production security hardening continues.
 
-Until RC-4, avoid major architecture refactoring unless it is required for a beta blocker.
+Until RC-4, avoid major architecture refactoring unless it is required for a release blocker.
 
 Allowed before RC-4:
 
 - bug fixes
 - UX improvements
 - printing
-- beta workflow improvements
+- product workflow improvements
 
 Avoid before RC-4:
 
@@ -41,4 +41,4 @@ Avoid before RC-4:
 - large database redesigns
 - unnecessary RPC redesigns
 
-Security remains mandatory before production release. Full Row Level Security, RPC security review, storage policies, server-side validation, token review, permission review, security testing, DSGVO review, and production hardening are scheduled for RC-4 after successful field beta and pilot operation.
+Security remains mandatory for the public product. Full Row Level Security, RPC security review, storage policies, server-side validation, token review, permission review, security testing, DSGVO review, and production hardening are scheduled for RC-4 after successful field operation and production operation.

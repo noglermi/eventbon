@@ -304,10 +304,10 @@ CSV is a temporary export format. For Version 1, an Excel export (`.xlsx`) is pr
 
 ## Future Integration Readiness
 
-Stripe and SumUp readiness can be supported by reserving a payment reference model later.
+Stripe belongs to the productive pay-per-event business model. SumUp readiness can be supported separately for possible future visitor-payment confirmation.
 
-The MVP should avoid hard-coding provider details into sales records. Provider-specific data should be isolated when payment integrations are added.
+The application should avoid hard-coding provider details into sales records. Provider-specific data belongs outside the Bon sales workflow.
 
-Stripe later handles event booking, organizer payment, paid extension, and invoice/payment handling outside the Bon sales workflow. This is separate from visitor payments and Bon sales.
+Stripe handles event booking, organizer payment, paid extension, and invoice/payment handling outside the Bon sales workflow. This is separate from visitor payments and Bon sales.
 
 Offline license tokens must represent the booked event and its allowed usage period. A future offline version must enforce preparation mode, active sales and printing mode, read-only post-event mode, expiry, and paid extension.

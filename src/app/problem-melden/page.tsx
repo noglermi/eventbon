@@ -1,6 +1,6 @@
 import { InfoSection, LegalPage } from "@/components/legal/LegalPage";
 
-const supportMailto = "mailto:nastasia.sushchenko@eo-sol.com?subject=EventBon%20Pilot%20%E2%80%93%20Problemmeldung";
+const supportMailto = "mailto:nastasia.sushchenko@eo-sol.com?subject=EventBon%20%E2%80%93%20Problemmeldung";
 
 export default function ProblemMeldenPage() {
   return (
