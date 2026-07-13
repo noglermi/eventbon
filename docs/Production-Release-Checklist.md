@@ -152,7 +152,7 @@ Open production assumptions to verify before production:
 - 1 x product in Einzelbons mode prints one job and one Bon.
 - 3 x product in Einzelbons mode prints three jobs and three Bons.
 - Sammelbon prints one combined Bon where possible.
-- Reprint from Letzte Verkaeufe does not create a new sale.
+- Reprint from Letzte Verkäufe does not create a new sale.
 - Browser fallback is tested.
 - Only after all checks pass may the status move from Test ausstehend to Getestet.
 

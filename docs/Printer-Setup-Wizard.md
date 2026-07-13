@@ -105,10 +105,10 @@ Printer support is modeled through central printer profiles. Each profile define
 
 Support status labels shown in the product are:
 
-- supported: Offiziell unterstuetzt
+- supported: Unterstützt
 - production: Getestet
 - testing_pending: Test ausstehend
-- legacy: Bestandsgeraet
+- legacy: Bestandsgerät
 - not_recommended: Nicht empfohlen
 
 The Brother TD-4000 is the first real thermal printer reference device for hardware validation. It is a tested existing device and remains selectable for the Windows production release. It is not positioned as the preferred new-purchase model.
@@ -175,10 +175,10 @@ The wizard explains that the selected profile controls the Bon layout, not the o
 
 The current modular wizard flow is:
 
-1. Drucker auswaehlen.
-2. Voraussetzungen pruefen: Windows 10/11, Chrome/Edge, QZ Tray, Windows driver, connected printer, loaded paper.
+1. Drucker auswählen.
+2. Voraussetzungen prüfen: Windows 10/11, Chrome/Edge, QZ Tray, Windows driver, connected printer, loaded paper.
 3. Modellspezifische Installation: driver hint, connection, paper, known notes, recommended settings.
-4. Windows-Drucker auswaehlen: QZ printer list where available, otherwise exact manual Windows printer name.
+4. Windows-Drucker auswählen: QZ printer list where available, otherwise exact manual Windows printer name.
 5. Testbon drucken: eventBon, Testdruck, model, paper, date/time, special characters, euro sign, multiple font sizes, divider, cutter test.
 6. Abschluss: user confirms the test result; profile, Windows/QZ printer name, output mode, test confirmation, and last test date are stored locally on the current device.
 
@@ -420,13 +420,13 @@ Cashier flow:
 - combined vouchers are submitted as one QZ job
 - successful QZ printing clears the cart/payment state and refreshes recent sales
 - if QZ Tray is not reachable or a later voucher fails, eventBon shows a friendly error, names the failed voucher number, keeps the completed sale available for retry, and offers browser print fallback
-- reprints from Letzte VerkÃ¤ufe use QZ Tray when selected and never create a new sale
+- reprints from Letzte Verkäufe use QZ Tray when selected and never create a new sale
 
 The current QZ implementation is a Windows production release path. It must be validated on real Brother TD-4000 hardware before the receipt-printing P0 item is considered complete.
 
 If QZ Tray is not installed or cannot be reached, the UI must show a friendly message:
 
-- QZ Tray ist auf diesem GerÃ¤t nicht installiert.
+- QZ Tray ist auf diesem Gerät nicht installiert.
 
 Technical errors should remain available as developer details so setup problems can be diagnosed While the product is evolving testing.
 
@@ -483,6 +483,6 @@ Checklist:
 - test QZ Tray discovery and printer name matching
 - print the EventBon test Bon
 - print single vouchers and combined vouchers from a saved sale
-- test reprint from Letzte Verkaeufe
+- test reprint from Letzte Verkäufe
 - document the tested eventBon version and date
 - update production checklist and Product Backlog

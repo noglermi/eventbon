@@ -1,4 +1,4 @@
-import { InfoSection, LegalPage, NoticeBox } from "@/components/legal/LegalPage";
+import { InfoSection, LegalPage } from "@/components/legal/LegalPage";
 
 export default function DatenschutzPage() {
   return (
@@ -56,11 +56,6 @@ export default function DatenschutzPage() {
           </a>
         </p>
       </InfoSection>
-
-      <NoticeBox>
-        Diese Datenschutzerkl&auml;rung enth&auml;lt produktive Grundinformationen und muss rechtlich final gepr&uuml;ft
-        und bei Bedarf erg&auml;nzt werden.
-      </NoticeBox>
     </LegalPage>
   );
 }

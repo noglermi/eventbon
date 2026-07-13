@@ -299,7 +299,7 @@ export function PrinterSetupWizard({ labels, language, printerSettings, onPrinte
     qzName: language === "de" ? "Windows/QZ-Druckername" : "Windows/QZ printer name",
     requirements: language === "de" ? "Voraussetzungen pr\u00fcfen" : "Check requirements",
     connectQz: language === "de" ? "Mit QZ Tray verbinden" : "Connect QZ Tray",
-    chooseWindowsPrinter: language === "de" ? "Windows-Drucker auswaehlen" : "Select Windows printer",
+    chooseWindowsPrinter: language === "de" ? "Windows-Drucker auswählen" : "Select Windows printer",
     manualPrinterName: language === "de" ? "Druckername manuell eintragen" : "Enter printer name manually",
     next: language === "de" ? "Weiter" : "Next",
     back: language === "de" ? "Zur\u00fcck" : "Back",
@@ -513,7 +513,7 @@ export function PrinterSetupWizard({ labels, language, printerSettings, onPrinte
             <div className="rounded-3xl bg-slate-50 p-5 ring-1 ring-slate-200">
               <p className="text-lg font-black text-slate-950">{labels.testPrint}</p>
               <p className="mt-2 text-sm font-semibold leading-6 text-slate-600">
-                {language === "de" ? "Der Testbon prueft Modell, Papierbreite, Sonderzeichen, Schriftgroessen und Schnitt am Job-Ende." : "The test voucher checks model, paper width, special characters, font sizes, and cutting at job end."}
+                {language === "de" ? "Der Testbon prüft Modell, Papierbreite, Sonderzeichen, Schriftgrößen und Schnitt am Job-Ende." : "The test voucher checks model, paper width, special characters, font sizes, and cutting at job end."}
               </p>
               <div className="mt-4 grid gap-3 sm:grid-cols-2">
                 <button type="button" onClick={printQzTestVoucher} disabled={isPrinting} className="min-h-14 rounded-2xl bg-emerald-600 px-5 text-base font-black text-white transition active:scale-[0.98] disabled:opacity-60">
@@ -538,7 +538,7 @@ export function PrinterSetupWizard({ labels, language, printerSettings, onPrinte
             <div className="rounded-3xl bg-emerald-50 p-5 ring-1 ring-emerald-100">
               <p className="text-xl font-black text-emerald-950">{language === "de" ? "Einrichtung abschliessen" : "Finish printer setup"}</p>
               <p className="mt-2 text-sm font-semibold leading-6 text-emerald-900">
-                {language === "de" ? "Wenn der Testbon korrekt gedruckt wurde, speichert EventBon dieses Profil lokal auf diesem Geraet." : "If the test voucher printed correctly, eventBon saves this profile locally on this device."}
+                {language === "de" ? "Wenn der Testbon korrekt gedruckt wurde, speichert EventBon dieses Profil lokal auf diesem Gerät." : "If the test voucher printed correctly, eventBon saves this profile locally on this device."}
               </p>
               <div className="mt-4 grid gap-3 sm:grid-cols-2">
                 <button type="button" onClick={confirmSuccessfulSetup} className="min-h-14 rounded-2xl bg-emerald-600 px-5 text-base font-black text-white transition active:scale-[0.98]">
