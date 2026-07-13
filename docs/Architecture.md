@@ -315,7 +315,7 @@ Receipt printing remains the P0 release blocker. The target pilot behavior is di
 
 The printer test lab is a diagnostic tool for the pilot and should not be prominent in ordinary organizer workflows.
 
-Legal and support surfaces must exist before external pilot users are invited. Impressum, Datenschutz, Nutzungsbedingungen, and Support / Problem melden may use explicit TODO placeholders during closed pilot preparation, but final legal review is required before public production.
+Legal and support surfaces must exist before external pilot users are invited. Impressum, Datenschutz, Nutzungsbedingungen, and Problem melden use pilot-phase text and must receive final legal review before public production.
 
 ## Event Booking As Core Object
 

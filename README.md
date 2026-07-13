@@ -50,6 +50,13 @@ Helper invitation links must point to the public application URL. For production
 
 The production domain `https://eventbons.com` is the canonical public home for eventBon. It will host the landing page, organizer login, and sales application.
 
+The Windows Pilot includes organizer-accessible legal and support pages:
+
+- `/problem-melden`
+- `/impressum`
+- `/datenschutz`
+- `/nutzungsbedingungen`
+
 Helpers cannot manage billing, organizer information, subscriptions, bookings, or other events. A permanent helper account may be added later, but it must remain optional and must never be required for the simple event workflow.
 
 The navigation model separates organizer work from helper work. Organizers log in, open "Meine Veranstaltungen", then move between the selected event dashboard or statistics, the event sales terminal, event settings or products, and "Speisekarte". Helpers do not use this organizer navigation. A helper enters through an invitation link, QR code, or event access code, enters a name, and directly opens the assigned event sales terminal. Helpers have no event selection, no organizer dashboard, and no access to other events.

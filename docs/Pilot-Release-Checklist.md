@@ -76,7 +76,7 @@ Open production assumptions to verify before pilot:
 - Organizer can create an event.
 - Organizer can open event workspace.
 - Organizer can reach Verkauf, Dashboard, Produkte, Helfer, Speisekarte, Bondrucker, and Einstellungen.
-- Footer shows Windows Pilot label, support placeholder, system requirements, and legal/support links.
+- Footer shows Windows Pilot label, system requirements, support through Problem melden, and legal/support links.
 
 ## Helper Flow
 
@@ -140,14 +140,14 @@ Open production assumptions to verify before pilot:
 - Impressum route exists.
 - Datenschutz route exists.
 - Nutzungsbedingungen route exists.
-- Support / Problem melden route exists.
-- Placeholder TODOs are clearly marked.
+- Problem melden route exists.
+- Legal pilot texts are present.
 - Final legal review remains required before public production.
 - Organizer responsibility notice is visible.
 
 ## Support Process
 
-- Support contact placeholder is replaced before external pilot invitations.
+- Support contact for pilot problem reports is present.
 - Pilot issue report format is defined.
 - Emergency contact is defined for live pilot events.
 - Printer setup problems have a triage path.

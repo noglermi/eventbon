@@ -18,7 +18,7 @@ export function PilotFooter({ language }: PilotFooterProps) {
           <p>{isGerman ? "Support über Problem melden." : "Support through Report a problem."}</p>
         </div>
         <nav className="flex flex-wrap gap-3" aria-label={isGerman ? "Pilot-Hilfe" : "Pilot help"}>
-          <Link href="/support" className="text-emerald-700 hover:text-emerald-900">{isGerman ? "Problem melden" : "Report a problem"}</Link>
+          <Link href="/problem-melden" className="text-emerald-700 hover:text-emerald-900">{isGerman ? "Problem melden" : "Report a problem"}</Link>
           <Link href="/impressum" className="text-emerald-700 hover:text-emerald-900">Impressum</Link>
           <Link href="/datenschutz" className="text-emerald-700 hover:text-emerald-900">{isGerman ? "Datenschutz" : "Privacy"}</Link>
           <Link href="/nutzungsbedingungen" className="text-emerald-700 hover:text-emerald-900">{isGerman ? "Nutzungsbedingungen" : "Terms"}</Link>

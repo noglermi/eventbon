@@ -721,7 +721,7 @@ Planned later:
 - Android
 - additional certified printers
 
-The pilot must include organizer-accessible placeholder pages for Impressum, Datenschutz, Nutzungsbedingungen, and Support / Problem melden. Legal placeholder content must use explicit TODO markers and must not invent company details.
+The pilot must include organizer-accessible pages for Impressum, Datenschutz, Nutzungsbedingungen, and Problem melden. These pages use pilot-phase legal and support text and must receive final legal review before public production.
 
 ### Reason
 

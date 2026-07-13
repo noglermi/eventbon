@@ -78,8 +78,10 @@ The production app must expose organizer-accessible placeholder pages during pil
 - `/impressum`
 - `/datenschutz`
 - `/nutzungsbedingungen`
-- `/support`
+- `/problem-melden`
 
-The pages may contain explicit TODO placeholders during the closed pilot preparation phase. They must not invent legal company details. Final legal review is required before public production.
+The legacy `/support` route may redirect to `/problem-melden` for compatibility.
+
+The pages use pilot-phase legal and support text. Final legal review is required before public production.
 
 Organizers are responsible for uploaded images, product information, prices, and allergen information.
