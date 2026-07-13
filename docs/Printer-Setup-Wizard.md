@@ -104,7 +104,11 @@ The Brother TD-4000 is the first real thermal printer reference device for beta 
 
 The current Brother TD-4000 beta test medium is fixed-size 58 x 60 mm label/Bon media. This is not continuous receipt paper. Each individual Bon must render as one 58 x 60 mm page. A sale with three single vouchers must print three pages or labels. A combined voucher should fit one 58 x 60 mm page where possible.
 
-The Brother TD-4000 58 x 60 mm profile is still browser-print based. Brother-specific driver behavior and commands are not implemented yet.
+The Brother TD-4000 58 x 60 mm profile is used by both the browser fallback and the QZ Tray Windows pilot path. The QZ Tray cashier path uses a dedicated QZ-compatible HTML/pixel renderer and does not rely on the browser CSS preview renderer.
+
+In Einzelbons mode, each voucher is sent as one separate QZ print job. Example: `3 x Bier` must become three sequential jobs, each containing one `1 x Bier` voucher. In Sammelbon mode, the complete sale is sent as one QZ print job containing all items and quantities.
+
+For the Brother TD-4000 pilot, cutting is handled by the Windows/Brother driver at print-job boundaries. eventBon does not send raw Brother cutter commands yet.
 
 The Brother QL-720NW may be useful for label experiments, but it is not the main Bon printer reference device.
 
@@ -381,10 +385,14 @@ Scope:
 Cashier flow:
 
 - completed sale is saved atomically first
-- if QZ Tray direct print is selected, eventBon sends the voucher print job to QZ Tray
+- if QZ Tray direct print is selected, eventBon sends vouchers directly to QZ Tray without browser preview
+- single vouchers are submitted as separate sequential QZ jobs
+- combined vouchers are submitted as one QZ job
 - successful QZ printing clears the cart/payment state and refreshes recent sales
-- if QZ Tray is not reachable, eventBon shows a friendly error and offers browser print fallback
+- if QZ Tray is not reachable or a later voucher fails, eventBon shows a friendly error, names the failed voucher number, keeps the completed sale available for retry, and offers browser print fallback
 - reprints from Letzte VerkÃ¤ufe use QZ Tray when selected and never create a new sale
+
+The current QZ implementation is a Windows pilot path. It must be validated on real Brother TD-4000 hardware before the receipt-printing P0 item is considered complete.
 
 If QZ Tray is not installed or cannot be reached, the UI must show a friendly message:
 

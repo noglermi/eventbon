@@ -117,6 +117,10 @@ Open production assumptions to verify before pilot:
 - Selected printer name matches the installed Brother TD-4000 printer name.
 - QZ connection error messages are understandable.
 - Browser print fallback remains available for diagnostics.
+- Cashier QZ mode does not open the browser print preview or call the browser print dialog.
+- Einzelbons are submitted as one sequential QZ print job per voucher.
+- Sammelbon is submitted as one QZ print job containing all sale items.
+- If one voucher job fails, the saved sale is not duplicated and the same completed sale can be retried.
 
 ## Brother TD-4000 Test
 
@@ -124,9 +128,12 @@ Open production assumptions to verify before pilot:
 - Correct media is loaded.
 - eventBon profile is selected.
 - Test print is readable.
-- Single vouchers print all vouchers.
-- Combined voucher prints one voucher where possible.
-- Cut or tear behavior is verified.
+- 1 x Bier in Einzelbons mode prints 1 job, 1 label, and 1 cut.
+- 3 x Bier in Einzelbons mode prints 3 jobs, 3 labels, and 3 cuts.
+- 2 x Bier plus 1 x Gulaschsuppe in Sammelbon mode prints 1 job, 1 label, and 1 cut where possible.
+- Reprint from Recent Sales prints the existing sale, marks the output as Nachdruck, and does not create a new sale.
+- Cut behavior is verified as Windows/Brother driver behavior at job boundaries.
+- This checklist item is complete only after real Brother TD-4000 hardware testing with the 58 x 60 mm pilot medium.
 
 ## Legal Pages
 

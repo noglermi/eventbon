@@ -505,7 +505,7 @@ The internal print flow distinguishes:
 - setupPrintPreview
 - cashierDirectPrintCandidate
 
-The current implementation still uses browser printing for both flows, but the distinction keeps the setup/test path separate from the future cashier direct-print path.
+Browser printing remains the setup, test, and explicit fallback path. The normal Windows pilot cashier path uses QZ Tray when the device-local output adapter is set to QZ Tray direct print. In QZ mode the Sales Terminal must not call `window.print()`, must not open the browser print preview, and must not show the legacy browser print modal unless the user explicitly chooses the browser fallback after a QZ failure.
 
 The PrintService selects the active device-local printer profile, creates the PrintJob IR, chooses a renderer adapter, and sends the rendered result to an output adapter. The Printer Profile defines paper width, margins, font scaling, cutter or tear-off behavior, and profile-specific layout values.
 
@@ -518,6 +518,14 @@ Supported foundation profiles:
 - Star Receipt
 
 The Brother TD-4000 58 x 60 mm profile targets the current fixed-size beta test medium. It is an abstraction only at this stage and does not implement Brother-specific commands or direct device support.
+
+For QZ Tray cashier printing, eventBon uses a dedicated QZ-compatible HTML/pixel renderer instead of the browser CSS renderer. Single-voucher mode sends one voucher as one separate QZ print job. A sale with `3 x Bier` in Einzelbons mode therefore produces three sequential QZ jobs, each containing one `1 x Bier` voucher. Combined-voucher mode sends exactly one QZ job containing all sale items and quantities.
+
+For the Brother TD-4000 pilot profile, cutting is handled by the Windows/Brother printer driver at print-job boundaries. eventBon deliberately does not send raw Brother cutter commands in this phase. This means individual vouchers must not be bundled into one multi-page QZ job, because the driver cut behavior depends on separate job boundaries.
+
+Sales completion in QZ mode happens only after all required QZ jobs have been submitted successfully. If a later voucher fails, the sale remains stored once, the cart is not silently cleared, the failed voucher number is shown, and the same completed sale can be retried or printed through the explicit browser fallback without creating another sale or changing statistics.
+
+This implementation is not marked fully complete until it has been verified on real Brother TD-4000 hardware with the 58 x 60 mm pilot medium.
 
 The receipt printer setup foundation stores device-local browser print settings in localStorage. These settings are intentionally not event data and are not stored in Supabase.
 

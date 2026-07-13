@@ -3,6 +3,7 @@ import type { Language } from "@/components/sales-terminal/types";
 import { formatDateTime } from "@/lib/date-format";
 import type { BonPrintJob } from "./print-service";
 import type { PrinterSettings } from "./printer-profile";
+import type { PrintVoucher } from "./print-renderer";
 
 type QzTray = typeof import("qz-tray").default;
 
@@ -10,6 +11,20 @@ export class QzTrayUnavailableError extends Error {
   constructor(message = "QZ Tray is not reachable.") {
     super(message);
     this.name = "QzTrayUnavailableError";
+  }
+}
+
+export class QzTrayPrintJobError extends Error {
+  voucherCount: number;
+  voucherIndex: number;
+  voucherLabel: string;
+
+  constructor(message: string, input: { voucherCount: number; voucherIndex: number; voucherLabel: string }) {
+    super(message);
+    this.name = "QzTrayPrintJobError";
+    this.voucherCount = input.voucherCount;
+    this.voucherIndex = input.voucherIndex;
+    this.voucherLabel = input.voucherLabel;
   }
 }
 
@@ -39,13 +54,36 @@ function escapeHtml(value: string) {
     .replaceAll("'", "&#039;");
 }
 
-function createVoucherHtml(input: {
+function describeVoucher(voucher: PrintVoucher) {
+  return voucher.lines.map((line) => line.quantity + " x " + line.name).join(", ");
+}
+
+function getVoucherTypography(lineCount: number) {
+  if (lineCount >= 6) {
+    return { nameSize: "8.5pt", quantitySize: "10pt", lineGap: "0.7mm" };
+  }
+
+  if (lineCount >= 4) {
+    return { nameSize: "10pt", quantitySize: "12pt", lineGap: "0.9mm" };
+  }
+
+  if (lineCount >= 2) {
+    return { nameSize: "13pt", quantitySize: "15pt", lineGap: "1.3mm" };
+  }
+
+  return { nameSize: "18pt", quantitySize: "20pt", lineGap: "1.8mm" };
+}
+
+function createSingleVoucherHtml(input: {
   eventName: string;
   labels: Translation;
   language: Language;
   printJob: BonPrintJob;
   printedAt: Date;
   reprintLabel?: string | null;
+  voucher: PrintVoucher;
+  voucherCount: number;
+  voucherIndex: number;
 }) {
   const printedAtText = formatDateTime(input.printedAt, input.language);
   const profile = input.printJob.profile;
@@ -53,33 +91,12 @@ function createVoucherHtml(input: {
   const paperHeight = profile.paperHeightMm;
   const pageSize = paperHeight ? paperWidth + "mm " + paperHeight + "mm" : "auto";
   const ticketHeightStyle = paperHeight ? "height:" + paperHeight + "mm;max-height:" + paperHeight + "mm;overflow:hidden;" : "min-height:40mm;";
-  const fontSize = profile.isFixedMedia ? "9pt" : "10pt";
-
-  const vouchers = input.printJob.vouchers.map((voucher, index) => {
-    const lines = voucher.lines.map((line) => (
-      "<div class=\"line\"><span>" + line.quantity + " &times;</span><span>" + escapeHtml(line.name) + "</span></div>"
-    )).join("");
-    const pageBreak = index === input.printJob.vouchers.length - 1 ? "" : "page-break-after:always;break-after:page;";
-    const reprint = input.reprintLabel ? "<div class=\"reprint\">" + escapeHtml(input.reprintLabel) + "</div>" : "";
-
-    return `
-      <section class="voucher" style="${pageBreak}">
-        <div class="center">
-          <div class="brand">eventBon</div>
-          <div class="event">${escapeHtml(input.eventName)}</div>
-          ${reprint}
-        </div>
-        <div class="rule"></div>
-        <div class="lines">${lines}</div>
-        <div class="rule"></div>
-        <div class="meta">
-          <div>${escapeHtml(input.labels.dateTime)}</div>
-          <div>${escapeHtml(printedAtText)}</div>
-        </div>
-        <div class="cut"></div>
-      </section>
-    `;
-  }).join("");
+  const typography = getVoucherTypography(input.voucher.lines.length);
+  const lines = input.voucher.lines.map((line) => (
+    "<div class=\"line\"><span class=\"quantity\">" + line.quantity + "x</span><span class=\"product\">" + escapeHtml(line.name) + "</span></div>"
+  )).join("");
+  const reprint = input.reprintLabel ? "<div class=\"reprint\">" + escapeHtml(input.reprintLabel) + "</div>" : "";
+  const voucherNumber = input.voucherCount > 1 ? "<div class=\"voucher-number\">" + input.voucherIndex + "/" + input.voucherCount + "</div>" : "";
 
   return `
     <!doctype html>
@@ -93,25 +110,39 @@ function createVoucherHtml(input: {
           .voucher {
             width: ${paperWidth}mm;
             ${ticketHeightStyle}
-            padding: ${profile.isFixedMedia ? "3mm 3mm 4mm 3mm" : "3mm"};
+            padding: ${profile.isFixedMedia ? "3.5mm 3mm 4mm 3mm" : "3mm"};
             color: #000;
             background: #fff;
             font-family: Arial, sans-serif;
-            font-size: ${fontSize};
             line-height: 1.15;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
           }
           .center { text-align: center; }
-          .brand { font-size: 13pt; font-weight: 900; }
-          .event { margin-top: 1mm; font-size: 9pt; font-weight: 700; }
-          .reprint { display: inline-block; margin-top: 2mm; padding: 1mm 2mm; border: 1px solid #000; font-size: 7pt; font-weight: 900; text-transform: uppercase; }
-          .rule { margin: 2mm 0; border-top: 1px dashed #000; }
-          .lines { font-weight: 900; }
-          .line { display: grid; grid-template-columns: auto 1fr; gap: 1.5mm; margin-bottom: 1mm; word-break: break-word; }
-          .meta { font-size: 7pt; font-weight: 700; }
-          .cut { margin-top: 3mm; border-top: 1px dashed #000; }
+          .event { font-size: 8pt; font-weight: 900; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+          .reprint { display: inline-block; margin-top: 1mm; padding: 0.7mm 1.5mm; border: 1.5px solid #000; font-size: 7pt; font-weight: 900; text-transform: uppercase; }
+          .voucher-number { margin-top: 0.6mm; font-size: 6.5pt; font-weight: 800; }
+          .lines { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: ${typography.lineGap}; padding: 1mm 0; font-weight: 900; }
+          .line { display: grid; grid-template-columns: 12mm minmax(0, 1fr); align-items: center; gap: 2mm; word-break: break-word; }
+          .quantity { font-size: ${typography.quantitySize}; font-weight: 900; line-height: 1; text-align: center; }
+          .product { font-size: ${typography.nameSize}; font-weight: 900; line-height: 1.02; }
+          .meta { font-size: 6.5pt; font-weight: 800; line-height: 1.15; text-align: center; }
         </style>
       </head>
-      <body>${vouchers}</body>
+      <body>
+        <section class="voucher">
+          <div class="center">
+            <div class="event">${escapeHtml(input.eventName)}</div>
+            ${reprint}
+            ${voucherNumber}
+          </div>
+          <div class="lines">${lines}</div>
+          <div class="meta">
+            <div>${escapeHtml(printedAtText)}</div>
+          </div>
+        </section>
+      </body>
     </html>
   `;
 }
@@ -143,10 +174,25 @@ export async function printBonWithQzTray(input: {
     margins: 0,
   });
 
-  await qz.print(config, [{
-    type: "pixel",
-    format: "html",
-    flavor: "plain",
-    data: createVoucherHtml(input),
-  }]);
+  for (const [index, voucher] of input.printJob.vouchers.entries()) {
+    try {
+      await qz.print(config, [{
+        type: "pixel",
+        format: "html",
+        flavor: "plain",
+        data: createSingleVoucherHtml({
+          ...input,
+          voucher,
+          voucherCount: input.printJob.vouchers.length,
+          voucherIndex: index + 1,
+        }),
+      }]);
+    } catch (error) {
+      throw new QzTrayPrintJobError(error instanceof Error ? error.message : "QZ Tray print job failed.", {
+        voucherCount: input.printJob.vouchers.length,
+        voucherIndex: index + 1,
+        voucherLabel: describeVoucher(voucher),
+      });
+    }
+  }
 }

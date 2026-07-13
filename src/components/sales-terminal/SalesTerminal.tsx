@@ -7,7 +7,7 @@ import { listRecentSales, recordSalePrint, saveCompletedSale } from "@/lib/repos
 import type { RecentSale } from "@/lib/repositories/sales";
 import { formatDateRange } from "@/lib/date-format";
 import { printService } from "@/lib/printing/print-service";
-import { printBonWithQzTray } from "@/lib/printing/qz-tray-output";
+import { printBonWithQzTray, QzTrayPrintJobError } from "@/lib/printing/qz-tray-output";
 import type { PrintVoucherLine } from "@/lib/printing/print-renderer";
 import { logSupabaseError } from "@/lib/supabase/diagnostics";
 import { supabaseConfigWarning } from "@/lib/supabase/client";
@@ -92,6 +92,29 @@ function getFilterLabel(filter: ProductFilter, labels: ReturnType<typeof getLabe
 
 function getLabels(language: Language) {
   return translations[language];
+}
+
+function formatPrintFailureMessage(labels: ReturnType<typeof getLabels>, error: unknown) {
+  if (error instanceof QzTrayPrintJobError) {
+    return labels.printFailedVoucher
+      .replace("{index}", String(error.voucherIndex))
+      .replace("{count}", String(error.voucherCount));
+  }
+
+  return labels.qzTrayUnavailable;
+}
+
+function formatPrintFailureDetails(error: unknown) {
+  if (error instanceof QzTrayPrintJobError) {
+    return [
+      "QZ print job failed",
+      "voucher=" + error.voucherIndex + "/" + error.voucherCount,
+      "content=" + error.voucherLabel,
+      "message=" + error.message,
+    ].join(" | ");
+  }
+
+  return error instanceof Error ? error.message : String(error);
 }
 
 function getScaledBlockStyle(value: number): CSSProperties {
@@ -208,7 +231,8 @@ export function SalesTerminal({
   const labels = getLabels(language);
   const eventName = eventSettings.name[language];
   const isHelperTerminal = isHelperMode || Boolean(activeHelperSession);
-  const isPrintDisabled = !salesAllowed || cartItems.length === 0 || isSavingSale || completedSale !== null;
+  const canRetryCompletedSalePrint = completedSale !== null && printerSettings.outputMode === "qz_tray";
+  const isPrintDisabled = !salesAllowed || cartItems.length === 0 || isSavingSale || (completedSale !== null && !canRetryCompletedSalePrint);
   const isCancelSaleDisabled = cartItems.length === 0 || isSavingSale || completedSale !== null;
 
   useEffect(() => {
@@ -569,7 +593,29 @@ export function SalesTerminal({
       return;
     }
 
-    if (cartItems.length === 0 || isSavingSale || completedSale) {
+    if (cartItems.length === 0 || isSavingSale) {
+      return;
+    }
+
+    if (completedSale) {
+      if (printerSettings.outputMode !== "qz_tray") {
+        return;
+      }
+
+      setIsSavingSale(true);
+      setBrowserPrintFallbackContext(null);
+      setPersistenceMessage(null);
+      setPersistenceDetails(null);
+
+      try {
+        await printInitialSaleWithQz(completedSale, new Date());
+      } catch (error) {
+        setPersistenceMessage(formatPrintFailureMessage(labels, error) + " " + labels.useBrowserPrintFallback);
+        setPersistenceDetails(formatPrintFailureDetails(error));
+        setBrowserPrintFallbackContext("initial");
+      } finally {
+        setIsSavingSale(false);
+      }
       return;
     }
 
@@ -634,8 +680,8 @@ export function SalesTerminal({
       try {
         await printInitialSaleWithQz(saleToPrint, printedAt);
       } catch (error) {
-        setPersistenceMessage(labels.qzTrayUnavailable + " " + labels.useBrowserPrintFallback);
-        setPersistenceDetails(error instanceof Error ? error.message : String(error));
+        setPersistenceMessage(formatPrintFailureMessage(labels, error) + " " + labels.useBrowserPrintFallback);
+        setPersistenceDetails(formatPrintFailureDetails(error));
         setBrowserPrintFallbackContext("initial");
       } finally {
         setIsSavingSale(false);
@@ -729,8 +775,8 @@ export function SalesTerminal({
       setReprintSale(null);
       setReprintPreviewDate(null);
     } catch (error) {
-      setPersistenceMessage(labels.qzTrayUnavailable + " " + labels.useBrowserPrintFallback);
-      setPersistenceDetails(error instanceof Error ? error.message : String(error));
+      setPersistenceMessage(formatPrintFailureMessage(labels, error) + " " + labels.useBrowserPrintFallback);
+      setPersistenceDetails(formatPrintFailureDetails(error));
       setBrowserPrintFallbackContext("reprint");
     }
   }
@@ -1014,7 +1060,7 @@ export function SalesTerminal({
         </button>
         <button type="button" onClick={openPrintPreview} disabled={isPrintDisabled} className="flex min-h-20 items-center justify-center gap-4 rounded-[1.75rem] bg-emerald-600 px-8 text-2xl font-black tracking-normal text-white shadow-[0_18px_35px_rgba(5,150,105,0.28)] transition focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200 active:scale-[0.99] disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 disabled:shadow-none">
           <PrinterIcon />
-          {isSavingSale ? labels.saving : completedSale ? labels.saleCompleted : labels.printVouchers}
+          {isSavingSale ? labels.saving : completedSale ? labels.retryPrint : labels.printVouchers}
         </button>
       </footer>
 
