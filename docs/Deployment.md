@@ -12,6 +12,19 @@ The production site will host:
 - organizer login
 - sales application
 
+The closed pilot release is eventBon Windows Pilot.
+
+Officially supported during the pilot:
+
+- Windows 10
+- Windows 11
+- Chrome
+- Edge
+- QZ Tray
+- Brother TD-4000
+
+iPad, Android, and additional certified printers are planned later.
+
 ## Environment Variables
 
 Production must set:
@@ -57,3 +70,16 @@ Protected Vercel preview URLs must not be used for event helpers because helpers
 Local development can continue to use localhost through `.env.local`.
 
 Production documentation, setup instructions, invitation URLs, and password recovery links should reference `https://eventbons.com`.
+
+## Legal And Support Pages
+
+The production app must expose organizer-accessible placeholder pages during pilot preparation:
+
+- `/impressum`
+- `/datenschutz`
+- `/nutzungsbedingungen`
+- `/support`
+
+The pages may contain explicit TODO placeholders during the closed pilot preparation phase. They must not invent legal company details. Final legal review is required before public production.
+
+Organizers are responsible for uploaded images, product information, prices, and allergen information.

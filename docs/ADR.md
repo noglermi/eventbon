@@ -699,3 +699,38 @@ A local print bridge keeps eventBon as a web app while allowing direct or near-d
 - WebUSB, WebSerial, and WebHID are not the core architecture. They may be explored only for special cases.
 - Electron is not the primary product. eventBon should remain a web app.
 - Chrome print preview must not remain the production cashier workflow.
+
+## ADR-022 Closed Windows Pilot Scope
+
+### Decision
+
+The current external validation release is eventBon Windows Pilot.
+
+Officially supported:
+
+- Windows 10
+- Windows 11
+- Chrome
+- Edge
+- QZ Tray
+- Brother TD-4000 as the first tested printer
+
+Planned later:
+
+- iPad
+- Android
+- additional certified printers
+
+The pilot must include organizer-accessible placeholder pages for Impressum, Datenschutz, Nutzungsbedingungen, and Support / Problem melden. Legal placeholder content must use explicit TODO markers and must not invent company details.
+
+### Reason
+
+Receipt printing is the highest-risk beta workflow. A narrow Windows pilot reduces variables while validating the real event workflow with QZ Tray and the Brother TD-4000 reference printer.
+
+### Consequences
+
+- iPad and Android are not implemented for this pilot.
+- Stripe pay-per-event activation is not part of this release-hardening step.
+- The printer test lab remains available for diagnostics but should not be prominent to ordinary organizers.
+- Receipt printing remains the P0 release blocker until QZ direct cashier printing reliably produces one print job per voucher, cuts after every voucher where supported, and uses readable Brother TD-4000 layout.
+- Production RLS/security review remains P0 before broader production release.

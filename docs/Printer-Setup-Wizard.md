@@ -342,6 +342,12 @@ Fast beta print bridge candidate:
 
 - QZ Tray
 
+The closed pilot is eventBon Windows Pilot. It officially supports Windows 10, Windows 11, Chrome, Edge, QZ Tray, and Brother TD-4000 as the first tested printer.
+
+iPad, Android, and additional certified printers are planned later and are not part of the first closed pilot.
+
+Receipt printing is the remaining P0 release blocker. Before external pilot users operate active sales, QZ direct cashier printing must reliably produce one print job per voucher, cut after every voucher where supported, and use readable Brother TD-4000 typography and layout.
+
 ## QZ Tray Evaluation Status
 
 QZ Tray is the current Windows beta direct print path for cashier printing.

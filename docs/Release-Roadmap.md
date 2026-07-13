@@ -25,6 +25,51 @@ Security remains mandatory before production release. Full production hardening 
 
 ## Release Candidates
 
+## Closed Windows Pilot
+
+Current release name:
+
+- eventBon Windows Pilot
+
+Officially supported:
+
+- Windows 10
+- Windows 11
+- Chrome
+- Edge
+- QZ Tray
+- Brother TD-4000 as first tested printer
+
+Planned later:
+
+- iPad
+- Android
+- additional certified printers
+
+P0 release blocker:
+
+- reliable receipt printing through QZ Tray for the cashier workflow
+- one print job per voucher
+- cut after every voucher where supported
+- optimized Brother TD-4000 typography and layout
+- QZ installation wizard
+- production RLS/security review
+
+P1 after pilot blocker resolution:
+
+- Stripe pay-per-event activation
+- event title correction
+- paid date extension
+- menu PDF
+- allergen completion
+
+P2:
+
+- iPad
+- Android
+- station-level analytics
+- additional printer certification
+
 ### RC-1 Beta Completion
 
 Focus:

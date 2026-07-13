@@ -18,6 +18,7 @@ import { HelperAccessPanel } from "@/components/organizer-workspace/HelperAccess
 import { MenuDesigner } from "@/components/organizer-workspace/MenuDesigner";
 import { OrganizerSalesDashboard } from "@/components/organizer-workspace/OrganizerSalesDashboard";
 import { PasswordRecoveryForm } from "@/components/organizer-workspace/PasswordRecoveryForm";
+import { PilotFooter } from "@/components/organizer-workspace/PilotFooter";
 import { hasPasswordRecoveryParameters } from "@/lib/supabase/recovery-url";
 import { defaultLanguage, translations } from "@/components/sales-terminal/i18n";
 import { productTiles } from "@/components/sales-terminal/mock-data";
@@ -703,7 +704,8 @@ export function OrganizerEventWorkspace() {
   if (!session) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-[#f6f7f5] p-6 text-slate-950">
-        <section className="w-full max-w-xl rounded-lg bg-white p-7 shadow-sm ring-1 ring-slate-200">
+        <div className="grid w-full max-w-xl gap-5">
+        <section className="rounded-lg bg-white p-7 shadow-sm ring-1 ring-slate-200">
           <div className="flex items-start justify-between gap-4">
             <p className="text-2xl font-black tracking-normal text-emerald-600">eventBon</p>
             <LanguageSwitch language={language} labels={labels} onLanguageChange={setOrganizerLanguage} />
@@ -785,6 +787,8 @@ export function OrganizerEventWorkspace() {
             {authMode === "login" ? labels.switchToRegistration : authMode === "reset" ? labels.backToLogin : labels.alreadyRegistered}
           </button>
         </section>
+        <PilotFooter language={language} />
+        </div>
       </main>
     );
   }
@@ -1010,6 +1014,8 @@ export function OrganizerEventWorkspace() {
               </dl>
             </section>
           ) : null}
+
+          <PilotFooter language={language} />
         </div>
 
         {workspaceSection === "helpers" ? (
@@ -1136,6 +1142,8 @@ export function OrganizerEventWorkspace() {
             </div>
           </section>
         ) : null)}
+
+        <PilotFooter language={language} />
       </div>
 
       {helperEvent ? (

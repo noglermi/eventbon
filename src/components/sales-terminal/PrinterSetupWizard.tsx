@@ -103,12 +103,6 @@ export function PrinterSetupWizard({ labels, language, printerSettings, onPrinte
           <p className="mt-2 text-sm font-semibold leading-6 text-slate-500">{labels.receiptPrinterSetupSubtitle}</p>
           <p className="mt-1 text-sm font-semibold leading-6 text-slate-500">{labels.printerBrowserDialogNote}</p>
         </div>
-        <Link
-          href="/printer-test-lab"
-          className="min-h-12 shrink-0 rounded-2xl bg-slate-950 px-4 py-3 text-base font-black text-white transition active:scale-[0.98] focus:outline-none focus-visible:ring-4 focus-visible:ring-slate-300"
-        >
-          Drucker Testlabor
-        </Link>
       </div>
 
       <div className="mt-5 grid gap-4">
@@ -243,6 +237,23 @@ export function PrinterSetupWizard({ labels, language, printerSettings, onPrinte
             {testResult === "success" ? labels.printerTestSuccessMessage : labels.printerTestProblemMessage}
           </p>
         ) : null}
+
+        <details className="rounded-2xl bg-slate-50 p-4 text-sm font-bold text-slate-600 ring-1 ring-slate-200/75">
+          <summary className="cursor-pointer font-black text-slate-800">
+            {language === "de" ? "Erweiterter Druckertest" : "Advanced printer test"}
+          </summary>
+          <p className="mt-2 leading-6">
+            {language === "de"
+              ? "Das Drucker Testlabor ist fuer die Windows-Pilotdiagnose vorgesehen und nicht Teil des normalen Verkaufsvorgangs."
+              : "The printer test lab is intended for Windows pilot diagnostics and is not part of the normal sales workflow."}
+          </p>
+          <Link
+            href="/printer-test-lab"
+            className="mt-3 inline-flex min-h-11 items-center rounded-2xl bg-white px-4 text-sm font-black text-slate-800 ring-1 ring-slate-300 transition active:scale-[0.98] focus:outline-none focus-visible:ring-4 focus-visible:ring-slate-300"
+          >
+            Drucker Testlabor
+          </Link>
+        </details>
       </div>
 
       {testPrintDate ? (

@@ -158,6 +158,25 @@ If the answer is no, the feature is outside the product scope.
 
 eventBon follows a beta-first release strategy.
 
+The current external validation target is eventBon Windows Pilot.
+
+Officially supported:
+
+- Windows 10
+- Windows 11
+- Chrome
+- Edge
+- QZ Tray
+- Brother TD-4000 as the first tested printer
+
+Planned later:
+
+- iPad
+- Android
+- additional certified printers
+
+Receipt printing remains the P0 release blocker for the pilot. Stripe, iPad, Android, and additional certified printers are not part of this release-hardening step.
+
 The project intentionally postpones full production security hardening until after the first successful field beta. During beta, the application is still evolving across database schema, RPC signatures, helper workflow, printing, dashboard, and organizer workflow. Implementing production-grade RLS too early would create unnecessary rework and increase regression risk.
 
 Security remains mandatory before production release. Full Row Level Security, RPC security review, storage policies, server-side validation, token review, permission review, security testing, DSGVO review, and production hardening are scheduled for RC-4 after successful pilot operation.

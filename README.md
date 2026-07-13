@@ -100,6 +100,25 @@ Reliable production receipt printing targets a local print bridge while eventBon
 
 eventBon follows a beta-first release strategy.
 
+The current closed pilot release is eventBon Windows Pilot.
+
+Officially supported for the pilot:
+
+- Windows 10
+- Windows 11
+- Chrome
+- Edge
+- QZ Tray
+- Brother TD-4000 as the first tested printer
+
+Planned later:
+
+- iPad
+- Android
+- additional certified printers
+
+Receipt printing remains the P0 release blocker until direct QZ cashier printing is reliable for one print job per voucher, with correct cutting and readable Brother TD-4000 output.
+
 The project intentionally prioritizes a complete, testable event workflow before full production security hardening. During beta, the database schema, RPC signatures, helper workflow, printing, dashboard, and organizer workflow are still evolving. Implementing production-grade RLS too early would create unnecessary rework and increase regression risk.
 
 Security remains mandatory before production release. Full RLS, RPC security review, storage policies, server-side validation, token review, permission review, security testing, DSGVO review, and production hardening are scheduled for RC-4 after successful field beta and pilot operation.
@@ -123,6 +142,8 @@ Until RC-4, major architecture refactoring should be avoided unless it is requir
 - [Roadmap](docs/Roadmap.md)
 - [Printer Setup Wizard](docs/Printer-Setup-Wizard.md)
 - [Deployment](docs/Deployment.md)
+- [Pilot Release Checklist](docs/Pilot-Release-Checklist.md)
+- [Beta Backlog](docs/Beta-Backlog.md)
 
 ## Contributor Note
 

@@ -290,6 +290,33 @@ Public application URLs must be generated from `NEXT_PUBLIC_APP_URL` where appro
 
 Helper invitation links, helper QR codes, and organizer password recovery redirects must use `NEXT_PUBLIC_APP_URL` so production links do not point to protected Vercel preview URLs.
 
+## Windows Pilot Release Scope
+
+The current release target is eventBon Windows Pilot.
+
+Officially supported:
+
+- Windows 10
+- Windows 11
+- Chrome
+- Edge
+- QZ Tray
+- Brother TD-4000 as the first tested printer
+
+Planned later:
+
+- iPad
+- Android
+- additional certified printers
+
+This pilot scope is intentionally narrow. It avoids spreading support across mobile operating systems before the Windows receipt-printing path is stable.
+
+Receipt printing remains the P0 release blocker. The target pilot behavior is direct QZ cashier printing, one print job per voucher, cutting after every voucher where supported, and an optimized Brother TD-4000 typography/layout profile.
+
+The printer test lab is a diagnostic tool for the pilot and should not be prominent in ordinary organizer workflows.
+
+Legal and support surfaces must exist before external pilot users are invited. Impressum, Datenschutz, Nutzungsbedingungen, and Support / Problem melden may use explicit TODO placeholders during closed pilot preparation, but final legal review is required before public production.
+
 ## Event Booking As Core Object
 
 eventBon is built around booked events, not generic permanent software workspaces.

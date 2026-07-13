@@ -43,6 +43,29 @@ Full production security hardening is intentionally postponed until after the fi
 
 Security remains mandatory before production release.
 
+### Closed Windows Pilot
+
+The current release target is eventBon Windows Pilot.
+
+Officially supported:
+
+- Windows 10
+- Windows 11
+- Chrome
+- Edge
+- QZ Tray
+- Brother TD-4000 as the first tested printer
+
+Planned later:
+
+- iPad
+- Android
+- additional certified printers
+
+P0 release blockers are tracked in `docs/Beta-Backlog.md`. Receipt printing remains the primary P0 blocker until QZ direct cashier printing reliably produces one print job per voucher, cuts after every voucher where supported, and uses readable Brother TD-4000 typography/layout.
+
+Stripe pay-per-event activation, iPad, and Android are outside the closed Windows pilot scope.
+
 ### RC-1 Beta Completion
 
 Focus:
