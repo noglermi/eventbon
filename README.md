@@ -24,7 +24,7 @@ eventBon is not:
 
 ## Product Direction
 
-eventBon exists for event teams that need a fast, focused way to sell prepaid vouchers at a single event. The user should be able to open the sales terminal, tap sales tiles, confirm payment, print vouchers in the browser, and review a simple summary at the end.
+eventBon exists for event teams that need a fast, focused way to sell prepaid vouchers at a single event. The user should be able to open the sales terminal, tap sales tiles, confirm payment, print Bons through the configured Bon printer, and review a simple summary at the end.
 
 eventBon is event-booking based. A customer does not primarily subscribe to a generic permanent software account; an organizer books eventBon for a specific event and usage period. For example, a riding tournament organizer can book eventBon for a tournament from 28.07. to 30.07.
 
@@ -101,7 +101,7 @@ The architecture is multi-tenant by design. All application data is stored in Su
 
 Event settings and device settings are intentionally separate. Event settings include products, helpers, menu, and dashboard/statistics. Device settings include the receipt printer, zoom, and device language. One event may be used from multiple terminals, and each terminal stores its own local device configuration.
 
-Reliable production receipt printing targets a local print bridge while eventBon remains a web app. Browser and CSS printing remain useful for setup, test prints, and fallback, but Chrome print preview must not be the final cashier workflow. A fast current candidate is QZ Tray; later printer-specific adapters may use ESC/POS for Epson and Star devices, Brother label/raster output or Brother SDK support through the bridge, Epson ePOS, and Star webPRNT.
+EventBon separates Bondruck and Seitendruck. Bondruck is the standard cashier path and uses QZ Tray with the selected local Bon printer. Seitendruck is reserved for organizer output such as Speisekarten, product lists, reports, PDFs, and price lists through the normal Windows system printer. The normal Bon printer setup is intentionally short: choose the Bon printer model, confirm or install QZ Tray, select the Bon printer found by QZ Tray, and print a test Bon.
 
 ## Release Strategy
 
@@ -133,7 +133,7 @@ Security remains mandatory for the public product. Full RLS, RPC security review
 Release candidates:
 
 - RC-1 Product completion: UX, bug fixes, tablet optimization, sales workflow, password reset, Menu Designer, printer support, and complete event workflow.
-- RC-2 Receipt Printing: printer setup wizard, local print bridge architecture, generic thermal printer support, Brother TD-4000 reference implementation, Epson and Star reference paths, browser print fallback, print testing, and print documentation.
+- RC-2 Receipt Printing: simplified Bon printer setup wizard, QZ Tray cashier printing, generic thermal printer support, Brother TD-4000 reference implementation, Epson and Star reference paths, print testing, and print documentation.
 - RC-3 Production Rollout: five real live events, feedback collection, UX fixes, and no major architecture changes.
 - RC-4 Security Hardening: production security hardening as an ongoing product workstream.
 

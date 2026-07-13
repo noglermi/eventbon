@@ -114,13 +114,14 @@ Open production assumptions to verify before production:
 
 - Device-local printer settings are stored in browser localStorage.
 - Selected profile ID, Windows/QZ printer name, output mode, test confirmation, and last test date survive reloads on the same device.
-- The modular printer setup wizard can be cancelled, restarted, and completed.
+- The simplified Bon printer setup wizard can be cancelled, restarted, and completed.
+- The wizard contains only model selection, QZ Tray check/download, Bon printer selection, and test Bon.
 - The selected printer profile status is visible to the organizer/device operator.
 - QZ Tray is installed on each Windows device.
 - Browser can connect to QZ Tray.
 - Selected printer name matches the installed Brother TD-4000 printer name.
 - QZ connection error messages are understandable.
-- Browser print fallback remains available for diagnostics.
+- Browser/system printing is reserved for Seitendruck such as PDFs, reports, menus, and support diagnostics.
 - Cashier QZ mode does not open the browser print preview or call the browser print dialog.
 - Einzelbons are submitted as one sequential QZ print job per voucher.
 - Sammelbon is submitted as one QZ print job containing all sale items.
@@ -153,7 +154,7 @@ Open production assumptions to verify before production:
 - 3 x product in Einzelbons mode prints three jobs and three Bons.
 - Sammelbon prints one combined Bon where possible.
 - Reprint from Letzte Verkäufe does not create a new sale.
-- Browser fallback is tested.
+- Seitendruck diagnostics are tested separately from the Bon printer cashier flow.
 - Only after all checks pass may the status move from Test ausstehend to Getestet.
 
 ## Legal Pages

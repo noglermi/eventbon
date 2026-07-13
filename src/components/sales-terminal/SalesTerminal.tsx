@@ -226,13 +226,11 @@ export function SalesTerminal({
   const [completedSale, setCompletedSale] = useState<{ saleId: string | null; printRecorded: boolean } | null>(null);
   const [reprintSale, setReprintSale] = useState<RecentSale | null>(null);
   const [reprintPreviewDate, setReprintPreviewDate] = useState<Date | null>(null);
-  const [browserPrintFallbackContext, setBrowserPrintFallbackContext] = useState<"initial" | "reprint" | null>(null);
   const { blockZoom, language, visibleCategories } = viewSettings;
   const labels = getLabels(language);
   const eventName = eventSettings.name[language];
   const isHelperTerminal = isHelperMode || Boolean(activeHelperSession);
-  const canRetryCompletedSalePrint = completedSale !== null && printerSettings.outputMode === "qz_tray";
-  const isPrintDisabled = !salesAllowed || cartItems.length === 0 || isSavingSale || (completedSale !== null && !canRetryCompletedSalePrint);
+  const isPrintDisabled = !salesAllowed || cartItems.length === 0 || isSavingSale;
   const isCancelSaleDisabled = cartItems.length === 0 || isSavingSale || completedSale !== null;
 
   useEffect(() => {
@@ -414,7 +412,6 @@ export function SalesTerminal({
     setReceivedEntry("");
     setCompletedSale(null);
     setPrintPreviewDate(null);
-    setBrowserPrintFallbackContext(null);
     requestAnimationFrame(() => receivedInputRef.current?.focus());
   }
 
@@ -440,7 +437,6 @@ export function SalesTerminal({
     setPrintPreviewDate(null);
     setReprintSale(null);
     setReprintPreviewDate(null);
-    setBrowserPrintFallbackContext(null);
     requestAnimationFrame(() => receivedInputRef.current?.focus());
   }
 
@@ -546,23 +542,6 @@ export function SalesTerminal({
     setPersistenceDetails(null);
   }
 
-  function useBrowserPrintFallback() {
-    if (browserPrintFallbackContext === "initial") {
-      setBrowserPrintFallbackContext(null);
-      setPersistenceMessage(null);
-      setPersistenceDetails(null);
-      setPrintPreviewDate(new Date());
-      return;
-    }
-
-    if (browserPrintFallbackContext === "reprint" && reprintSale) {
-      setBrowserPrintFallbackContext(null);
-      setPersistenceMessage(null);
-      setPersistenceDetails(null);
-      setReprintPreviewDate(new Date());
-    }
-  }
-
   function toggleCategory(filter: ProductFilter) {
     if (filter === "all") {
       setViewSettings((current) => ({
@@ -598,21 +577,15 @@ export function SalesTerminal({
     }
 
     if (completedSale) {
-      if (printerSettings.outputMode !== "qz_tray") {
-        return;
-      }
-
       setIsSavingSale(true);
-      setBrowserPrintFallbackContext(null);
       setPersistenceMessage(null);
       setPersistenceDetails(null);
 
       try {
         await printInitialSaleWithQz(completedSale, new Date());
       } catch (error) {
-        setPersistenceMessage(formatPrintFailureMessage(labels, error) + " " + labels.useBrowserPrintFallback);
+        setPersistenceMessage(formatPrintFailureMessage(labels, error));
         setPersistenceDetails(formatPrintFailureDetails(error));
-        setBrowserPrintFallbackContext("initial");
       } finally {
         setIsSavingSale(false);
       }
@@ -637,7 +610,6 @@ export function SalesTerminal({
       setIsSavingSale(true);
       setPersistenceMessage(null);
       setPersistenceDetails(null);
-      setBrowserPrintFallbackContext(null);
 
       const persistedReceivedCents = paymentMethod === "card_manual" ? totalCents : receivedCents;
       const persistedChangeCents = paymentMethod === "card_manual" ? 0 : Math.max(receivedCents - totalCents, 0);
@@ -674,22 +646,19 @@ export function SalesTerminal({
       setCompletedSale(saleToPrint);
     }
 
-    if (printerSettings.outputMode === "qz_tray" && saleToPrint) {
+    if (saleToPrint) {
       setIsSavingSale(true);
       const printedAt = new Date();
       try {
         await printInitialSaleWithQz(saleToPrint, printedAt);
       } catch (error) {
-        setPersistenceMessage(formatPrintFailureMessage(labels, error) + " " + labels.useBrowserPrintFallback);
+        setPersistenceMessage(formatPrintFailureMessage(labels, error));
         setPersistenceDetails(formatPrintFailureDetails(error));
-        setBrowserPrintFallbackContext("initial");
       } finally {
         setIsSavingSale(false);
       }
       return;
     }
-
-    setPrintPreviewDate(new Date());
   }
 
   async function reloadRecentSales() {
@@ -728,7 +697,7 @@ export function SalesTerminal({
       setPersistenceMessage(null);
       setPersistenceDetails(null);
     } catch (error) {
-      const diagnostic = logSupabaseError("reload recent sales after print preview close", error);
+      const diagnostic = logSupabaseError("reload recent sales after completed print", error);
       setPersistenceMessage(labels.recentSalesLoadError);
       setPersistenceDetails(diagnostic);
     } finally {
@@ -761,12 +730,6 @@ export function SalesTerminal({
   async function openReprintPreview(sale: RecentSale) {
     setReprintSale(sale);
 
-    if (printerSettings.outputMode !== "qz_tray") {
-      setReprintPreviewDate(new Date());
-      return;
-    }
-
-    setBrowserPrintFallbackContext(null);
     setPersistenceMessage(null);
     setPersistenceDetails(null);
 
@@ -775,9 +738,8 @@ export function SalesTerminal({
       setReprintSale(null);
       setReprintPreviewDate(null);
     } catch (error) {
-      setPersistenceMessage(formatPrintFailureMessage(labels, error) + " " + labels.useBrowserPrintFallback);
+      setPersistenceMessage(formatPrintFailureMessage(labels, error));
       setPersistenceDetails(formatPrintFailureDetails(error));
-      setBrowserPrintFallbackContext("reprint");
     }
   }
 
@@ -995,15 +957,6 @@ export function SalesTerminal({
                         <pre className="mt-2 whitespace-pre-wrap break-words rounded-xl bg-white/70 p-3 font-mono text-[11px] leading-relaxed">{persistenceDetails}</pre>
                       </details>
                     ) : null}
-                    {browserPrintFallbackContext ? (
-                      <button
-                        type="button"
-                        onClick={useBrowserPrintFallback}
-                        className="mt-3 min-h-11 rounded-xl bg-slate-950 px-4 text-sm font-black text-white transition active:scale-[0.98] focus:outline-none focus-visible:ring-4 focus-visible:ring-slate-300"
-                      >
-                        {labels.useBrowserPrintFallback}
-                      </button>
-                    ) : null}
                   </div>
                 ) : null}
                 {isLoadingProducts ? (
@@ -1031,15 +984,6 @@ export function SalesTerminal({
                     <summary className="cursor-pointer font-black">{labels.technicalDetails}</summary>
                     <pre className="mt-2 whitespace-pre-wrap break-words rounded-xl bg-white/70 p-3 font-mono text-[11px] leading-relaxed">{persistenceDetails}</pre>
                   </details>
-                ) : null}
-                {browserPrintFallbackContext ? (
-                  <button
-                    type="button"
-                    onClick={useBrowserPrintFallback}
-                    className="mt-3 min-h-11 rounded-xl bg-slate-950 px-4 text-sm font-black text-white transition active:scale-[0.98] focus:outline-none focus-visible:ring-4 focus-visible:ring-slate-300"
-                  >
-                    {labels.useBrowserPrintFallback}
-                  </button>
                 ) : null}
                 {!salesAllowed && salesUnavailableMessage ? (
                   <div className="mt-4 rounded-2xl bg-amber-50 px-4 py-3 text-sm font-black text-amber-900 ring-1 ring-amber-200">

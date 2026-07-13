@@ -102,7 +102,7 @@ It includes:
 - order total
 - cash change helper
 - manual card confirmation
-- browser voucher printing
+- QZ Tray Bon printing
 
 ## Shopping Cart
 

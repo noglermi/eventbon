@@ -513,11 +513,11 @@ RC-1 focuses on Product completion:
 
 RC-2 focuses on receipt printing:
 
-- printer setup wizard
+- simplified Bon printer setup wizard
+- QZ Tray cashier printing
 - generic thermal printer support
 - Brother TD-4000 reference implementation
 - Epson reference profiles
-- browser print optimization
 - print testing
 - print documentation
 
@@ -548,27 +548,24 @@ Until RC-4, major architecture refactoring should be avoided unless required for
 
 eventBon provides a guided Printer Setup Wizard as a major product feature.
 
-The wizard helps a non-technical organizer or device operator configure receipt printing without reading a printer manual.
+The wizard helps a non-technical Veranstalter configure Bon printing without reading a printer manual.
 
-The initial implementation uses browser printing and printer profiles. It guides the user through:
+The normal setup flow is intentionally limited to:
 
-- printer profile selection
-- paper width selection
-- browser print expectations
-- test print
-- confirmation of local device settings
-- troubleshooting
+1. Bondruckermodell auswählen.
+2. Confirm QZ Tray or download it.
+3. Select the Bon printer from the QZ Tray printer list.
+4. Testbon drucken.
 
-Initial profiles are:
+Visible model options start with:
 
-- Generic 58 mm receipt printer
-- Generic 80 mm receipt printer
 - Brother TD-4000
-- Generic A4 test printer
+- MUNBYN
+- Weitere
 
 The Brother TD-4000 is the first real thermal printer reference device for hardware validation. The Brother QL-720NW is not the main Bon printer reference.
 
-Later versions may certify Epson and Star printers and may add direct ESC/POS, WebUSB, WebSerial, native bridge, or vendor SDK support.
+Later versions may certify Epson and Star printers and may add advanced adapters behind the same simple setup concept.
 
 ### Reason
 
@@ -576,18 +573,18 @@ Printing is one of the highest-risk event-floor workflows. A Bon printer often h
 
 A guided setup lowers support risk and makes receipt printing testable before active sales start.
 
-Browser printing is the right first step because it works with existing operating system printer drivers and avoids native integration complexity While the product is evolving.
+The normal user does not care about browser printing, Windows printer concepts, ESC/POS, drivers, or print architecture. The wizard must therefore hide these details and optimize for the first successful test Bon.
 
 ### Consequences
 
 - Printer setup becomes an explicit organizer/device workflow.
 - The wizard must include a test print before the device is considered ready.
 - Printer settings remain device-local and are stored in localStorage, not in Supabase.
-- Each terminal keeps its own printer profile and paper settings.
+- Each terminal keeps its own Bon printer profile and QZ printer selection.
 - The Brother TD-4000 profile is the hardware reference for real thermal printing.
 - Epson and Star profiles require later certification with real hardware.
-- Direct ESC/POS or native printer integration remains future scope.
 - The printer feature must stay focused on Bon printing and must not introduce fiscalization, cash drawer control, receipt accounting, or general POS hardware scope.
+- Browser test print, Windows printer setup steps, and Drucker Testlabor do not belong in the normal assistant.
 
 See `docs/Printer-Setup-Wizard.md` for the full concept.
 
@@ -634,9 +631,12 @@ One event may be used from multiple terminals. Each terminal needs local control
 
 eventBon remains a web app.
 
-Reliable production receipt printing will use a local print bridge.
+Reliable production receipt printing uses a local bridge path. The current Windows path is QZ Tray.
 
-Browser and CSS printing are only setup, test, and fallback paths. They are not the final cashier workflow.
+EventBon separates two print worlds:
+
+- Bondruck: QZ Tray plus selected Bon printer for all Bonierungen.
+- Seitendruck: normal Windows/browser/PDF printing for Speisekarten, lists, reports, PDFs, and administrative output.
 
 Target receipt-printing architecture:
 
@@ -665,16 +665,15 @@ Renderer Adapters:
 
 Output Adapters:
 
-- Browser Print fallback
-- Local Print Bridge
+- QZ Tray output for Bondruck
+- Browser/PDF output for Seitendruck
 - Epson ePOS network adapter
 - Star webPRNT network adapter
 
 Technology direction:
 
-- Primary future path: local print bridge
-- Fast current candidate: QZ Tray
-- Fallback: browser/CSS print
+- Primary cashier path: QZ Tray for Bondruck
+- Browser/PDF printing: Seitendruck only
 - Printer-specific adapters: ESC/POS for Epson and Star, Brother label/raster or Brother SDK through the bridge, Epson ePOS, and Star webPRNT
 
 ### Reason
@@ -687,8 +686,8 @@ A local print bridge keeps eventBon as a web app while allowing direct or near-d
 
 ### Consequences
 
-- Browser printing remains useful for setup, test prints, and fallback.
-- The Printer Setup Wizard must support local device configuration and later bridge readiness.
+- Browser printing remains useful for Seitendruck, not as the normal Bon printer assistant path.
+- The Printer Setup Wizard must support a short local device setup focused on QZ Tray and test Bon success.
 - PrintService must work with a printer-independent PrintJob IR.
 - Epson and Star can be supported through ESC/POS and vendor network protocols where suitable.
 - Brother TD printers can be supported through label/raster output or Brother SDK integration through the bridge.

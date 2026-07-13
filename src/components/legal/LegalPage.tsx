@@ -23,7 +23,7 @@ export function LegalPage({ children, intro, title }: LegalPageProps) {
 
         <footer className="flex flex-wrap gap-4 border-t border-slate-200 pt-5 text-sm font-bold text-slate-600">
           <Link href="/" className="text-emerald-700 hover:text-emerald-900">
-            Organizer Login
+            Veranstalter Login
           </Link>
           <Link href="/problem-melden" className="text-emerald-700 hover:text-emerald-900">
             Problem melden

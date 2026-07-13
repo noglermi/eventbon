@@ -175,7 +175,7 @@ Supabase responsibilities:
 
 Supabase should be treated as the source of truth for sales and voucher records.
 
-Completed sales must be stored atomically. The application calls a Supabase RPC that inserts the sale and all sale_items inside one database transaction. If any sale_item insert fails, the transaction fails and no partial sale remains in the database. The print preview opens only after this transaction succeeds.
+Completed sales must be stored atomically. The application calls a Supabase RPC that inserts the sale and all sale_items inside one database transaction. If any sale_item insert fails, the transaction fails and no partial sale remains in the database. Bon printing starts only after this transaction succeeds.
 
 Database and frontend code must treat Supabase tables and PostgreSQL RPC functions as explicit contracts. Whenever a database table, SQL migration, RPC function, repository method, or frontend payload changes, the SQL signature and frontend call signature must be verified together.
 
@@ -192,8 +192,7 @@ Sales are finalized exactly once. The active sales workflow is:
 - Sale
 - BONS DRUCKEN
 - atomic save
-- print preview
-- print
+- QZ Tray Bon print
 - sale completed
 
 After the initial print action, the checkout automatically returns to an empty ready state for the next customer. The previous cart, received amount, change, payment input, and current sale state are cleared. The active checkout cannot print that completed sale again.
@@ -453,13 +452,33 @@ Stripe is never used for Bon sales to visitors. Visitor payments remain outside 
 
 ## Printing
 
-eventBon remains a web app. Reliable production receipt printing targets a local print bridge. Browser and CSS printing are acceptable for setup, test prints, and fallback, but they are not the final cashier workflow.
+eventBon separates printing into two deliberately different worlds.
 
-Real Brother TD-4000 testing confirmed that Windows and browser printing can reach the printer, but browser print preview caused repeated labels, incomplete single-voucher output, and too much cashier friction. Receipt printing is therefore a release blocker. Production operation requires direct or near-direct printing so the cashier can complete a sale without a disruptive preview step.
+### Bondruck
 
-The printer engine foundation separates the Sales Terminal from printer details.
+Bondruck is the standard event-floor path for Bons, single vouchers, combined vouchers, and reprints.
 
-Target receipt-printing architecture:
+Bondruck uses:
+
+- QZ Tray
+- the selected local Bon printer
+
+All Bonierungen use this path. The Sales Terminal must not depend on browser print preview for the normal cashier workflow. The cashier completes a sale, EventBon stores the sale atomically, and the Bon print job is sent through QZ Tray to the configured Bon printer.
+
+### Seitendruck
+
+Seitendruck is used for organizer and administration output:
+
+- Speisekarten
+- Produktlisten
+- Preislisten
+- Auswertungen
+- PDF
+- Berichte
+
+Seitendruck uses the normal Windows system printer through browser/PDF printing. These outputs are not routed through the Bon printer.
+
+The printer engine foundation separates the Sales Terminal from printer details:
 
 - eventBon Web App
 - PrintService
@@ -467,9 +486,9 @@ Target receipt-printing architecture:
 - Renderer Adapters
 - Output Adapters
 
-The Sales Terminal requests Print Bon. It does not know paper widths, print CSS, printer commands, cutter spacing, output target, or printer-specific layout values.
+The Sales Terminal requests Print Bon. It does not know paper widths, printer commands, cutter spacing, or printer-specific layout values.
 
-The PrintJob IR is the internal print representation. It contains:
+The PrintJob IR contains:
 
 - voucher lines
 - print mode
@@ -479,83 +498,36 @@ The PrintJob IR is the internal print representation. It contains:
 - reprint marker
 - helper or terminal context if needed
 
-Renderer Adapters turn the PrintJob IR into output-specific print data:
+For QZ Tray cashier printing, EventBon uses a dedicated QZ-compatible renderer. Single-voucher mode sends one voucher as one separate QZ print job. A sale with `3 x Bier` in Einzelbons mode therefore produces three sequential QZ jobs, each containing one `1 x Bier` voucher. Combined-voucher mode sends exactly one QZ job containing all sale items and quantities.
 
-- Browser CSS renderer
-- ESC/POS renderer
-- Raster/PDF label renderer
-- Vendor SDK renderer later
+The Brother TD-4000 profile targets the current fixed-size 58 x 60 mm medium. Cutting is handled by the Windows/Brother printer driver at print-job boundaries. EventBon does not send raw Brother cutter commands in this phase.
 
-Output Adapters deliver the rendered job:
+The simplified Bon printer setup stores device-local printer settings in localStorage. These include profile ID, QZ printer name, test confirmation, and last test date. These settings are intentionally not event data and are not stored in Supabase.
 
-- Browser Print fallback
-- Local Print Bridge
-- Epson ePOS network adapter
-- Star webPRNT network adapter
+Each sales terminal or device uses exactly one configured Bon printer. There is no product-based printer routing, kitchen printer routing, or multi-printer routing per terminal in the current product scope.
 
-Technology decision:
+Visible printer support states are:
 
-- Primary future path: local print bridge
-- Fast current candidate: QZ Tray
-- Fallback: browser/CSS print
-- Printer-specific adapters: ESC/POS for Epson and Star, Brother label/raster or Brother SDK through the bridge, Epson ePOS, and Star webPRNT
+- Unterstützt
+- Getestet
+- Test ausstehend
+- Bestandsgerät
+- Nicht empfohlen
 
-The internal print flow distinguishes:
+The Brother TD-4000 is shown as Getestetes Bestandsgerät. The MUNBYN profile remains Test ausstehend until a practical end-to-end test confirms installation, QZ Tray discovery, Bon readability, special characters, euro sign, cutter behavior, single-voucher behavior, combined-voucher behavior, reprint behavior, and the cashier sale flow.
 
-- setupPrintPreview
-- cashierDirectPrintCandidate
+The normal Bon printer assistant is intentionally short:
 
-Browser printing remains the setup, test, and explicit fallback path. The normal Windows production release cashier path uses QZ Tray when the device-local output adapter is set to QZ Tray direct print. In QZ mode the Sales Terminal must not call `window.print()`, must not open the browser print preview, and must not show the legacy browser print modal unless the user explicitly chooses the browser fallback after a QZ failure.
+1. Bondruckermodell auswählen.
+2. QZ Tray bestätigen or download.
+3. Bondrucker from the QZ Tray printer list auswählen.
+4. Testbon drucken.
 
-The PrintService selects the active device-local printer profile, creates the PrintJob IR, chooses a renderer adapter, and sends the rendered result to an output adapter. The Printer Profile defines paper width, margins, font scaling, cutter or tear-off behavior, and profile-specific layout values.
-
-Supported foundation profiles:
-
-- Generic 58 mm Receipt
-- Generic 80 mm Receipt
-- Brother TD-4000 58 x 60 mm
-- MUNBYN 80 mm thermal receipt printer
-- Epson Receipt
-- Star Receipt
-
-The Brother TD-4000 58 x 60 mm profile targets the current fixed-size configured test medium. It is an abstraction only at this stage and does not implement Brother-specific commands or direct device support.
-
-Printer profiles are central typed configuration, not database records during the production. A profile contains manufacturer, model, display name, support status, description, paper dimensions, printer type, connection options, cutter behavior, supported platforms, required software, driver hint, installation guide, test status, last tested date, tested eventBon version, notes, recommended settings, QZ printer hints, and active/inactive availability.
-
-Support states are explicit: supported, production, testing_pending, legacy, and not_recommended. The Brother TD-4000 is a legacy/tested existing device. The MUNBYN 80 mm profile is testing_pending until the physical printer is tested and documented. eventBon must not claim MUNBYN support before that practical test.
-
-For QZ Tray cashier printing, eventBon uses a dedicated QZ-compatible HTML/pixel renderer instead of the browser CSS renderer. Single-voucher mode sends one voucher as one separate QZ print job. A sale with `3 x Bier` in Einzelbons mode therefore produces three sequential QZ jobs, each containing one `1 x Bier` voucher. Combined-voucher mode sends exactly one QZ job containing all sale items and quantities.
-
-For the Brother TD-4000 configured profile, cutting is handled by the Windows/Brother printer driver at print-job boundaries. eventBon deliberately does not send raw Brother cutter commands in this phase. This means individual vouchers must not be bundled into one multi-page QZ job, because the driver cut behavior depends on separate job boundaries.
-
-Sales completion in QZ mode happens only after all required QZ jobs have been submitted successfully. If a later voucher fails, the sale remains stored once, the cart is not silently cleared, the failed voucher number is shown, and the same completed sale can be retried or printed through the explicit browser fallback without creating another sale or changing statistics.
-
-This implementation is not marked fully complete until it has been verified on real Brother TD-4000 hardware with the 58 x 60 mm configured medium.
-
-The receipt printer setup foundation stores device-local printer settings in localStorage. These include profile ID, output mode, Windows/QZ printer name, paper/profile options, test confirmation, and last test date. These settings are intentionally not event data and are not stored in Supabase.
-
-Each sales terminal or device uses exactly one configured printer. There is no multi-printer routing per terminal. Multiple terminals at one event are supported by configuring each terminal/device with its own local printer settings.
-
-Initial tested printer profiles:
-
-- Generic 58 mm receipt printer
-- Generic 80 mm receipt printer
-- Brother TD-4000
-- Generic A4 test printer
-
-The organizer or device operator must install the printer in the operating system first for browser-print fallback and for bridge-based output where the bridge uses installed printers. eventBon then applies the selected printer profile for width, density, and tear/cut spacing. Browser printing is acceptable for setup and testing, but it is not the final cashier workflow.
-
-Printing should be generated from recorded sales data so the printed result can be traced back to the order and event.
+Browser test print, Windows printer explanation, ESC/POS explanation, and Drucker Testlabor do not belong in the normal setup wizard. Advanced diagnostics may later live under Einstellungen -> Erweiterte Druckereinstellungen.
 
 Bon printing is an event-period capability. Outside the active event period or an explicitly enabled usage window, printing should be inactive even if product setup and read-only statistics access are still available.
 
-The architecture explicitly does not make WebUSB, WebSerial, or WebHID the core printer architecture. These browser device APIs may be explored for special cases, but they are too dependent on browser, platform, permissions, and device support to be the product foundation.
-
-The architecture also does not make Electron the primary product. A native shell may be revisited only if the web app plus local print bridge cannot satisfy field requirements.
-
-eventBon should stop treating Chrome print preview as the production cashier workflow. The preview path remains for setup, test prints, and fallback only.
-
-Product-based printer routing, kitchen printer routing, and multiple printers per terminal are not part of the MVP. This keeps event-floor printing simple, predictable, and easier to support.
+The architecture explicitly does not make WebUSB, WebSerial, WebHID, Electron, or Chrome print preview the core cashier printing architecture.
 
 ## Release Candidate Architecture Priorities
 

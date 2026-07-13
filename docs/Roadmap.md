@@ -94,13 +94,13 @@ Focus:
 
 - printer setup wizard
 - local print bridge as target production architecture
-- QZ Tray as fast current candidate
+- QZ Tray as cashier Bondruck path
 - generic thermal printer support
 - Brother TD-4000 reference implementation
 - Epson and Star reference paths
 - ESC/POS renderer path for Epson and Star
 - Brother label/raster or Brother SDK path through the bridge
-- browser/CSS print as setup, test, and fallback
+- browser/PDF print as Seitendruck for menus, lists, reports, and PDFs
 - print testing
 - print documentation
 
@@ -124,14 +124,14 @@ Receipt printing architecture:
 - eventBon remains a web app
 - Sales Terminal requests printing through PrintService
 - PrintService creates a PrintJob IR
-- Renderer adapters produce Browser CSS, ESC/POS, Raster/PDF label, or later vendor SDK output
-- Output adapters deliver through Browser Print fallback, Local Print Bridge, Epson ePOS, or Star webPRNT
+- Renderer adapters produce QZ-compatible Bon output, Browser/PDF Seitendruck output, ESC/POS, Raster/PDF label, or later vendor SDK output
+- Output adapters deliver through QZ Tray for Bondruck, Browser/PDF for Seitendruck, Epson ePOS, or Star webPRNT
 
 Architecture exclusions:
 
 - WebUSB, WebSerial, and WebHID are not the core printer architecture
 - Electron is not the primary product direction
-- Chrome print preview is not the production cashier workflow
+- Chrome print preview is not the cashier Bondruck workflow
 
 ### RC-3 Production Rollout
 
@@ -256,7 +256,7 @@ Scope:
 - shopping cart
 - cash change helper
 - manual card confirmation
-- browser voucher printing
+- QZ Tray Bon printing
 - simple statistics
 - CSV export
 
@@ -375,7 +375,7 @@ Scope:
 - sales
 - sale items
 - product name and price snapshots
-- existing print preview flow
+- existing QZ Tray Bon print flow
 - no statistics UI
 - no CSV export
 

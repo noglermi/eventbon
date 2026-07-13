@@ -1,7 +1,6 @@
 import {
   defaultPrinterSettings,
   getPrinterProfile,
-  normalizePrintOutputMode,
   normalizeBoolean,
   normalizeOptionalIsoDate,
   normalizePrinterCutMode,
@@ -40,7 +39,7 @@ function clonePrinterSettings(settings: PrinterSettings): PrinterSettings {
   return { ...settings };
 }
 
-export function loadPrinterSettings() {
+export function loadPrinterSettings(): PrinterSettings {
   if (typeof window === "undefined") {
     return clonePrinterSettings(defaultPrinterSettings);
   }
@@ -61,7 +60,7 @@ export function loadPrinterSettings() {
       paperWidthMm: profile.isFixedMedia ? profile.paperWidthMm : normalizePrinterPaperWidth(stored.paperWidthMm, profile.paperWidthMm),
       density: normalizePrinterDensity(stored.density, profile.density),
       cutMode: normalizePrinterCutMode(stored.cutMode, profile.cutMode),
-      outputMode: normalizePrintOutputMode(stored.outputMode),
+      outputMode: "qz_tray",
       qzPrinterName: normalizeQzPrinterName(stored.qzPrinterName),
       setupCompleted: normalizeBoolean(stored.setupCompleted),
       testConfirmed: normalizeBoolean(stored.testConfirmed),
