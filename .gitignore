@@ -23,6 +23,7 @@
 # misc
 .DS_Store
 *.pem
+/tools/qz/generated/
 
 # debug
 npm-debug.log*
