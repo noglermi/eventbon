@@ -731,5 +731,37 @@ Receipt printing is the highest-risk product workflow. A narrow Windows producti
 - iPad and Android are not implemented for this production.
 - Stripe pay-per-event activation belongs to the productive commercial model and remains separate from Bon sales.
 - The printer test lab remains available for diagnostics but should not be prominent to ordinary organizers.
-- Receipt printing remains the P0 release blocker until QZ direct cashier printing reliably produces one print job per voucher, cuts after every voucher where supported, and uses readable Brother TD-4000 layout.
+- The QZ/Brother TD-4000 Bondruck path is the printing architecture v1 reference. Future print work should preserve this behavior while adding model support, UX improvements, and documentation.
 - Production RLS/security review remains P0 before broader production release.
+
+## ADR-023 Printing Architecture v1 Reference
+
+### Decision
+
+The productive EventBon Bondruck architecture is frozen as printing architecture v1.
+
+The validated reference path is:
+
+- `https://www.eventbons.com`
+- QZ Tray
+- server-side QZ signing
+- EventBon signing certificate
+- EventBon Root certificate
+- Brother TD-4000
+- automatic Bon printing without browser print dialog in the cashier flow
+- no recurring QZ security prompt after trust was granted
+
+Future changes to this architecture are limited to bug fixes, support for additional printer models, UX improvements, and documentation unless a major architecture change is explicitly requested.
+
+### Reason
+
+The current architecture has reached the first productive reference state. EventBon should now stabilize this path instead of continuing to redesign the print architecture.
+
+### Consequences
+
+- Browser print remains a Seitendruck path for menus, reports, PDFs, and administrative output.
+- QZ Tray remains the productive Bondruck path for the Sales Terminal.
+- Brother TD-4000 is the first tested reference printer and remains the regression device for print changes.
+- MUNBYN remains Test ausstehend until a practical end-to-end test is complete.
+- Certificate and key handling must follow the documented QZ trust workflow.
+- No anonymous or untrusted QZ printing is acceptable for product operation.

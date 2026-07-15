@@ -62,7 +62,7 @@ Planned later:
 - Android
 - additional certified printers
 
-P0 release blockers are tracked in `docs/Product-Backlog.md`. Receipt printing remains the primary P0 blocker until QZ direct cashier printing reliably produces one print job per voucher, cuts after every voucher where supported, and uses readable Brother TD-4000 typography/layout.
+P0 release blockers are tracked in `docs/Product-Backlog.md`. The QZ/Brother TD-4000 Bondruck path is now the printing architecture v1 reference. Remaining printing work focuses on preserving that reference, adding printer models, simplifying setup, and improving diagnostics.
 
 Stripe pay-per-event activation belongs to the productive commercial model. iPad and Android are outside the current Windows production scope.
 

@@ -129,9 +129,9 @@ The MVP allows staff to manually confirm that a card payment was completed outsi
 
 This keeps the MVP ready for Stripe commercial billing and possible future SumUp integration while keeping visitor payments outside EventBon.
 
-## Browser Voucher Printing
+## QZ Tray Bon Printing
 
-After payment confirmation, eventBon prints vouchers through the browser.
+After payment confirmation, eventBon prints Bons through QZ Tray and the configured Bon printer.
 
 Printed vouchers should represent the purchased items clearly enough for event operations.
 

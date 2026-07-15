@@ -103,6 +103,8 @@ Event settings and device settings are intentionally separate. Event settings in
 
 EventBon separates Bondruck and Seitendruck. Bondruck is the standard cashier path and uses QZ Tray with the selected local Bon printer. Seitendruck is reserved for organizer output such as Speisekarten, product lists, reports, PDFs, and price lists through the normal Windows system printer. The normal Bon printer setup is intentionally short: choose the Bon printer model, confirm or install QZ Tray, select the Bon printer found by QZ Tray, and print a test Bon.
 
+The productive Bondruck reference uses QZ Tray with server-side signing and the EventBon certificate chain. The first tested reference printer is Brother TD-4000. The cashier workflow prints Bons automatically through QZ Tray and does not use the browser print dialog.
+
 ## Release Strategy
 
 eventBon follows a product-first release strategy.
@@ -124,7 +126,7 @@ Planned later:
 - Android
 - additional certified printers
 
-Receipt printing remains the P0 release blocker until direct QZ cashier printing is reliable for one print job per voucher, with correct cutting and readable Brother TD-4000 output.
+The printing architecture v1 reference is QZ Tray with server-side signing, the EventBon certificate chain, and Brother TD-4000. Future printing work should preserve this reference behavior and focus on bug fixes, additional printer models, UX improvements, and documentation.
 
 The project intentionally prioritizes a complete, reliable event workflow while production security hardening continues. While the product is evolving, the database schema, RPC signatures, helper workflow, printing, dashboard, and organizer workflow may still change. Implementing production-grade RLS too early would create unnecessary rework and increase regression risk.
 
@@ -148,6 +150,13 @@ Until RC-4, major architecture refactoring should be avoided unless it is requir
 - [Data Model](docs/Data-Model.md)
 - [Roadmap](docs/Roadmap.md)
 - [Printer Setup Wizard](docs/Printer-Setup-Wizard.md)
+- [Printing Architecture v1](docs/printing/printing-architecture.md)
+- [QZ Certificates](docs/printing/qz-certificates.md)
+- [Printer Setup](docs/printing/printer-setup.md)
+- [Printing Backup And Recovery](docs/printing/backup-and-recovery.md)
+- [Printing Test Log](docs/printing/printing-test-log.md)
+- [Printing Roadmap](docs/printing/printing-roadmap.md)
+- [Supported Printers](docs/printing/supported-printers.md)
 - [Deployment](docs/Deployment.md)
 - [Production Release Checklist](docs/Production-Release-Checklist.md)
 - [Product Backlog](docs/Product-Backlog.md)

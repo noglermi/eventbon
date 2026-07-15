@@ -21,7 +21,7 @@ Planned later:
 - Android
 - additional certified printers
 
-Receipt printing remains the P0 release blocker until direct QZ cashier printing is reliable for one print job per voucher, with correct cutting and readable Brother TD-4000 layout.
+The QZ/Brother TD-4000 Bondruck path is the printing architecture v1 reference. Release validation must preserve direct QZ cashier printing, server-side signing, the EventBon certificate chain, no browser print dialog in the cashier flow, and no recurring QZ security prompt after trust was granted.
 
 ## Production Readiness Audit
 

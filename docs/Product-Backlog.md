@@ -2,11 +2,11 @@
 
 ## P0
 
-- QZ direct cashier printing: implemented in app, pending real Brother TD-4000 hardware validation.
-- One print job per voucher: implemented for QZ Einzelbons, pending hardware validation.
-- Cut after every voucher: expected through Windows/Brother driver job boundaries, pending hardware validation.
-- Optimized Brother TD-4000 typography and layout: implemented for 58 x 60 mm configured medium, pending hardware validation.
-- QZ installation wizard and modular printer setup wizard.
+- QZ direct cashier printing: validated as printing architecture v1 reference with Brother TD-4000.
+- One print job per voucher: validated for the current Brother TD-4000 reference path.
+- Cut after every voucher: handled through Windows/Brother driver job boundaries for the reference path.
+- Optimized Brother TD-4000 typography and layout: current reference layout for the tested medium.
+- QZ installation wizard and modular printer setup wizard refinement.
 - Production RLS/security review.
 
 The QZ/Brother printing items may only be marked complete after a real Brother TD-4000 test confirms:

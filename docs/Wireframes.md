@@ -77,7 +77,7 @@ Payment confirmed
      |
 Create voucher records
      |
-Open browser print view
+Send QZ Tray print job
      |
 Print vouchers
      |

@@ -46,13 +46,17 @@ Planned later:
 - Android
 - additional certified printers
 
-P0 release blocker:
+Printing reference:
 
 - reliable receipt printing through QZ Tray for the cashier workflow
-- one print job per voucher
-- cut after every voucher where supported
-- optimized Brother TD-4000 typography and layout
-- QZ installation wizard
+- server-side QZ signing with the EventBon certificate chain
+- Brother TD-4000 as tested reference printer
+- no browser print dialog in the cashier flow
+- no recurring QZ security prompt after trust was granted
+
+Remaining P0:
+
+- QZ installation wizard refinement
 - production RLS/security review
 
 Commercial P0:

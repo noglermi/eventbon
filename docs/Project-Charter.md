@@ -4,7 +4,7 @@
 
 eventBon is the simplest voucher printing system for events.
 
-It helps event teams sell vouchers, calculate cash change, print vouchers in the browser, and produce a simple sales summary.
+It helps event teams sell vouchers, calculate cash change, print Bons through the configured Bon printer, and produce a simple sales summary.
 
 eventBon is event-booking based. The customer books eventBon for a specific event and usage period instead of primarily subscribing to a generic permanent software workspace.
 
@@ -175,7 +175,7 @@ Planned later:
 - Android
 - additional certified printers
 
-Receipt printing remains the P0 release blocker for the production. Stripe belongs to the productive commercial model. iPad, Android, and additional certified printers remain separate platform and hardware roadmap items.
+The QZ/Brother TD-4000 Bondruck path is the printing architecture v1 reference. Stripe belongs to the productive commercial model. iPad, Android, and additional certified printers remain separate platform and hardware roadmap items.
 
 The project continues production security hardening while validating the event workflow in real field operation. While the product is evolving, the application is still evolving across database schema, RPC signatures, helper workflow, printing, dashboard, and organizer workflow. Implementing production-grade RLS too early would create unnecessary rework and increase regression risk.
 
@@ -202,7 +202,7 @@ Focus:
 - generic thermal printer support
 - Brother TD-4000 reference implementation
 - Epson reference profiles
-- browser print optimization
+- QZ Tray cashier printing
 - print testing
 - print documentation
 

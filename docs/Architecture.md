@@ -310,7 +310,9 @@ Planned later:
 
 This Windows production scope is intentionally narrow. It avoids spreading support across mobile operating systems before the Windows receipt-printing path is stable.
 
-Receipt printing remains the P0 release blocker. The target production behavior is direct QZ cashier printing, one print job per voucher, cutting after every voucher where supported, and an optimized Brother TD-4000 typography/layout profile.
+The productive Bondruck reference is QZ Tray with server-side signing, the EventBon certificate chain, and Brother TD-4000. This printing architecture v1 reference was validated on `https://www.eventbons.com` with automatic Bon printing, no browser print dialog in the cashier flow, and no recurring QZ security prompt after trust was granted.
+
+Future printing changes should preserve this reference behavior. Changes are limited to bug fixes, additional printer model support, UX improvements, and documentation unless a major architecture change is explicitly requested.
 
 The printer test lab is a diagnostic tool for setup and support and should not be prominent in ordinary organizer workflows.
 

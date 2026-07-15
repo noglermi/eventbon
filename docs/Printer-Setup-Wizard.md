@@ -258,6 +258,8 @@ Browser/PDF printing remains available for Seitendruck only.
 
 Future printer-specific work may add more renderer and output adapters, but the normal Veranstalter setup must remain short and non-technical.
 
+The productive Bondruck reference is documented in `docs/printing/`. The current reference path is eventbons.com -> QZ Tray -> Brother TD-4000 with server-side signing and the EventBon certificate chain.
+
 ## Troubleshooting Flow
 
 Troubleshooting should remain action-oriented.
